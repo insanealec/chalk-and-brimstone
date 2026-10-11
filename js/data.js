@@ -60,6 +60,67 @@ const PENTACLES = [
 // days a spirit will serve before its bonds wear thin (firm bindings add 2)
 const PATIENCE = [0, 3, 4, 4, 5, 6];
 
+// The last part of every incantation: what kind of binding you are making.
+// Vessel and familiar bindings are for good, so they must be firm, or the spirit tears free.
+const CLAUSES = {
+  service:  { name: 'of Service',      desc: 'A servant for errands, for as long as its patience lasts.' },
+  vessel:   { name: 'of the Vessel',   desc: 'Sealed into a tool for good. Needs a firm binding, or the spirit tears free.' },
+  familiar: { name: 'of the Familiar', desc: 'A companion for good. It follows you and helps, but never runs errands. Needs a firm binding.' },
+};
+
+// Tools a spirit can be sealed into. The effect scales with the class (tier) of the spirit inside;
+// the housing caps the class it can hold and can be reinforced. `cap` is the cap when bought.
+const VESSELS = {
+  scrying: {
+    name: 'Scrying Glass', price: 25, rank: 0, cap: 1,
+    desc: 'A hand mirror backed with silver. Something inside it can see a long way.',
+    effect: t => `Each dawn, shows you ${t} unknown thing${t > 1 ? 's' : ''} about the spirit you are studying, if that spirit is no more than one class above the one in the glass.`,
+  },
+  lantern: {
+    name: 'Hooded Lantern', price: 20, rank: 0, cap: 1,
+    desc: 'A dark-lantern with a shutter. Whatever burns inside it shows things as they are.',
+    effect: t => `Reveals hidden options in the city (strength ${t} of 5).`,
+  },
+  cane: {
+    name: 'Sword-Cane', price: 30, rank: 1, cap: 1,
+    desc: 'Malacca wood, silver-topped, with a blade inside and room for something else.',
+    effect: t => `Turns aside ${caneGuard(t)} damage from every injury.`,
+  },
+  watch: {
+    name: 'Pocket Watch', price: 60, rank: 1, cap: 1,
+    desc: 'A railroad watch that keeps perfect time. With help, it keeps a little extra.',
+    effect: t => `+${watchHours(t)} hour${watchHours(t) > 1 ? 's' : ''} every day.`,
+  },
+  ring: {
+    name: 'Signet Ring', price: 40, rank: 1, cap: 1,
+    desc: 'A heavy gold signet. The Machine knows its friends by their rings.',
+    effect: t => `City Hall pays ${25 * t}% more, and some doors open that otherwise would not (strength ${t} of 5).`,
+  },
+};
+const caneGuard = t => Math.ceil(t / 2);
+const watchHours = t => Math.ceil(t / 2);
+
+// Cost to reinforce a vessel so it can hold a spirit of each class. Requires the rank before that class.
+const VESSEL_CAP_COST = [0, 0, 40, 90, 180, 300];
+
+// What a familiar does for you. A familiar has every ability up to its own class.
+const FAMILIAR_ABILITIES = [
+  { tier: 1, text: 'Warns you which choices in the city could get you hurt.' },
+  { tier: 2, text: 'Points out mistakes your notebook already knows about before you speak a summons.' },
+  { tier: 3, text: 'Watches your back: one less damage from every injury.' },
+  { tier: 4, text: 'Tells you the odds of getting hurt in the city.' },
+  { tier: 5, text: 'Keeps your days in order: one extra hour every day.' },
+];
+
+const FAMILIAR_QUIPS = [
+  '{name} spends the morning reading over your shoulder and sighing.',
+  '{name} has rearranged your bookshelves "by threat level."',
+  '{name} asks, not for the first time, what exactly you think you are doing with your life.',
+  '{name} has eaten the cheese. It does not deny it.',
+  '{name} critiques your chalk lines from the mantelpiece.',
+  '{name} wonders aloud whether your predecessor also snored.',
+];
+
 // Each spirit likes exactly one incense and hates exactly one; the notebook's deductions rely on that.
 //
 // Lore fragments carry `facts` the notebook records automatically when the fragment is read.
@@ -301,9 +362,9 @@ const COMMISSIONS = [
     done: 'A clerk writes your name in a ledger without looking up. In this city, that is how careers begin.',
   },
   {
-    title: 'The Maxwell Street Fence', type: 'errand', diff: 1, rep: 2, pay: 25,
+    title: 'The Maxwell Street Fence', type: 'errand', diff: 1, rep: 2, pay: 25, teaches: 'vessel', gift: 'scrying',
     text: 'A scrying-glass has gone missing from a City Hall storeroom and turned up, rumor has it, in the back room of a Maxwell Street pawnbroker. Send a servant to get it back. Quietly.',
-    done: 'The glass is returned. The pawnbroker has taken up a new career in being somewhere else.',
+    done: 'The glass is returned. The pawnbroker has taken up a new career in being somewhere else. The clerk slides a second, cracked glass across the desk, with a card explaining the Clause of the Vessel. "Make yourself useful," it reads.',
   },
   {
     title: 'Messengers for the Mayor', type: 'bind', tier: 2, rep: 3, pay: 30,
@@ -311,9 +372,9 @@ const COMMISSIONS = [
     done: 'The Mayor’s office sends a letter of thanks, which arrives by imp, three days late.',
   },
   {
-    title: 'Whispers on LaSalle Street', type: 'errand', diff: 2, rep: 3, pay: 45,
+    title: 'Whispers on LaSalle Street', type: 'errand', diff: 2, rep: 3, pay: 45, teaches: 'familiar',
     text: 'Someone is selling the city’s secrets to the speculators at the Board of Trade. Send a servant to shadow the Superintendent of Public Works, who has lately been buying very expensive hats.',
-    done: 'The hats were a code. The Superintendent of Public Works is now the former Superintendent of Public Works.',
+    done: 'The hats were a code, carried by the Superintendent’s familiar, a sleek grey foliot that never left his shoulder. The Superintendent is now the former Superintendent, and City Hall sends you a transcript of how his familiar was bound: the Clause of the Familiar.',
   },
   {
     title: 'Fire and Air', type: 'bind', tier: 3, rep: 4, pay: 70,

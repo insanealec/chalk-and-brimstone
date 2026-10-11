@@ -104,26 +104,40 @@ A map with six districts, unlocked by rank: Maxwell Street, the Levee, LaSalle S
 ### Step 1: incantation and automatic deduction ✅
 Built as described above.
 
-### Step 2: binding clauses, vessels and the familiar
-The incantation gains a final **binding clause** that decides what kind of binding you're making. Clauses are learned through progression, not given at the start.
+### Step 2: binding clauses, vessels and the familiar ✅
+Every incantation now ends with a **binding clause** that decides what kind of binding you're making. Clauses are learned through progression:
 
-| Clause | Result |
+| Clause | Result | Learned |
+|---|---|---|
+| *of Service* | Timed servant for errands | From the start |
+| *of the Vessel* | The spirit is sealed into a tool for good | Commission 2 (The Maxwell Street Fence), which also gives a scrying glass |
+| *of the Familiar* | A companion for good that stays at your side | Commission 4 (Whispers on LaSalle Street) |
+
+**Permanent bindings must be firm.** A vessel or familiar binding that would only be uneasy breaks instead, and the spirit tears free. So the loop is: experiment with cheap service bindings until the notebook is complete, then make the permanent binding. Vessel and familiar spirits don't count against the servant limit, never run errands and never run out of patience. A spirit can only be bound in one place at a time, and binding a new spirit into a filled vessel or familiar slot releases the old one.
+
+**Vessels.** Each vessel is bought once and has a housing that caps the class it can hold. It starts at imp and is reinforced in the Workshop for $40 / $90 / $180 / $300 to reach foliot through marid; each step requires the rank just below that class. The effect scales with the class *t* of the spirit inside:
+
+| Vessel | Price | Effect with a spirit of class *t* |
+|---|---|---|
+| Scrying glass | $25 | Each dawn, records *t* unknown facts about the spirit selected in the chamber (or another known spirit), if it is at most class *t* + 1 |
+| Hooded lantern | $20 | Reveals hidden choices in districts that need lantern strength ≤ *t* |
+| Sword-cane | $30 | Turns aside ceil(*t*/2) damage from every injury |
+| Pocket watch | $60 | ceil(*t*/2) extra hours every day |
+| Signet ring | $40 | City Hall pays 25% × *t* more; reveals choices that need signet strength ≤ *t* |
+
+Lantern and signet choices are invisible until the vessel is strong enough. When they appear they're tagged, so you can tell what the vessel bought you.
+
+**Familiar.** One at a time, bound with *of the Familiar*. It never runs errands, but it is **with you in the city**, so it satisfies "needs a servant of class X" choices there. It has every ability up to its own class:
+
+| Class | Ability |
 |---|---|
-| *of Service* | Timed servant for errands (current behavior; known from the start) |
-| *of the Vessel* | The spirit is sealed into a tool |
-| *of the Familiar* | A permanent companion that stays at your side |
+| Imp | Warns which choices in the city could hurt you |
+| Foliot | Points out mistakes in the chamber that the notebook already knows about (wrong syllable, useless rune, missing rune, hated incense, circle too weak) |
+| Djinni | One less damage from every injury |
+| Afrit | Gives the odds of getting hurt in the city |
+| Marid | One extra hour every day |
 
-**Vessels (bound tools).** A vessel's effect scales with the class of the spirit inside it. To upgrade, release the spirit and bind a stronger one into the same vessel. Each vessel caps the class it can hold, so better vessels are also something to acquire. Vessel spirits are permanent and never sent on errands.
-
-| Vessel | Effect (scales with class) |
-|---|---|
-| Scrying glass | Reveals part of a spirit's requirements each day (feeds the notebook) |
-| Lantern | Shows hidden options when visiting districts |
-| Cane | Protects against harm in districts and from failed bindings |
-| Pocket watch | Extra hours in the day |
-| Signet ring | Opens doors and options with the Machine |
-
-**Familiar.** Bound with *of the Familiar*. It's permanent, but it **only follows you and helps**: it can't run errands. Anything sent out into the city is time-limited. It gives small passive help (warnings about danger in districts, noticing things, commentary in the chamber) and can be replaced by a stronger familiar later.
+The familiar is the stepping stone to step 4: the earned companion is a familiar you can't simply summon.
 
 ### Step 3: district places and current events
 Replace the random encounter draw with something more tangible:
@@ -143,9 +157,9 @@ One specific sarcastic djinni with its own story arc spread across places and ev
 
 ## Open questions
 
-- **Balance.** Economy and pacing haven't been tested in real play. The wheat tips on LaSalle Street come out slightly in the player's favor on average, and removing languages took away money sinks of $335 in total.
+- **Balance.** Economy and pacing haven't been tested in real play. The wheat tips on LaSalle Street come out slightly in the player's favor on average, and removing languages took away money sinks of $335 in total (vessels and reinforcing them add new ones). The scrying glass and pocket watch may be too strong; they're the first things to tune.
 - **Cost of guessing names.** Each attempt costs an hour and an incense. Is that the right price, or should testing a name be cheaper but riskier?
-- **Rival magicians and the Machine.** Should rivals raid your workshop, and should wards be part of step 2 or step 3?
+- **Rival magicians and the Machine.** Should rivals raid your workshop and try to steal your vessels? Wards could be a sixth vessel, or part of step 3.
 - **Rune positions.** The circle has three rune slots, but position doesn't matter yet. Placing runes at specific points is a candidate for deepening the lab puzzle later.
 - **Repeat visits.** What should happen after a spirit is bound once? Should rebinding get easier, and do spirits remember how you treated them?
 

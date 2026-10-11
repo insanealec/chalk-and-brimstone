@@ -1,6 +1,6 @@
 'use strict';
 
-const SAVE_KEY = 'chalk-and-brimstone-chicago-v1';
+const SAVE_KEY = 'chalk-and-brimstone-v2';
 const MAX_HEALTH = 10;
 const ACTIONS_PER_DAY = 3;
 const MAX_RUNES = 3;
@@ -43,7 +43,10 @@ function newState() {
     over: null, // 'dead' | 'won'
     deathCause: '',
     seenIntro: false,
-    sel: { name: 'nibbet', syllables: [], circle: 'chalk', pentacle: 'chalk', runes: [], incense: null },
+    sel: { name: 'nibbet', syllables: [], clause: 'service', circle: 'chalk', pentacle: 'chalk', runes: [], incense: null },
+    clauses: ['service'],   // binding clauses learned
+    vessels: {},            // vessel type -> { cap, spirit } for vessels you own
+    familiar: null,         // demon id of your familiar
     district: 'maxwell',    // district selected on the city map
     encounter: null,        // { district, id } awaiting a choice
     encounterResult: null,  // what happened on the last visit
@@ -60,13 +63,7 @@ function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    const saved = Object.assign(newState(), JSON.parse(raw));
-    // saves from before true names: languages and free-text observations are gone
-    delete saved.languages;
-    delete saved.observations;
-    delete saved.sel.language;
-    if (!Array.isArray(saved.sel.syllables)) saved.sel.syllables = [];
-    return saved;
+    return Object.assign(newState(), JSON.parse(raw));
   } catch (e) { /* corrupt or unavailable */ }
   return null;
 }
@@ -106,14 +103,106 @@ function grantRandomIncense(count, maxRank) {
   return Object.entries(got).map(([k, n]) => `${n} ${INCENSE[k].name.toLowerCase()}`).join(', ');
 }
 
+// ---------- bound spirits: vessels and the familiar
+
+const vesselTier = type => {
+  const v = state.vessels[type];
+  return v && v.spirit ? demonById(v.spirit).tier : 0;
+};
+const familiarTier = () => (state.familiar ? demonById(state.familiar).tier : 0);
+const maxActions = () => ACTIONS_PER_DAY + (vesselTier('watch') ? watchHours(vesselTier('watch')) : 0) + (familiarTier() >= 5 ? 1 : 0);
+
+// How a spirit is currently bound to you, as a phrase ("in your service"), or null if it is free.
+function boundPhrase(demonId) {
+  if (state.servants.some(sv => sv.demonId === demonId)) return 'in your service';
+  if (state.familiar === demonId) return 'your familiar';
+  const type = Object.keys(state.vessels).find(k => state.vessels[k].spirit === demonId);
+  return type ? `sealed in your ${VESSELS[type].name.toLowerCase()}` : null;
+}
+
+function clauseLabel(clause) {
+  return clause.startsWith('vessel:') ? `${CLAUSES.vessel.name}: ${VESSELS[clause.slice(7)].name}` : CLAUSES[clause].name;
+}
+
+function releaseVessel(type, quiet = false) {
+  const v = state.vessels[type];
+  if (!v || !v.spirit) return;
+  if (!quiet) log(`You crack the seal. ${bold(demonById(v.spirit))} unfolds from your ${VESSELS[type].name.toLowerCase()}, stretches, and leaves with a remark about the accommodations.`);
+  v.spirit = null;
+}
+
+function releaseFamiliar(quiet = false) {
+  if (!state.familiar) return;
+  if (!quiet) log(`You speak the words of parting. ${bold(demonById(state.familiar))} gives you a long look, and is gone.`);
+  state.familiar = null;
+}
+
+function reinforce(type) {
+  const v = state.vessels[type];
+  const next = v && v.cap + 1;
+  if (!v || next > 5 || rankIndex() < next - 1 || state.dollars < VESSEL_CAP_COST[next]) return;
+  state.dollars -= VESSEL_CAP_COST[next];
+  v.cap = next;
+  log(`Your ${VESSELS[type].name.toLowerCase()} is reinforced. It can now hold a ${TIER_NAMES[next].toLowerCase()}.`);
+  render();
+}
+
+// Facts about a spirit the notebook does not have yet, in notebook format.
+function unknownFacts(d) {
+  const k = dossier(d);
+  const out = [];
+  d.trueName.forEach((syl, i) => { if (!k.name[i]) out.push(`syl:${i}:${syl}`); });
+  if (k.runeCount === null) out.push(`runes:${d.runes.length}`);
+  d.runes.forEach(r => { if (!k.runeYes.includes(r)) out.push(`rune:${r}`); });
+  if (!k.likes) out.push(`likes:${d.likes}`);
+  if (!k.hates) out.push(`hates:${d.hates}`);
+  return out;
+}
+
+function factText(fact) {
+  const [t, a, b] = fact.split(':');
+  switch (t) {
+    case 'syl': return `${sylHTML(b)} is syllable ${Number(a) + 1} of its name`;
+    case 'runes': return `it is held by ${a} rune${a > 1 ? 's' : ''}`;
+    case 'rune': return `the ${RUNES[a].name} rune holds it`;
+    case 'likes': return `it likes ${INCENSE[a].name.toLowerCase()}`;
+    case 'hates': return `it hates ${INCENSE[a].name.toLowerCase()}`;
+  }
+  return fact;
+}
+
+// Each dawn the spirit in the scrying glass shows you something about the spirit selected in the chamber
+// (or another you know), as long as it is no more than one class above the spirit in the glass.
+function scry() {
+  const t = vesselTier('scrying');
+  if (!t) return;
+  const glass = demonById(state.vessels.scrying.spirit);
+  const viewable = d => isKnown(d) && d.tier <= t + 1 && unknownFacts(d).length;
+  const selected = state.sel.name && demonById(state.sel.name);
+  const d = selected && viewable(selected) ? selected : pick(knownDemons().filter(viewable));
+  if (!d) {
+    log(`The scrying glass shows ${bold(glass)} examining its fingernails. There is nothing within its reach you do not already know.`);
+    return;
+  }
+  const facts = unknownFacts(d).sort(() => Math.random() - 0.5).slice(0, t);
+  facts.forEach(f => recordFact(d.id, f));
+  log(`In the scrying glass, ${bold(glass)} shows you ${bold(d)}: ${facts.map(factText).join('; ')}.`, 'lore');
+}
+
+// Injuries are reduced by a cane's spirit and by a familiar of class 3 or more. Returns the damage taken.
 function hurt(n, cause) {
-  state.health -= n;
+  const guard = (vesselTier('cane') ? caneGuard(vesselTier('cane')) : 0) + (familiarTier() >= 3 ? 1 : 0);
+  const taken = Math.max(0, n - guard);
+  state.health -= taken;
   if (state.health <= 0) {
     state.health = 0;
     state.over = 'dead';
     state.deathCause = cause;
   }
+  return taken;
 }
+
+const hurtNote = (taken, n) => `−${taken} health${taken < n ? `, ${n - taken} turned aside` : ''}`;
 
 // ---------- lore and the notebook
 
@@ -271,8 +360,17 @@ function summonBlocker() {
   if (s.syllables.some(x => !x)) return `Speak all ${d.trueName.length} syllables of its true name.`;
   if (!s.incense) return 'Choose an incense to burn.';
   if ((state.incense[s.incense] || 0) < 1) return `You have no ${INCENSE[s.incense].name.toLowerCase()} left.`;
-  if (state.servants.some(sv => sv.demonId === s.name)) return `${d.name} is already in your service.`;
-  if (state.servants.length >= maxServants()) return `At your rank you can hold only ${maxServants()} spirit${maxServants() > 1 ? 's' : ''} at once. Dismiss one first.`;
+  const bound = boundPhrase(s.name);
+  if (bound) return `${d.name} is already ${bound}.`;
+  if (s.clause === 'service' && state.servants.length >= maxServants()) {
+    return `At your rank you can hold only ${maxServants()} servant${maxServants() > 1 ? 's' : ''} at once. Dismiss one first.`;
+  }
+  if (s.clause.startsWith('vessel:')) {
+    const type = s.clause.slice(7);
+    if (d.tier > state.vessels[type].cap) {
+      return `Your ${VESSELS[type].name.toLowerCase()} can hold nothing stronger than ${TIER_NAMES[state.vessels[type].cap].toLowerCase()}. Reinforce it in the workshop.`;
+    }
+  }
   return null;
 }
 
@@ -318,14 +416,14 @@ function resolveSummon() {
     feedback[i] === 'exact' ? `syl:${i}:${syl}` : feedback[i] === 'near' ? `at!:${syl}:${i}` : `not:${syl}`));
 
   const m = { demon: target, target, spoken, feedback, outcome: null, lines: [], greet: '', footnote: '' };
-  log(`You light the ${incName} and speak a name meant for ${bold(target)}: ${spoken.map(x => sylHTML(x)).join('·')}.`);
+  log(`You light the ${incName} and speak a name meant for ${bold(target)}: ${spoken.map(x => sylHTML(x)).join('·')}, <i>${clauseLabel(s.clause)}</i>.`);
 
   const d = DEMONS.find(x => x.trueName.join() === spoken.join());
-  if (!d || state.servants.some(sv => sv.demonId === d.id)) {
+  if (!d || boundPhrase(d.id)) {
     m.outcome = 'silence';
     m.lines.push(nameFeedback(spoken, feedback, target));
     m.lines.push(d
-      ? `${d.name} — already bound to you — flickers in the circle, irritated, and is gone.`
+      ? `${d.name} — already ${boundPhrase(d.id)} — flickers in the circle, irritated, and is gone.`
       : feedback.includes('exact') || feedback.includes('near')
         ? `Something stirs at the edge of hearing, then subsides. The ${incName} is spent.`
         : `The ${incName} smoke curls, unbothered. Nothing answers.`);
@@ -387,40 +485,66 @@ function resolveSummon() {
     const score = incMod - wrong.length + circleBonus;
     m.outcome = score >= 2 ? 'firm' : score >= 0 ? 'uneasy' : 'broken';
   }
+  const vesselType = s.clause.startsWith('vessel:') ? s.clause.slice(7) : null;
+  if (m.outcome !== 'broken' && vesselType && d.tier > state.vessels[vesselType].cap) {
+    m.lines.push(`Your ${VESSELS[vesselType].name.toLowerCase()} was never meant to hold a spirit of this power. It rings like a struck bell, and ${d.name} is out.`);
+    m.outcome = 'broken';
+  } else if (m.outcome === 'uneasy' && s.clause !== 'service') {
+    m.lines.push(`A binding ${clauseLabel(s.clause).split(':')[0]} must be perfect. This one is not, and ${d.name} tears free of it.`);
+    m.outcome = 'broken';
+  }
 
   if (m.outcome === 'broken') {
     const safe = pent.tier >= d.tier;
     const dmg = safe ? Math.ceil(d.tier / 2) : d.tier * 2 + 1;
+    const taken = hurt(dmg, `torn apart by ${d.name}, who slipped a faulty binding`);
     m.lines.push(safe
-      ? `The binding fails. ${d.name} hurls itself at you and breaks against your ${pent.name}. It settles for a parting blast of essence (−${dmg} health) and flees into the night.`
-      : `The binding fails. ${d.name} comes for you, and your ${pent.name} is nowhere near strong enough. (−${dmg} health)`);
+      ? `The binding fails. ${d.name} hurls itself at you and breaks against your ${pent.name}. It settles for a parting blast of essence (${hurtNote(taken, dmg)}) and flees into the night.`
+      : `The binding fails. ${d.name} comes for you, and your ${pent.name} is nowhere near strong enough. (${hurtNote(taken, dmg)})`);
     const q = pick(BROKEN_QUIPS);
     m.greet = fill(q.greet, { name: d.name });
     m.footnote = q.footnote;
-    hurt(dmg, `torn apart by ${d.name}, who slipped a faulty binding`);
-    log(`The binding failed. ${bold(d)} broke free. (−${dmg} health)`, 'bad');
+    log(`The binding failed. ${bold(d)} broke free. (${hurtNote(taken, dmg)})`, 'bad');
     return m;
   }
 
-  const servant = {
-    uid: state.nextUid++, demonId: d.id, binding: m.outcome,
-    patience: PATIENCE[d.tier] + (m.outcome === 'firm' ? 2 : 0),
-    pentTier: pent.tier, errand: null,
-  };
-  if (m.outcome === 'uneasy' && pent.tier < d.tier && Math.random() < 0.35) {
-    m.lines.push(`Before submitting, ${d.name} tests the edge of your pentacle — and finds it wanting. (−${d.tier} health)`);
-    hurt(d.tier, `scorched by ${d.name}, testing a pentacle too weak to hold it`);
-  }
-  m.lines.push(m.outcome === 'firm'
-    ? `The binding holds firm. ${d.name} is yours to command — for now.`
-    : `The binding holds, barely. ${d.name} strains against it, watching for a mistake.`);
   m.greet = d.greet;
   m.footnote = d.footnote;
-  log(`${bold(d)} is bound ${m.outcome === 'firm' ? 'firmly' : 'uneasily'} to your service.`, 'good');
-  if (!state.over) {
-    state.servants.push(servant);
-    checkBindCommission(d);
+  if (s.clause === 'service') {
+    if (m.outcome === 'uneasy' && pent.tier < d.tier && Math.random() < 0.35) {
+      const taken = hurt(d.tier, `scorched by ${d.name}, testing a pentacle too weak to hold it`);
+      m.lines.push(`Before submitting, ${d.name} tests the edge of your pentacle \u2014 and finds it wanting. (${hurtNote(taken, d.tier)})`);
+    }
+    m.lines.push(m.outcome === 'firm'
+      ? `The binding holds firm. ${d.name} is yours to command \u2014 for now.`
+      : `The binding holds, barely. ${d.name} strains against it, watching for a mistake.`);
+    log(`${bold(d)} is bound ${m.outcome === 'firm' ? 'firmly' : 'uneasily'} to your service.`, 'good');
+    if (!state.over) {
+      state.servants.push({
+        uid: state.nextUid++, demonId: d.id, binding: m.outcome,
+        patience: PATIENCE[d.tier] + (m.outcome === 'firm' ? 2 : 0),
+        pentTier: pent.tier, errand: null,
+      });
+    }
+  } else if (s.clause === 'familiar') {
+    if (state.familiar) {
+      log(`${bold(demonById(state.familiar))} is released to make room, and leaves without a backward glance.`);
+      releaseFamiliar(true);
+    }
+    state.familiar = d.id;
+    m.lines.push(`The binding holds, perfectly. The circle fades, and ${d.name} steps out of it to take its place at your side. It is your familiar now, for good.`);
+    log(`${bold(d)} is bound as your familiar.`, 'good');
+  } else {
+    const v = state.vessels[vesselType];
+    if (v.spirit) {
+      log(`${bold(demonById(v.spirit))} is released from your ${VESSELS[vesselType].name.toLowerCase()} to make room.`);
+      releaseVessel(vesselType, true);
+    }
+    v.spirit = d.id;
+    m.lines.push(`The binding holds, perfectly. ${d.name} folds itself smaller and smaller and is drawn into your ${VESSELS[vesselType].name.toLowerCase()}, protesting all the way.`);
+    log(`${bold(d)} is sealed in your ${VESSELS[vesselType].name.toLowerCase()}.`, 'good');
   }
+  if (!state.over) checkBindCommission(d);
   return m;
 }
 
@@ -497,8 +621,8 @@ function twist(d) {
     state.dollars -= amt;
     log(fill(t.text, { ...vars, amt }), 'bad');
   } else if (t.effect === 'hurt') {
-    log(fill(t.text, vars) + ' (−1 health)', 'bad');
-    hurt(1, `a fall arranged by ${d.name}`);
+    const taken = hurt(1, `a fall arranged by ${d.name}`);
+    log(`${fill(t.text, vars)} (${hurtNote(taken, 1)})`, 'bad');
   } else if (t.effect === 'incense') {
     const owned = Object.keys(state.incense).filter(k => state.incense[k] > 0);
     if (!owned.length) return log(fill(TWISTS[3].text, vars), 'bad');
@@ -526,8 +650,8 @@ function expire(sv) {
     return;
   }
   const dmg = sv.pentTier >= d.tier ? Math.ceil(d.tier / 2) : d.tier;
-  log(`${bold(d)} has strained against its bonds too long. They snap — and it leaves you a parting gift. (−${dmg} health)`, 'bad');
-  hurt(dmg, `ambushed by ${d.name}, whose bonds were left to fray`);
+  const taken = hurt(dmg, `ambushed by ${d.name}, whose bonds were left to fray`);
+  log(`${bold(d)} has strained against its bonds too long. They snap — and it leaves you a parting gift. (${hurtNote(taken, dmg)})`, 'bad');
 }
 
 function endDay() {
@@ -547,8 +671,10 @@ function endDay() {
   if (!state.over) {
     state.health = Math.min(MAX_HEALTH, state.health + 1);
     state.day++;
-    state.actions = ACTIONS_PER_DAY;
+    state.actions = maxActions();
     log(`Day ${state.day} dawns.`, 'info');
+    scry();
+    if (state.familiar && Math.random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
   }
   manifestation = null;
   render();
@@ -557,6 +683,8 @@ function endDay() {
 // ---------- commissions
 
 const currentCommission = () => COMMISSIONS[state.commission] || null;
+// a signet ring with a spirit in it makes City Hall more generous
+const commissionPay = c => Math.round(c.pay * (1 + 0.25 * vesselTier('ring')));
 
 function checkBindCommission(d) {
   const c = currentCommission();
@@ -565,11 +693,20 @@ function checkBindCommission(d) {
 
 function completeCommission() {
   const c = currentCommission();
-  state.dollars += c.pay;
+  const pay = commissionPay(c);
+  state.dollars += pay;
   state.commission++;
   state.servants.forEach(s => { if (s.errand === 'commission') s.errand = null; });
-  log(`<b>Commission complete: ${c.title}.</b> ${c.done} (+${c.rep} reputation, +$${c.pay})`, 'good');
+  log(`<b>Commission complete: ${c.title}.</b> ${c.done} (+${c.rep} reputation, +$${pay})`, 'good');
   gainRep(c.rep);
+  if (c.gift && !state.vessels[c.gift]) {
+    state.vessels[c.gift] = { cap: VESSELS[c.gift].cap, spirit: null };
+    log(`You now own a ${VESSELS[c.gift].name.toLowerCase()}. See the workshop.`, 'good');
+  }
+  if (c.teaches && !state.clauses.includes(c.teaches)) {
+    state.clauses.push(c.teaches);
+    log(`You have learned the Clause ${CLAUSES[c.teaches].name}. ${CLAUSES[c.teaches].desc}`, 'good');
+  }
   if (c.win) state.over = 'won';
 }
 
@@ -611,11 +748,29 @@ function choiceBlocker(ch) {
   if (ch.cost && state.dollars < ch.cost) return `You need $${ch.cost}.`;
   if (r.dollars && state.dollars < r.dollars) return `You need $${r.dollars}.`;
   if (r.rank && rankIndex() < r.rank) return `Requires the rank of ${RANKS[r.rank].name}.`;
-  if (r.servantTier && !state.servants.some(sv => demonById(sv.demonId).tier >= r.servantTier)) {
-    return `Requires a bound ${TIER_NAMES[r.servantTier]} or stronger.`;
+  // your familiar is at your side, so it counts as well as servants
+  if (r.servantTier && familiarTier() < r.servantTier && !state.servants.some(sv => demonById(sv.demonId).tier >= r.servantTier)) {
+    return `Requires a servant or familiar: ${TIER_NAMES[r.servantTier]} or stronger.`;
   }
   if (r.known && !isKnown(demonById(r.known))) return 'You would need to know what it is.';
   return null;
+}
+
+// Lantern and signet choices are invisible until the vessel holds a strong enough spirit.
+function choiceHidden(ch) {
+  const r = ch.req || {};
+  return Boolean((r.lantern && vesselTier('lantern') < r.lantern) || (r.ring && vesselTier('ring') < r.ring));
+}
+
+// A familiar warns about choices that can hurt you; a strong one tells you the odds.
+function familiarWarning(ch) {
+  const ft = familiarTier();
+  if (!ft) return '';
+  const total = ch.outcomes.reduce((a, o) => a + o.w, 0);
+  const risk = ch.outcomes.filter(o => o.fx.health < 0).reduce((a, o) => a + o.w, 0) / total;
+  if (!risk) return '';
+  const fam = demonById(state.familiar).name;
+  return ft >= 4 ? `${fam}: ${Math.round(risk * 100)}% chance this hurts` : `${fam} looks uneasy about this`;
 }
 
 function chooseOption(i) {
@@ -623,7 +778,7 @@ function chooseOption(i) {
   if (!cur || state.over) return;
   const { dist, enc } = cur;
   const ch = enc.choices[i];
-  if (!ch || choiceBlocker(ch)) return;
+  if (!ch || choiceHidden(ch) || choiceBlocker(ch)) return;
 
   if (ch.cost) state.dollars -= ch.cost;
   let roll = Math.random() * ch.outcomes.reduce((a, o) => a + o.w, 0);
@@ -704,8 +859,7 @@ function applyEffects(fx, cause) {
     state.health = Math.min(MAX_HEALTH, state.health + fx.health);
     if (state.health > before) notes.push(`+${state.health - before} health`);
   } else if (fx.health < 0) {
-    notes.push(`−${-fx.health} health`);
-    hurt(-fx.health, cause);
+    notes.push(hurtNote(hurt(-fx.health, cause), -fx.health));
   }
   return { notes, frags };
 }
@@ -731,6 +885,9 @@ function buy(kind, id, qty = 1) {
           state.dollars += price;
         }
       }; break;
+    case 'vessel': ({ price, rank } = VESSELS[id]);
+      if (state.vessels[id]) return;
+      apply = () => { state.vessels[id] = { cap: VESSELS[id].cap, spirit: null }; }; break;
     case 'poultice': price = 6; rank = 0;
       apply = () => { state.health = Math.min(MAX_HEALTH, state.health + 2); }; break;
     default: return;
@@ -757,7 +914,7 @@ function render() {
 function renderStats() {
   const hearts = Array.from({ length: MAX_HEALTH }, (_, i) => `<span class="heart ${i < state.health ? 'full' : ''}"></span>`).join('');
   $('#stats').innerHTML = `
-    <div class="stat"><span class="k">Day</span><span class="v">${state.day} · ${HOUR_NAMES[state.actions]}</span></div>
+    <div class="stat"><span class="k">Day</span><span class="v">${state.day} · ${HOUR_NAMES[Math.ceil(state.actions / maxActions() * 3)]}</span></div>
     <div class="stat"><span class="k">Hours left</span><span class="v">${state.actions}</span></div>
     <div class="stat"><span class="k">Dollars</span><span class="v">$${state.dollars}</span></div>
     <div class="stat"><span class="k">Health</span><span class="v hearts" title="${state.health}/${MAX_HEALTH}">${hearts}</span></div>
@@ -779,7 +936,7 @@ function renderTabs() {
 }
 
 function renderView() {
-  const views = { chamber: viewChamber, city: viewCity, journal: viewJournal, servants: viewServants, market: viewMarket, cityhall: viewCityHall };
+  const views = { chamber: viewChamber, city: viewCity, journal: viewJournal, servants: viewServants, workshop: viewWorkshop, market: viewMarket, cityhall: viewCityHall };
   $('#view').innerHTML = views[currentTab]();
 }
 
@@ -811,6 +968,7 @@ function viewChamber() {
     <div class="controls panel">
       ${ctl('Spirit to call', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join(''))}
       ${d ? incantationHTML(d) : ''}
+      ${clauseHTML()}
       ${ctl('Summoning circle', CIRCLES.filter(c => state.circles.includes(c.id)).map(c =>
         chip('circle', c.id, `${c.name}<small>holds up to ${TIER_NAMES[c.tier]}</small>`, s.circle === c.id)).join(''))}
       ${ctl('Your pentacle', PENTACLES.filter(p => state.pentacles.includes(p.id)).map(p =>
@@ -822,9 +980,47 @@ function viewChamber() {
         chip('incense', k, `${INCENSE[k].name}<small>×${state.incense[k]}</small>`, s.incense === k, state.incense[k] < 1)).join(''))}
       <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Speak the summons <small>(1 hour)</small></button>
       <p class="hint">${busy ? 'The air grows thick…' : blocker || 'Speak carefully.'}</p>
+      ${d && !busy ? familiarAdvice(d) : ''}
       ${d ? `<div class="notes"><h3>Notebook: ${d.name}</h3>${demonNotes(d, false)}</div>` : ''}
     </div>
   </div>`;
+}
+
+// The last part of the incantation: what kind of binding this is.
+function clauseHTML() {
+  const s = state.sel;
+  const options = [chip('clause', 'service', `${CLAUSES.service.name}<small>servant ${state.servants.length}/${maxServants()}</small>`, s.clause === 'service')];
+  if (state.clauses.includes('vessel')) {
+    Object.keys(VESSELS).filter(k => state.vessels[k]).forEach(k => {
+      const v = state.vessels[k];
+      const inside = v.spirit ? `holds ${demonById(v.spirit).name}` : 'empty';
+      options.push(chip('clause', `vessel:${k}`, `${CLAUSES.vessel.name}: ${VESSELS[k].name}<small>${inside} \u00b7 up to ${TIER_NAMES[v.cap]}</small>`, s.clause === `vessel:${k}`));
+    });
+  }
+  if (state.clauses.includes('familiar')) {
+    const current = state.familiar ? `replaces ${demonById(state.familiar).name}` : 'none yet';
+    options.push(chip('clause', 'familiar', `${CLAUSES.familiar.name}<small>${current}</small>`, s.clause === 'familiar'));
+  }
+  const kind = s.clause.startsWith('vessel:') ? 'vessel' : s.clause;
+  return `<div class="ctl"><h3>Binding clause</h3><div class="chips">${options.join('')}</div>
+    <p class="muted small clause-desc">${CLAUSES[kind].desc}</p></div>`;
+}
+
+// A familiar of class 2 or more points out mistakes the notebook already knows about.
+function familiarAdvice(d) {
+  if (familiarTier() < 2) return '';
+  const s = state.sel;
+  const k = dossier(d);
+  const notes = [];
+  s.syllables.forEach((syl, i) => {
+    if (syl && (k.absent.has(syl) || (k.name[i] && k.name[i] !== syl))) notes.push(`${sylHTML(syl, 'none')} does not go there`);
+  });
+  if (circleById(s.circle).tier < d.tier) notes.push(`that circle will not hold a ${TIER_NAMES[d.tier].toLowerCase()}`);
+  s.runes.forEach(r => { if (k.runeNo.includes(r)) notes.push(`the ${RUNES[r].name} rune does nothing for it`); });
+  k.runeYes.forEach(r => { if (!s.runes.includes(r)) notes.push(`you have left out the ${RUNES[r].name} rune`); });
+  if (s.incense && s.incense === k.hates) notes.push(`it hates ${INCENSE[s.incense].name.toLowerCase()}`);
+  if (!notes.length) return '';
+  return `<p class="familiar-says"><b>${demonById(state.familiar).name}</b> clears its throat: ${notes.join('; ')}.</p>`;
 }
 
 // The true-name builder: one slot per syllable, and a palette of syllables colored by what the notebook knows.
@@ -995,9 +1191,13 @@ function encounterHTML({ dist, enc }) {
     <p>${enc.text}</p>
     <div class="choices">
       ${enc.choices.map((ch, i) => {
+        if (choiceHidden(ch)) return '';
         const blocker = choiceBlocker(ch);
-        return `<button class="choice" data-action="choose" data-value="${i}" ${blocker ? 'disabled' : ''}>
-          <span>${ch.label}</span>${ch.cost && !ch.label.includes('$') ? `<small class="cost">$${ch.cost}</small>` : ''}
+        const warning = familiarWarning(ch);
+        const via = ch.req && ch.req.lantern ? 'lantern' : ch.req && ch.req.ring ? 'signet' : '';
+        return `<button class="choice ${via ? 'revealed' : ''}" data-action="choose" data-value="${i}" ${blocker ? 'disabled' : ''}>
+          <span>${ch.label}</span>${via ? `<small class="via">${via}</small>` : ''}${ch.cost && !ch.label.includes('$') ? `<small class="cost">$${ch.cost}</small>` : ''}
+          ${warning ? `<small class="risk">⚠ ${warning}</small>` : ''}
           ${blocker ? `<small class="why">${blocker}</small>` : ''}
         </button>`;
       }).join('')}
@@ -1147,6 +1347,74 @@ function viewServants() {
   </div>`;
 }
 
+// ---- workshop
+
+function viewWorkshop() {
+  return `
+  <div class="workshop">
+    <div class="panel">
+      <h2>The Workshop</h2>
+      <p>Spirits bound here are yours for good. Vessels and familiars never run errands and never run out of patience, but binding one takes a firm, perfect binding.</p>
+      <p class="muted small">Clauses you know: ${state.clauses.map(c => `<i>${CLAUSES[c].name}</i>`).join(', ')}.</p>
+    </div>
+    <h2 class="section-title">Familiar</h2>
+    ${familiarCard()}
+    <h2 class="section-title">Vessels</h2>
+    ${!state.clauses.includes('vessel') ? '<p class="muted">You have not learned the Clause of the Vessel, so these are only curios for now.</p>' : ''}
+    <div class="cards">${Object.keys(VESSELS).filter(k => state.vessels[k]).map(vesselCard).join('')
+      || '<p class="muted">You own no vessels. Wabash Avenue sells them.</p>'}</div>
+  </div>`;
+}
+
+function familiarCard() {
+  if (!state.clauses.includes('familiar')) {
+    return '<p class="muted">You have not learned the Clause of the Familiar. City Hall may have reason to teach it to you, in time.</p>';
+  }
+  const fam = state.familiar && demonById(state.familiar);
+  const ft = familiarTier();
+  return `<article class="panel card familiar">
+    <header><h3>${fam ? fam.name : 'No familiar yet'}</h3>${fam ? `<span class="tag">${TIER_NAMES[fam.tier]}</span>` : ''}</header>
+    <p class="muted">${fam ? `Appears as ${fam.form}. It goes everywhere with you, and counts as a servant at your side in the city.`
+      : 'Bind one in the chamber with the Clause of the Familiar. A stronger spirit makes a more useful familiar.'}</p>
+    <ul class="abilities">
+      ${FAMILIAR_ABILITIES.map(a => `<li class="${a.tier <= ft ? 'on' : ''}"><span class="tag">${TIER_NAMES[a.tier]}</span>${a.text}</li>`).join('')}
+    </ul>
+    <div class="row-btns">
+      <button class="ghost" data-action="bind-into" data-value="familiar">${fam ? 'Bind a stronger familiar' : 'Bind a familiar'}</button>
+      ${fam ? `<button class="ghost" data-action="release-familiar">Release ${fam.name}</button>` : ''}
+    </div>
+  </article>`;
+}
+
+function vesselCard(type) {
+  const v = state.vessels[type];
+  const def = VESSELS[type];
+  const sp = v.spirit && demonById(v.spirit);
+  const t = sp ? sp.tier : 0;
+  const next = v.cap + 1;
+  let reinforceBtn = '';
+  if (next <= 5) {
+    reinforceBtn = rankIndex() >= next - 1
+      ? `<button data-action="reinforce" data-value="${type}" ${state.dollars < VESSEL_CAP_COST[next] ? 'disabled' : ''}>Reinforce to hold ${TIER_NAMES[next].toLowerCase()}s · $${VESSEL_CAP_COST[next]}</button>`
+      : `<span class="locked">Reinforce: ${RANKS[next - 1].name}</span>`;
+  }
+  const studying = type === 'scrying' && sp
+    ? `<p class="muted small">Studying ${state.sel.name ? demonById(state.sel.name).name : 'nothing'}: whichever spirit is selected in the chamber.</p>` : '';
+  return `<article class="panel card vessel ${sp ? 'filled' : ''}">
+    <header><h3>${def.name}</h3><span class="tag">holds up to ${TIER_NAMES[v.cap]}</span></header>
+    <p class="muted small">${def.desc}</p>
+    ${sp ? `<p><b>${sp.name}</b> (${TIER_NAMES[t].toLowerCase()}) is sealed inside. ${def.effect(t)}</p>`
+      : `<p>Empty. With an imp inside: ${def.effect(1)}</p>`}
+    ${sp && t < 5 ? `<p class="muted small">With a ${TIER_NAMES[t + 1].toLowerCase()} inside: ${def.effect(t + 1)}</p>` : ''}
+    ${studying}
+    <div class="row-btns">
+      ${state.clauses.includes('vessel') ? `<button class="ghost" data-action="bind-into" data-value="vessel:${type}">${sp ? 'Bind a stronger spirit' : 'Bind a spirit into it'}</button>` : ''}
+      ${sp ? `<button class="ghost" data-action="release-vessel" data-value="${type}">Release ${sp.name}</button>` : ''}
+      ${reinforceBtn}
+    </div>
+  </article>`;
+}
+
 // ---- market
 
 function shopRow(name, desc, price, rank, owned, buyAttrs, extra = '') {
@@ -1165,6 +1433,7 @@ function viewMarket() {
   const circles = CIRCLES.filter(c => c.price).map(c => shopRow(`${c.name} <small>holds up to ${TIER_NAMES[c.tier]}</small>`, c.desc, c.price, c.rank, state.circles.includes(c.id), `circle:${c.id}`)).join('');
   const pents = PENTACLES.filter(p => p.price).map(p => shopRow(`${p.name} <small>shields from ${TIER_NAMES[p.tier]}</small>`, p.desc, p.price, p.rank, state.pentacles.includes(p.id), `pentacle:${p.id}`)).join('');
   const runes = Object.entries(RUNES).filter(([, r]) => r.price).map(([k, r]) => shopRow(`<span class="glyph">${r.glyph}</span> Primer of the ${r.name}`, 'Teaches you to inscribe the rune.', r.price, r.rank, state.runes.includes(k), `rune:${k}`)).join('');
+  const vessels = Object.entries(VESSELS).map(([k, v]) => shopRow(`${v.name} <small>holds up to ${TIER_NAMES[v.cap]}</small>`, v.desc, v.price, v.rank, !!state.vessels[k], `vessel:${k}`)).join('');
   return `
   <div class="market">
     <section class="panel"><h2>Hobb &amp; Daughters, Maxwell Street</h2><p class="muted">Incense, candles, and no questions.</p>${incense}</section>
@@ -1173,6 +1442,7 @@ function viewMarket() {
       ${runes}
     </section>
     <section class="panel"><h2>The South Branch Foundries</h2><p class="muted">Circles for your spirits; pentacles for yourself.</p>${circles}${pents}</section>
+    <section class="panel"><h2>Curiosities of Wabash Avenue</h2><p class="muted">Vessels for spirits. ${state.clauses.includes('vessel') ? 'Bind a spirit into one with the Clause of the Vessel.' : 'Of little use until you learn the Clause of the Vessel.'}</p>${vessels}</section>
     <section class="panel"><h2>The Apothecary</h2>
       ${shopRow('Poultice of comfrey and gunpowder', 'Restores 2 health. Smells alarming.', 6, 0, false, 'poultice:x')}
     </section>
@@ -1193,7 +1463,7 @@ function viewCityHall() {
   <div class="cityhall">
     <section class="panel">
       <h2>City Hall</h2>
-      ${c ? `<h3>${c.title}</h3><p>${c.text}</p><p>${req}</p><p class="muted">Reward: ${c.rep} reputation, $${c.pay}.</p>`
+      ${c ? `<h3>${c.title}</h3><p>${c.text}</p><p>${req}</p><p class="muted">Reward: ${c.rep} reputation, $${commissionPay(c)}${c.gift ? `, a ${VESSELS[c.gift].name.toLowerCase()}` : ''}${c.teaches ? `, and the Clause ${CLAUSES[c.teaches].name}` : ''}.</p>`
           : '<p>City Hall has nothing further to ask of you. It is, frankly, a little afraid of you.</p>'}
     </section>
     <section class="panel"><h2>Ranks</h2><ol class="ladder">${ladder}</ol></section>
@@ -1214,6 +1484,7 @@ function renderOverlay() {
       <ul>
         <li>Learn spirits’ <b>true names</b> and what binds them in the <b>Journal</b>.</li>
         <li>In the <b>Chamber</b>, speak a spirit’s <b>true name</b> syllable by syllable, and set out the right circle, runes and incense. Every failure teaches you something, and your notebook fills itself in.</li>
+        <li>In time you will learn to seal spirits into <b>vessels</b>, tools that grow stronger with a stronger spirit inside, and to bind a <b>familiar</b> that stays at your side.</li>
         <li>Bound spirits run <b>errands</b> overnight: coin, stolen incense, secrets.</li>
         <li>Complete <b>City Hall</b> commissions to rise through the Machine and unlock stronger circles, rarer incense and new parts of the city.</li>
         <li>A failed binding sets the spirit loose. Only your <b>pentacle</b> stands between you and it.</li>
@@ -1283,6 +1554,14 @@ document.addEventListener('click', e => {
     case 'slot': if (!busy) { state.sel.syllables[Number(el.dataset.value)] = null; render(); } break;
     case 'end-day': endDay(); break;
     case 'study': study(); break;
+    case 'reinforce': reinforce(el.dataset.value); break;
+    case 'release-vessel': releaseVessel(el.dataset.value); render(); break;
+    case 'release-familiar': releaseFamiliar(); render(); break;
+    case 'bind-into':
+      state.sel.clause = el.dataset.value;
+      currentTab = 'chamber';
+      render();
+      break;
     case 'visit': visitDistrict(el.dataset.value); break;
     case 'choose': chooseOption(Number(el.dataset.value)); break;
     case 'dismiss': dismiss(Number(el.dataset.value)); break;

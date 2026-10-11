@@ -358,6 +358,31 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 #log .fx { font-size: 0.95em; }
 .badge.alert { background: var(--ember); color: #1a1008; }
 
+.choice .via { color: var(--lore); font-style: italic; font-size: 0.8em; }
+.choice.revealed { border-color: #5a4a8a; background: #221d2c; }
+.choice .risk { flex-basis: 100%; color: var(--ember); font-size: 0.85em; }
+
+/* ---------- clauses, familiar, workshop */
+
+.clause-desc { margin: 0.35rem 0 0; }
+.familiar-says {
+  font-size: 0.92rem;
+  font-style: italic;
+  border-left: 2px solid var(--lore);
+  padding: 0.2rem 0 0.2rem 0.6rem;
+  margin: 0 0 0.6rem;
+}
+.section-title { margin: 1.2rem 0 0.6rem; }
+.workshop .cards { margin-top: 0; }
+.card.familiar { max-width: 640px; border-top: 2px solid var(--lore); }
+.card.vessel.filled { border-top: 2px solid var(--gold); }
+.abilities { list-style: none; padding: 0; margin: 0.4rem 0 0.6rem; }
+.abilities li { display: flex; gap: 0.6rem; align-items: baseline; color: var(--dim); margin-bottom: 0.3rem; font-size: 0.92rem; }
+.abilities li .tag { min-width: 5.2em; text-align: center; }
+.abilities li.on { color: var(--text); }
+.abilities li.on .tag { color: var(--lore); border-color: #5a4a8a; }
+.row-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-top: 0.6rem; }
+
 /* ---------- journal / servants / cards */
 
 .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }

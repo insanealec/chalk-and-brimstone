@@ -3,6 +3,7 @@
 // Encounter choices may have:
 //   cost      dollars paid up front
 //   req       { rank, servantTier, known } needed to pick it (known: a spirit you have heard of)
+//             { lantern, ring } hide the choice entirely unless that vessel holds a spirit of at least this class
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
 //
 // Outcome effects (fx):
@@ -34,6 +35,9 @@ const DISTRICTS = [
             { w: 5, text: 'After ten minutes of theatrical outrage on both sides, you walk away with two sacks for three dollars.', fx: { dollars: -3, incenseRandom: [2, 1] } },
             { w: 5, text: 'He takes your offer as a personal insult to his mother, his village and his incense. No sale.', fx: {} },
           ] },
+          { label: 'Hold your lantern to the sacks', cost: 6, req: { lantern: 1 }, outcomes: [
+            { w: 1, text: 'In the lantern\u2019s light one sack glows faintly: genuine stock. You buy that one.', fx: { incenseRandom: [4, 2] } },
+          ] },
           { label: 'Walk on', outcomes: [{ w: 1, text: 'You leave the peddler to his next mark.', fx: {} }] },
         ],
       },
@@ -58,6 +62,9 @@ const DISTRICTS = [
           { label: 'Snap a binding word at it', outcomes: [
             { w: 6, text: 'It freezes mid-step, then grins. "Fair cop." It returns your purse and sweetens the deal with a little gossip.', fx: { lore: [1, 2] } },
             { w: 4, text: 'Your Latin is a fraction too slow. It bites your hand and is gone.', fx: { robbed: [3, 6], health: -1 } },
+          ] },
+          { label: 'Catch its true shape in your lantern', req: { lantern: 1 }, outcomes: [
+            { w: 1, text: 'The light pins the imp in its real shape, mid-step and mortified. It hands back your purse, adds a coin for its dignity, and talks.', fx: { dollars: 4, lore: [1, 2] } },
           ] },
           { label: 'Let it go', outcomes: [{ w: 1, text: 'You decide it isn’t worth the trouble. The imp agrees, and waves.', fx: { robbed: [3, 6] } }] },
         ],
@@ -91,6 +98,9 @@ const DISTRICTS = [
           { label: 'Bet $20', cost: 20, outcomes: [
             { w: 45, text: 'You win, loudly. Several people remember your face.', fx: { dollars: 40 } },
             { w: 55, text: 'The dealer sweeps your money away with a sympathetic smile.', fx: {} },
+          ] },
+          { label: 'Open your lantern on the dealing box', req: { lantern: 2 }, outcomes: [
+            { w: 1, text: 'The imp in the box shrieks in the light. The dealer pays you a good deal to close the shutter and leave.', fx: { dollars: [15, 25] } },
           ] },
           { label: 'Watch the dealer instead', outcomes: [
             { w: 5, text: 'On the third hand you see it: an imp curled in the dealing box, whispering the cards. For a dollar, it whispers other things too.', fx: { dollars: -1, lore: [1, 2] } },
@@ -148,6 +158,9 @@ const DISTRICTS = [
         id: 'toughs', title: 'Three Men in an Alley',
         text: 'Three toughs step out of an alley off Custom House Place. One of them is holding a lead pipe and a very old grudge against magicians.',
         choices: [
+          { label: 'Show them the Machine\u2019s signet', req: { ring: 1 }, outcomes: [
+            { w: 1, text: 'They see the ring and melt back into the alley, apologizing to your boots.', fx: {} },
+          ] },
           { label: 'Hand over your purse', outcomes: [{ w: 1, text: 'They take it and leave, almost politely.', fx: { robbed: [5, 15] } }] },
           { label: 'Fight', outcomes: [
             { w: 4, text: 'You shout a word that is not actually magic. They flee anyway.', fx: {} },
@@ -170,6 +183,9 @@ const DISTRICTS = [
         id: 'tip', title: 'A Tip on Wheat',
         text: 'A broker on the steps of the Board of Trade grabs your sleeve. He has a tip on wheat futures, and the frantic eyes of a man whose imp has been reading other people’s telegrams.',
         choices: [
+          { label: 'Ask the Machine\u2019s friends on the floor instead', req: { ring: 1 }, outcomes: [
+            { w: 1, text: 'A man with a ring like yours murmurs a better tip than the broker\u2019s. It pays.', fx: { dollars: [25, 35] } },
+          ] },
           { label: 'Invest $20', cost: 20, outcomes: [
             { w: 5, text: 'Wheat goes up. Your money comes back fatter.', fx: { dollars: 45 } },
             { w: 5, text: 'Wheat goes down, and your twenty dollars go with it.', fx: {} },
@@ -202,6 +218,9 @@ const DISTRICTS = [
           { label: 'Bribe the doorman', cost: 12, outcomes: [
             { w: 7, text: 'He looks the other way for exactly one hour. You use it well.', fx: { lore: r => [r, r + 2] } },
             { w: 3, text: 'He takes the money and does not look the other way.', fx: {} },
+          ] },
+          { label: 'Show your signet to the doorman', req: { ring: 2 }, outcomes: [
+            { w: 1, text: 'The doorman bows. Friends of the Machine are always members.', fx: { lore: r => [r, r + 2] } },
           ] },
           { label: 'Present yourself as a member', req: { rank: 2 }, outcomes: [
             { w: 1, text: 'An alderman of the Machine is always expected. The librarian finds you something rare.', fx: { lore: r => [r, r + 1] } },
@@ -269,6 +288,9 @@ const DISTRICTS = [
             { w: 6, text: 'Two spirits, gossiping about their masters. You learn more than they meant to say.', fx: { lore: [2, 3] } },
             { w: 4, text: 'They notice you listening.', fx: { health: -2 } },
           ] },
+          { label: 'Unshutter your lantern and look properly', req: { lantern: 2 }, outcomes: [
+            { w: 1, text: 'The spirits at the drains freeze in the light like rats in a kitchen, and you take your time reading them.', fx: { lore: [2, 4] } },
+          ] },
           { label: 'Leave quickly', outcomes: [{ w: 1, text: 'Wise.', fx: {} }] },
         ],
       },
@@ -325,6 +347,9 @@ const DISTRICTS = [
             { w: 6, text: 'The warnings are about an afrit. They are very specific.', fx: { loreDemon: 'ulgaroth' } },
             { w: 4, text: 'The guard wakes up and throws you out by the collar.', fx: { health: -1 } },
           ] },
+          { label: 'Read the inscription only the lantern shows', req: { lantern: 3 }, outcomes: [
+            { w: 1, text: 'Under the carved warnings is a second inscription, written in light. It was meant for magicians.', fx: { lore: [3, 5] } },
+          ] },
           { label: 'Move along', outcomes: [{ w: 1, text: 'Something in the sarcophagus shifts as you leave.', fx: {} }] },
         ],
       },
@@ -342,6 +367,9 @@ const DISTRICTS = [
           { label: 'Look into the water with your second sight', outcomes: [
             { w: 6, text: 'Far below, something vast turns over in its sleep. You feel its name before you hear it.', fx: { loreDemon: 'shemashara' } },
             { w: 4, text: 'Something looks back.', fx: { health: -3 } },
+          ] },
+          { label: 'Lower your bound lantern instead', req: { lantern: 4 }, outcomes: [
+            { w: 1, text: 'The spirit in your lantern goes down without fear and comes back with something the lake did not mean to give.', fx: { loreDemon: 'shemashara' } },
           ] },
           { label: 'Pull the lantern up', outcomes: [{ w: 1, text: 'The lantern comes up wet, though it never touched the water.', fx: {} }] },
         ],
