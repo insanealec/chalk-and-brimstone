@@ -43,7 +43,8 @@ function newState() {
     over: null, // 'dead' | 'won'
     deathCause: '',
     seenIntro: false,
-    sel: { name: 'nibbet', syllables: [], clause: 'service', circle: 'chalk', pentacle: 'chalk', runes: [], incense: null },
+    sel: { name: 'nibbet', syllables: [], clause: 'service', circle: 'chalk', pentacle: 'chalk', runes: [], incense: null, overreach: false, brace: [] },
+    familiarOut: { own: 0, ithzar: 0 },  // day each familiar is back from bracing a circle
     clauses: ['service'],   // binding clauses learned
     vessels: {},            // vessel type -> { cap, spirit } for vessels you own
     familiar: null,         // demon id of your familiar
@@ -71,6 +72,7 @@ function load() {
     // fill in nested fields added since the save was made
     saved.standing = { ...newState().standing, ...saved.standing };
     saved.ithzar = { ...newState().ithzar, ...saved.ithzar };
+    saved.sel = { ...newState().sel, ...saved.sel };
     return saved;
   } catch (e) { /* corrupt or unavailable */ }
   return null;
@@ -118,10 +120,10 @@ const vesselTier = type => {
   return v && v.spirit ? demonById(v.spirit).tier : 0;
 };
 // Ithzar is with you today: it has joined you and isn't out (its first term: it comes and goes as it pleases).
-const ithzarHere = () => state.ithzar.joined && state.ithzar.awayDay !== state.day;
-const familiarTier = () => Math.max(state.familiar ? demonById(state.familiar).tier : 0, ithzarHere() ? ITHZAR.tier : 0);
+const ithzarHere = () => state.ithzar.joined && state.ithzar.awayDay !== state.day && !familiarResting('ithzar');
+const familiarTier = () => Math.max(ownFamiliar() ? ownFamiliar().tier : 0, ithzarHere() ? ITHZAR.tier : 0);
 // whoever speaks up with warnings: Ithzar when it's with you, otherwise your own familiar
-const familiarVoice = () => (ithzarHere() ? ITHZAR.name : state.familiar ? demonById(state.familiar).name : '');
+const familiarVoice = () => (ithzarHere() ? ITHZAR.name : ownFamiliar() ? ownFamiliar().name : '');
 const maxActions = () => ACTIONS_PER_DAY + (vesselTier('watch') ? watchHours(vesselTier('watch')) : 0) + (familiarTier() >= 5 ? 1 : 0);
 
 // ---------- Ithzar (content in js/ithzar.js)
@@ -163,8 +165,10 @@ function banter(familiar) {
 }
 
 function summonAside(m) {
-  if (!ithzarPresent() || Math.random() > (state.ithzar.joined ? 0.7 : 0.5)) return null;
-  return ithzarLine(m.accident ? 'summon:accident' : `summon:${m.outcome}`,
+  const braced = m.overreach && m.overreach.bracers.includes('ithzar');
+  if (!(ithzarPresent() || braced) || Math.random() > (state.ithzar.joined ? 0.7 : 0.5)) return null;
+  const key = m.overreach ? `summon:overreach-${m.overreach.held ? 'held' : 'failed'}` : m.accident ? 'summon:accident' : `summon:${m.outcome}`;
+  return ithzarLine(key,
     state.ithzar.joined ? ITHZAR.name : `${ITHZAR.name}, from the chimney`);
 }
 
@@ -172,7 +176,7 @@ function summonAside(m) {
 // At most once per district per day.
 function cityAside(dist) {
   if (!ithzarPresent() || state.ithzar.asideDay[dist.id] === state.day) return null;
-  const fam = state.familiar && demonById(state.familiar);
+  const fam = ownFamiliar();
   let aside = null;
   if (fam && Math.random() < 0.25) aside = banter(fam);
   else if (Math.random() < 0.3) aside = ithzarLine(`city:${dist.id}`);
@@ -433,7 +437,7 @@ function ithzarCard() {
   if (state.flags['met-ithzar'] === undefined) return '';
   let status;
   if (state.ithzar.joined) {
-    status = `Your second familiar. Familiar abilities work at the class of the stronger of your two familiars. Ask it about spirits from the chamber’s notebook, once a day; at high trust it will run the odd errand as a favor.${state.ithzar.awayDay === state.day ? ' <b>It is out today.</b>' : ''}`;
+    status = `Your second familiar. Familiar abilities work at the class of the stronger of your two familiars. Ask it about spirits from the chamber’s notebook, once a day; at high trust it will run the odd errand as a favor.${state.ithzar.awayDay === state.day ? ' <b>It is out today.</b>' : ''}${familiarResting('ithzar') ? ` <b>Resting after bracing a circle; back on ${dateLabel(state.familiarOut.ithzar, 'long')}.</b>` : ''}`;
   } else if (state.flags['ithzar-released'] !== undefined) {
     status = state.flags['kept-promise'] !== undefined
       ? 'Gone. You let it go, as you promised, before the thing under the lake.'
@@ -716,6 +720,8 @@ function summonBlocker() {
   if ((state.incense[s.incense] || 0) < 1) return `You have no ${INCENSE[s.incense].name.toLowerCase()} left.`;
   const bound = boundPhrase(s.name);
   if (bound) return `${d.name} is already ${bound}.`;
+  const reach = s.overreach && overreachCheck(d);
+  if (reach && !reach.ok) return 'Your binding is no longer perfect enough to overreach. Fix it, or stop overreaching.';
   if (s.clause === 'service' && state.servants.length >= maxServants()) {
     return `At your rank you can hold only ${maxServants()} servant${maxServants() > 1 ? 's' : ''} at once. Dismiss one first.`;
   }
@@ -831,7 +837,17 @@ function resolveSummon() {
   }
 
   const circleBonus = clamp(circle.tier - d.tier, 0, 2);
-  if (circle.tier < d.tier) {
+  const reach = circle.tier < d.tier && s.overreach && d === target ? overreachCheck(d) : null;
+  if (reach && reach.ok && !wrong.length && !missing.length && d.likes === s.incense) {
+    const held = Math.random() * 100 < reach.odds;
+    m.overreach = { bracers: reach.bracers.map(b => b.key), odds: reach.odds, held };
+    const names = reach.bracers.map(b => b.name);
+    const who = names.length
+      ? `${names.join(' and ')} ${names.length > 1 ? 'throw their' : 'throws its'} weight against the chalk`
+      : 'You hold the lines with nothing but your will';
+    m.lines.push(`Your ${circle.name} was never meant to hold a spirit of this power. ${d.name} feels it give, and pushes. ${who}${held ? ', and the circle holds.' : '. It is not enough.'}`);
+    m.outcome = held ? 'uneasy' : 'broken';
+  } else if (circle.tier < d.tier) {
     m.lines.push(`The ${circle.name} was never meant to hold a spirit of this power. It cracks like ice on a pond.`);
     m.outcome = 'broken';
   } else if (missing.length) {
@@ -851,7 +867,7 @@ function resolveSummon() {
   }
 
   if (m.outcome === 'broken') {
-    const safe = pent.tier >= d.tier;
+    const safe = !m.overreach && pent.tier >= d.tier;  // a failed overreach comes at you at full fury
     const dmg = safe ? Math.ceil(d.tier / 2) : d.tier * 2 + 1;
     const taken = hurt(dmg, `torn apart by ${d.name}, who slipped a faulty binding`);
     m.lines.push(safe
@@ -860,6 +876,11 @@ function resolveSummon() {
     const q = pick(BROKEN_QUIPS);
     m.greet = fill(q.greet, { name: d.name });
     m.footnote = q.footnote;
+    if (m.overreach) {
+      state.standing.suspicion = Math.min(10, state.standing.suspicion + 2);
+      m.lines.push('A loose spirit on Clark Street makes the papers. (the police take an interest)');
+    }
+    settleBracing(m, d);
     log(`The binding failed. ${bold(d)} broke free. (${hurtNote(taken, dmg)})`, 'bad');
     return m;
   }
@@ -867,7 +888,9 @@ function resolveSummon() {
   m.greet = d.greet;
   m.footnote = d.footnote;
   if (s.clause === 'service') {
-    if (m.outcome === 'uneasy' && pent.tier < d.tier && Math.random() < 0.35) {
+    settleBracing(m, d);
+    if (m.overreach) m.lines.push(`It is held by a circle too small for it, and it knows. It will be testing that circle every night.`);
+    if (m.outcome === 'uneasy' && !m.overreach && pent.tier < d.tier && Math.random() < 0.35) {
       const taken = hurt(d.tier, `scorched by ${d.name}, testing a pentacle too weak to hold it`);
       m.lines.push(`Before submitting, ${d.name} tests the edge of your pentacle \u2014 and finds it wanting. (${hurtNote(taken, d.tier)})`);
     }
@@ -878,8 +901,8 @@ function resolveSummon() {
     if (!state.over) {
       state.servants.push({
         uid: state.nextUid++, demonId: d.id, binding: m.outcome,
-        patience: PATIENCE[d.tier] + (m.outcome === 'firm' ? 2 : 0),
-        pentTier: pent.tier, errand: null,
+        patience: m.overreach ? Math.ceil(PATIENCE[d.tier] / 2) : PATIENCE[d.tier] + (m.outcome === 'firm' ? 2 : 0),
+        pentTier: pent.tier, errand: null, strained: !!m.overreach,
       });
     }
   } else if (s.clause === 'familiar') {
@@ -888,6 +911,7 @@ function resolveSummon() {
       releaseFamiliar(true);
     }
     state.familiar = d.id;
+    state.familiarOut.own = 0;
     m.lines.push(`The binding holds, perfectly. The circle fades, and ${d.name} steps out of it to take its place at your side. It is your familiar now, for good.`);
     log(`${bold(d)} is bound as your familiar.`, 'good');
   } else {
@@ -902,6 +926,84 @@ function resolveSummon() {
   }
   if (!state.over) checkBindCommission(d);
   return m;
+}
+
+// ---------- overreaching: binding a spirit one class above your circle
+
+// A familiar recovering from bracing a circle is no use to you while state.day < its familiarOut day.
+const familiarResting = key => state.day < (state.familiarOut[key] || 0);
+const ownFamiliar = () => (state.familiar && !familiarResting('own') ? demonById(state.familiar) : null);
+
+// Familiars who could brace the circle right now, and what each adds to the odds.
+function availableBracers() {
+  const list = [];
+  const own = ownFamiliar();
+  if (own) list.push({ key: 'own', name: own.name, bonus: Math.min(25, 5 * own.tier) });
+  if (ithzarHere()) list.push({ key: 'ithzar', name: ITHZAR.name, bonus: 15 });
+  return list;
+}
+
+// Whether the chamber's setup could overreach for spirit d. Null when overreaching doesn't apply
+// (the circle is strong enough, the clause isn't Service, or the spirit is more than one class too strong);
+// otherwise { ok, reason } or { ok, odds, bracers, pentOk }. The gate is the notebook: overreaching needs a
+// binding the notebook says is perfect.
+function overreachCheck(d) {
+  const s = state.sel;
+  const circle = circleById(s.circle);
+  if (!d || s.clause !== 'service' || d.tier !== circle.tier + 1) return null;
+  if (d.tier === 5) return { ok: false, reason: 'Nobody overreaches for a marid. Not twice, anyway.' };
+  const k = dossier(d);
+  const needed = [];
+  if (!k.nameComplete || k.name.some((syl, i) => syl !== s.syllables[i])) needed.push('its full true name');
+  if (k.runeCount === null || k.runeYes.length < k.runeCount || s.runes.length !== k.runeCount
+    || s.runes.some(r => !k.runeYes.includes(r))) needed.push('exactly the runes that hold it');
+  if (!k.likes || s.incense !== k.likes) needed.push('the incense it likes');
+  if (needed.length) {
+    return { ok: false, reason: `You can only overreach with a binding your notebook says is perfect. Still needed: ${needed.join('; ')}.` };
+  }
+  const bracers = availableBracers().filter(b => s.brace.includes(b.key));
+  const pentOk = pentacleById(s.pentacle).tier >= d.tier;
+  const odds = Math.min(90, 40 + (pentOk ? 15 : 0) + bracers.reduce((a, b) => a + b.bonus, 0));
+  return { ok: true, odds, bracers, pentOk };
+}
+
+// After an overreach, bracing familiars pay for it: spent for the day if the circle held,
+// out for as many days as the spirit's class if it didn't. Ithzar also resents being dragged in.
+function settleBracing(m, d) {
+  if (!m.overreach) return;
+  const days = m.overreach.held ? 1 : d.tier;
+  for (const key of m.overreach.bracers) {
+    state.familiarOut[key] = state.day + days;
+    const name = key === 'ithzar' ? ITHZAR.name : demonById(state.familiar).name;
+    m.lines.push(m.overreach.held
+      ? `${name} is spent, and will be no use to you until tomorrow.`
+      : `${name} took the backlash, and will be out for ${days} day${days > 1 ? 's' : ''}.`);
+    if (key === 'ithzar' && !m.overreach.held) {
+      state.standing.trust = Math.max(-10, state.standing.trust - 1);
+      m.lines.push('"You dragged me into that," says Ithzar. (Ithzar thinks less of you)');
+    }
+  }
+}
+
+function overreachHTML(d) {
+  const check = overreachCheck(d);
+  if (!check) return '';
+  const s = state.sel;
+  const circle = circleById(s.circle);
+  const head = `<h3>Overreach</h3>
+    <p class="muted small">Your ${circle.name} holds nothing stronger than ${TIER_NAMES[circle.tier].toLowerCase()}s, and ${d.name} is a ${TIER_NAMES[d.tier].toLowerCase()}. Without a stronger circle it will break free, unless you overreach.</p>`;
+  if (!check.ok) return `<div class="ctl overreach">${head}<p class="small">${check.reason}</p></div>`;
+  const bracers = availableBracers();
+  return `<div class="ctl overreach ${s.overreach ? 'on' : ''}">${head}
+    <div class="chips">${chip('overreach', '1', 'Attempt to overreach', s.overreach)}</div>
+    ${s.overreach ? `
+      ${bracers.length
+        ? `<p class="small">Familiars on standby:</p><div class="chips">${bracers.map(b =>
+          chip('brace', b.key, `${b.name} braces the circle<small>+${b.bonus}%</small>`, s.brace.includes(b.key))).join('')}</div>`
+        : '<p class="muted small">No familiar is free to brace the circle.</p>'}
+      <p class="odds">Chance the circle holds: <b>${check.odds}%</b>${check.pentOk ? '' : ' <span class="muted small">(+15% with a pentacle that could contain it)</span>'}</p>
+      <p class="muted small">If it holds: a strained, uneasily bound servant with half the usual patience, which may break loose any night, and bracing familiars are spent for the day. If it fails: ${d.name} breaks free at full fury (${d.tier * 2 + 1} damage before protections), the police take an interest, and bracing familiars are out for ${d.tier} days.</p>` : ''}
+  </div>`;
 }
 
 // ---------- servants and errands
@@ -1012,7 +1114,8 @@ function expire(sv) {
   }
   const dmg = sv.pentTier >= d.tier ? Math.ceil(d.tier / 2) : d.tier;
   const taken = hurt(dmg, `ambushed by ${d.name}, whose bonds were left to fray`);
-  log(`${bold(d)} has strained against its bonds too long. They snap — and it leaves you a parting gift. (${hurtNote(taken, dmg)})`, 'bad');
+  if (sv.patience > 0) log(`${bold(d)} has been testing your too-small circle every night. Tonight it finds the gap. (${hurtNote(taken, dmg)})`, 'bad');
+  else log(`${bold(d)} has strained against its bonds too long. They snap — and it leaves you a parting gift. (${hurtNote(taken, dmg)})`, 'bad');
 }
 
 function endDay() {
@@ -1026,7 +1129,7 @@ function endDay() {
   if (!state.over) {
     for (const sv of [...state.servants]) {
       sv.patience--;
-      if (sv.patience <= 0) expire(sv);
+      if (sv.patience <= 0 || (sv.strained && Math.random() < 0.15)) expire(sv);
       if (state.over) break;
     }
   }
@@ -1557,6 +1660,7 @@ function viewChamber() {
           !s.runes.includes(r) && s.runes.length >= MAX_RUNES)).join(''))}
       ${ctl('Incense', Object.keys(INCENSE).filter(k => state.incense[k] !== undefined).map(k =>
         chip('incense', k, `${INCENSE[k].name}<small>×${state.incense[k]}</small>`, s.incense === k, state.incense[k] < 1)).join(''))}
+      ${d ? overreachHTML(d) : ''}
       <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Speak the summons <small>(1 hour)</small></button>
       <p class="hint">${busy ? 'The air grows thick…' : blocker || 'Speak carefully.'}</p>
       ${d && !busy ? familiarAdvice(d) : ''}
@@ -1966,6 +2070,7 @@ function viewServants() {
         <p class="${sv.patience <= 1 ? 'warn' : ''}">${sv.patience <= 1
           ? (sv.binding === 'firm' ? 'Its service ends tonight.' : 'Its bonds will snap tonight unless you dismiss it!')
           : `Will serve ${sv.patience} more nights.`}</p>
+        ${sv.strained ? '<p class="warn small">Strained: held by a circle too small for it. It may break loose any night.</p>' : ''}
         <label>Tonight’s errand
           <select data-errand="${sv.uid}">
             <option value="">Idle in its circle</option>
@@ -2007,6 +2112,7 @@ function familiarCard() {
   const ft = familiarTier();
   return `<article class="panel card familiar">
     <header><h3>${fam ? fam.name : 'No familiar yet'}</h3>${fam ? `<span class="tag">${TIER_NAMES[fam.tier]}</span>` : ''}</header>
+    ${fam && familiarResting('own') ? `<p class="warn small">Resting after bracing a circle. Back on ${dateLabel(state.familiarOut.own, 'long')}.</p>` : ''}
     <p class="muted">${fam ? `Appears as ${fam.form}. It goes everywhere with you, and counts as a servant at your side in the city.`
       : 'Bind one in the chamber with the Clause of the Familiar. A stronger spirit makes a more useful familiar.'}</p>
     <ul class="abilities">
@@ -2178,6 +2284,8 @@ document.addEventListener('click', e => {
         else if (s.runes.length < MAX_RUNES) s.runes.push(v);
         break;
       case 'incense': s.incense = s.incense === v ? null : v; break;
+      case 'overreach': s.overreach = !s.overreach; break;
+      case 'brace': s.brace = s.brace.includes(v) ? s.brace.filter(b => b !== v) : [...s.brace, v]; break;
       case 'name': s.name = v; resetIncantation(); break;
       default: s[el.dataset.pick] = v;
     }

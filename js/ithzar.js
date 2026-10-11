@@ -31,6 +31,16 @@ const ITHZAR_LINES = {
     'I heard at least one syllable flinch. That is something. Not much, but something.',
     'The smoke is laughing at you. I can tell; I speak smoke.',
   ],
+  'summon:overreach-held': [
+    { text: 'That circle had no business holding that.¹', note: '¹ Neither did you, frankly.' },
+    'We held it. Do not ever do that again. Do it again next week; I want to see the look on Cornelia’s face.',
+    'I have not pushed that hard since Persepolis. I am going to lie down in the coal scuttle.',
+  ],
+  'summon:overreach-failed': [
+    'I told you. I did not, actually, but I was thinking it very loudly.',
+    { text: 'Next time, buy the bigger circle. I will lend you the money.¹', note: '¹ At interest. I am a djinni, not a saint.' },
+    'Well. The ceiling needed replastering anyway.',
+  ],
   'summon:accident': [
     { text: 'You rang the wrong doorbell. It happens. Usually only once per magician.¹', note: '¹ Because of the dying.' },
     'Not the one you wanted. It never is, with names. Ask any parent.',

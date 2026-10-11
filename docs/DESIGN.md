@@ -262,7 +262,7 @@ Not in this step, but the arc is shaped to allow them later:
 - **Forced binding.** In chapter 3, keep Ithzar's name and bind it by force instead of freeing it. It works, but it hates you, its commentary turns poisonous, and it sabotages you once at the worst moment.
 - **Refusing the call.** Break your promise and keep Ithzar for the marid. It stays, bitterly, as the forced-familiar version.
 
-### Step 5: overreaching (planned)
+### Step 5: overreaching ✅
 
 A way to bind a spirit **one class above what your circle can hold**, for a player who has done the lab work and is willing to gamble. The circle stays the reliable path; overreaching is the desperate one.
 
@@ -271,7 +271,9 @@ A way to bind a spirit **one class above what your circle can hold**, for a play
 - every rune it needs, and no wrong ones
 - the incense it likes
 
-Knowing a spirit completely is the skill this game tests, so this is the "skill check". The chamber only offers the attempt when the setup qualifies. Overreaching is never allowed for the marid, and never more than one class above your circle.
+Knowing a spirit completely is the skill this game tests, so this is the "skill check". The gate checks the **notebook**: the attempt is only offered when everything above is confirmed there and matches the chamber's setup. Notebook facts are always true (Ithzar's unconfirmed claims don't count), so a notebook-perfect binding is actually perfect. Overreaching is never allowed for the marid, and never more than one class above your circle.
+
+**In the chamber** (built). When the chosen spirit is exactly one class above your circle and the clause is *of Service*, an **Overreach** panel appears just above the summon button. Until the notebook shows a perfect binding, it lists what's still needed. Once it does, you can toggle the attempt, choose which familiars brace the circle, and see the odds and the stakes update live. If the setup stops being perfect while the toggle is on, summoning is blocked until you fix it or turn the toggle off. Without the toggle, a circle that's too weak still simply breaks, as before.
 
 **Then a roll, with the odds shown before you commit.**
 
@@ -286,7 +288,9 @@ Knowing a spirit completely is the skill this game tests, so this is the "skill 
 - **On success,** a bracing familiar is spent for the rest of the day: no familiar abilities until tomorrow.
 - **On failure,** each bracing familiar takes the backlash and is out for as many days as the spirit's class. Ithzar also loses 1 trust ("you dragged me into that").
 
-**Success is a strained binding.** It's always uneasy, with half the usual patience, and each night there's a chance it breaks loose early and attacks. You have a spirit ahead of schedule, but it's a ticking bomb. Overreaching is service only: vessel and familiar bindings must be firm, so they can't be overreached.
+A resting familiar gives no abilities, can't brace again, doesn't banter, and (for Ithzar) makes no remarks; the Workshop shows the date it's back. Ithzar still gets a remark on an overreach it braced, with lines of its own for a circle that held and one that didn't. Because the bracers are still bracing when a failed overreach hits you, a djinni-class familiar's injury reduction applies to that blow: the familiar takes part of the backlash.
+
+**Success is a strained binding.** It's always uneasy, with half the usual patience (rounded up), and each night there's a 15% chance it breaks loose early and attacks, as an uneasy servant does when its bonds snap. The Servants tab marks it as strained. You have a spirit ahead of schedule, but it's a ticking bomb. Overreaching is service only: vessel and familiar bindings must be firm, so they can't be overreached.
 
 **Failure is spectacular.** The spirit breaks free at full fury: the damage of an outmatched pentacle, whatever your pentacle actually is, plus +2 police suspicion. A loose spirit on Clark Street makes the papers.
 

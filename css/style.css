@@ -388,6 +388,14 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 #log .entry.news { border-color: #b9a888; }
 .paper { font-style: italic; color: #d6c9a8; margin-right: 0.3em; }
 
+/* ---------- overreaching */
+
+.ctl.overreach { border: 1px dashed #8a4f22; border-radius: 8px; padding: 0.6rem 0.8rem; }
+.ctl.overreach.on { border-style: solid; background: #2a1c10; }
+.ctl.overreach p { margin: 0.3rem 0; }
+.ctl.overreach .odds { font-size: 1.05rem; }
+.ctl.overreach .odds b { color: var(--gold-hi); }
+
 /* ---------- Ithzar's asides */
 
 .aside {
