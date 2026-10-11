@@ -160,7 +160,7 @@ The familiar is the stepping stone to step 4: the earned companion is a familiar
 ### Step 3: district places and current events ✅
 Built as described under **City** above. The magic-immune workers took the form of Dora Kaspar's packinghouse hands, "some of whom can see straight through a glamour." Their immunity is flavor for now and could become a mechanic later.
 
-### Step 4: Ithzar, the earned companion (Parts A and B built)
+### Step 4: Ithzar, the earned companion ✅
 
 You never summon Ithzar. You earn it over most of the game, through a story arc threaded across the city and its events. The arc ends with a lab puzzle in your own chamber, and the relationship it builds is called in near the end of the game.
 
@@ -223,7 +223,14 @@ Then you perform the rite in the chamber: choose "Ithzar (release from Cornelia)
 
 The offer comes three days after the release and waits five days. Refusing, or letting it lapse, sends Ithzar away. It makes the offer once more a week later; refuse that too and it's gone for good. Once accepted, Ithzar is **away about one day in seven**: that day it gives no abilities, no remarks and no favors.
 
-**The call.** After the afrit commission, with the marid in view, Ithzar asks to leave before you wake the thing under the lake; it was there the last time someone tried. You let it go. As a parting gift it gives you one of the marid's missing syllables and a last footnote. You face the marid without it: no extra abilities, no heckling through the hardest summoning in the game. The ending's epilogue acknowledges it.
+**The call** (built). At dawn after the afrit commission, Ithzar waits on your stairs with its hat on and asks to leave before you wake the thing under the lake; it was there the last time someone tried. The request stands for three days:
+- **Let it go:** a proper goodbye. As a parting gift it writes the marid's third syllable, UL (the one no lore gives you), into the notebook, which also puts Shem-Ashara in your journal. It leaves with a last footnote.
+- **Ask it to stay:** it says no, gently, and gives you another day.
+- **Avoid it for three days:** it lets itself go, without the gift.
+
+Either way, you face the marid without it: no extra abilities, and no heckling through the hardest summoning in the game.
+
+**The epilogue.** The victory screen ends with a line about Ithzar, depending on how things stood: you kept your promise, it left on its own, you refused its terms twice, it was still Cornelia's, or (if you somehow win before the call) it was still at your side. Players who never met Ithzar get no epilogue line.
 
 #### What Ithzar does
 
@@ -246,7 +253,7 @@ The offer comes three days after the release and waits five days. Refusing, or l
 
 - **Part A ✅:** Ithzar's data, the second familiar slot (abilities at the stronger familiar, Ithzar's voice for warnings once joined), remarks on summonings, districts and headlines, banter, morning notes, chapters 1 and 2, the crackdown tip, and Ithzar's card in the Workshop showing trust in words. Cornelia is now named in the LaSalle Street rival encounter, and meeting her there can start chapter 1 early.
 - **Part B ✅:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, the doorstep conversation and wincing, chapters 3 and 4 with the second offer, Ithzar's days away, "Ask Ithzar" with lies, and the weekly favor.
-- **Part C:** the call and the ending's epilogue.
+- **Part C ✅:** the call, the parting gift, and the epilogue.
 
 #### Deferred: dark paths
 

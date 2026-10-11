@@ -418,11 +418,26 @@ function ithzarFavorCard() {
   </article>`;
 }
 
+// The victory screen's last word on Ithzar, if you ever met it.
+function ithzarEpilogue() {
+  const f = state.flags;
+  if (f['met-ithzar'] === undefined) return '';
+  if (state.ithzar.joined) return ITHZAR_EPILOGUES.joined;
+  if (f['kept-promise'] !== undefined) return ITHZAR_EPILOGUES.kept;
+  if (f['ithzar-left'] !== undefined) return ITHZAR_EPILOGUES.left;
+  if (f['ithzar-gone'] !== undefined) return ITHZAR_EPILOGUES.gone;
+  return f['ithzar-freed'] === undefined ? ITHZAR_EPILOGUES.bound : '';
+}
+
 function ithzarCard() {
   if (state.flags['met-ithzar'] === undefined) return '';
   let status;
   if (state.ithzar.joined) {
     status = `Your second familiar. Familiar abilities work at the class of the stronger of your two familiars. Ask it about spirits from the chamber’s notebook, once a day; at high trust it will run the odd errand as a favor.${state.ithzar.awayDay === state.day ? ' <b>It is out today.</b>' : ''}`;
+  } else if (state.flags['ithzar-released'] !== undefined) {
+    status = state.flags['kept-promise'] !== undefined
+      ? 'Gone. You let it go, as you promised, before the thing under the lake.'
+      : 'Gone. It asked you to let it go, and when you would not answer, it let itself go.';
   } else if (state.flags['ithzar-gone'] !== undefined) {
     status = 'Gone. You refused its terms twice.';
   } else if (state.flags['ithzar-freed'] !== undefined) {
@@ -437,7 +452,7 @@ function ithzarCard() {
       <header><h3>${ITHZAR.name}</h3><span class="tag">${TIER_NAMES[ITHZAR.tier]}</span></header>
       <p class="muted">Appears as ${ITHZAR.form}.</p>
       <p>${status}</p>
-      ${state.flags['ithzar-gone'] === undefined ? `<p>Ithzar <b>${standingWord('trust')}</b>.</p>` : ''}
+      ${state.flags['ithzar-gone'] === undefined && state.flags['ithzar-released'] === undefined ? `<p>Ithzar <b>${standingWord('trust')}</b>.</p>` : ''}
     </article>`;
 }
 
@@ -1396,6 +1411,18 @@ function applyEffects(fx, cause) {
     const clue = corneliaClue(fx.corneliaClue);
     notes.push(clue ? `Cornelia\u2019s binding: ${clue}` : 'nothing new about Cornelia\u2019s binding');
   }
+  if (fx.notebook) {
+    const [id, ...facts] = fx.notebook;
+    facts.forEach(f => recordFact(id, f));
+    if (!state.met.includes(id)) state.met.push(id);
+    notes.push(`${demonById(id).name}’s notebook: ${facts.map(factText).join('; ')}`);
+  }
+  if (fx.releaseIthzar) {
+    state.ithzar.joined = false;
+    state.flags['ithzar-released'] = state.day;
+    state.flags[fx.releaseIthzar === 'kept' ? 'kept-promise' : 'ithzar-left'] = state.day;
+    notes.push('Ithzar is gone');
+  }
   if (fx.joinIthzar) {
     state.ithzar.joined = true;
     if (state.flags['ithzar-joined'] === undefined) state.flags['ithzar-joined'] = state.day;
@@ -2108,6 +2135,7 @@ function renderOverlay() {
     html = `<h1>The Deep One Is Bound</h1>
       <p>On ${dateLabel(state.day, 'long')}, Shem-Ashara rose from beneath Lake Michigan and knelt — after a fashion — within your obsidian rings.</p>
       <p>You are, by any measure, the most powerful magician in Chicago. Which is, of course, precisely when the trouble starts.</p>
+      ${ithzarEpilogue() ? `<p><i>${ithzarEpilogue()}</i></p>` : ''}
       <button class="primary big" data-action="restart">Begin anew</button>
       <button class="ghost" data-action="close-overlay">Admire your handiwork</button>`;
   }

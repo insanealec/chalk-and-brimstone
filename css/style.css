@@ -507,3 +507,5 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
   .tabs { gap: 0.15rem; }
   .tabs button { padding: 0.45em 0.6em; font-size: 0.75rem; letter-spacing: 0.02em; }
 }
+
+.result span.footnote, #log span.footnote { display: block; margin-top: 0.4rem; }

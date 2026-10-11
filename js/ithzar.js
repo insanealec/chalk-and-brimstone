@@ -348,3 +348,35 @@ EVENTS.push(
     ],
   },
 );
+
+// ---------- Part C: the promise is called in, and the epilogue
+
+EVENTS.push({
+  id: 'ithzar-call', title: 'The Promise',
+  // the dawn after the afrit commission (the seventh) is complete
+  starts: s => s.ithzar.joined && s.commission >= 7,
+  stages: [
+    {
+      headline: null, place: 'clark:doorstep', days: 3,
+      text: 'Ithzar is waiting on your stairs with its hat already on. "You have bound an afrit," it says. "Next they will ask you for the thing under the lake. I was there the last time someone tried to wake it, and I would very much rather not be there the next time. So: I am asking. You promised."',
+      actions: [
+        { label: 'Let it go', outcomes: [
+          { w: 1, text: 'You say the words of parting. Ithzar takes off its hat, which it has never done before. "One thing for the road," it says. "The marid’s name. The third syllable is <span class="syl">UL</span>. The rest you will have to find yourself; I am not a charity." It puts the hat back on. "Goodbye, magician. You were tolerable."¹ Then it goes up the chimney like smoke, and does not come back down.<span class="footnote">¹ In two thousand six hundred years, it had never said that to a magician before. It would deny it, if anyone asked. Nobody does.</span>', fx: { notebook: ['shemashara', 'syl:2:UL'], releaseIthzar: 'kept', advance: 'end' } },
+        ] },
+        { label: 'Ask it to stay', cooldown: 1, outcomes: [
+          { w: 1, text: '"No," says Ithzar, quite gently. "You promised. Take a day, if you need one. I will be on the stairs."', fx: {} },
+        ] },
+      ],
+      expire: { next: 'end', text: 'When you come down in the morning, the stairs are empty. Ithzar has let itself go.', fx: { releaseIthzar: 'left' } },
+    },
+  ],
+});
+
+// The victory screen's last word on Ithzar, by how things ended between you.
+const ITHZAR_EPILOGUES = {
+  kept: 'Somewhere far out over the lake, a tall figure in a stovepipe hat watches the water go still, and tips its hat to no one in particular.',
+  left: 'You never did say goodbye to Ithzar. The next morning a copy of the Clarion arrives with your victory on the front page, its grammar corrected in red ink. There is no return address.',
+  joined: 'Ithzar watched the whole thing from the ceiling, making notes. Afterwards it asks, very politely, to be let go. You let it.',
+  bound: 'Cornelia Ashby does not send congratulations. Her djinni does, by pigeon, with a note in neat copperplate: "Well done. Now get me out of here."',
+  gone: 'Now and then you wonder what became of the djinni in the stovepipe hat. The Clarion’s filler headlines, you notice, have become very slightly sillier.',
+};
