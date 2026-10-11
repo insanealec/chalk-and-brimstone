@@ -93,9 +93,27 @@ Bound spirits are **timed**: they serve for 3–6 nights depending on class, plu
 
 There's a chain of eight commissions, alternating "bind a spirit of class X" with "send a servant on errand X". Reputation raises your rank: Apprentice → Ward Magician → Alderman → Commissioner → Boss. Rank gates market goods, districts and how many spirits you can hold. The last commission is binding the marid.
 
-### City (built; to be reworked in step 3)
+### City (built in step 3)
 
-A map with six districts, unlocked by rank: Maxwell Street, the Levee, LaSalle Street, the Union Stock Yards, the Midway Plaisance and the Water Crib. A visit costs an hour and draws a random encounter with choices. Choices can need money, a rank, a bound servant of some class, or knowledge of a spirit. Content lives in `js/districts.js`.
+**Calendar.** Day 1 is Monday, April 3, 1893. Dates replace day numbers everywhere. The World's Fair opens on May 1 (day 29).
+
+**Districts and places.** The map has seven districts. Clark Street, where your workshop is, is always open. The others unlock by rank: Maxwell Street and the Levee from the start, LaSalle Street and the Union Stock Yards at Ward Magician, the Midway Plaisance at Alderman *and* once the Fair opens, and the Water Crib at Commissioner. Each district has **fixed places**, and each place has **standing actions** that take an hour each, for example faro at the Gilded Anchor or wheat tips at the Board of Trade. Actions can be one-time (`once`) or have a `cooldown` in days. A place can close because of a story flag; the Imp Pit is padlocked if the reformer wins.
+
+**Streets.** Most districts can also be wandered for an hour, which draws a one-off street encounter with choices (the pickpocket imp, the alley toughs, the bottled foliot). Street encounters can be one-time or removed by flags.
+
+**The newspaper.** *The Chicago Clarion* is at the top of the City tab. It prints the headlines of running events, newest first, or a filler headline on quiet days. New headlines also go into the chronicle at dawn. An orange dot on the map marks districts where an event has something for you to do. The City tab gets a badge when something is waiting at your door.
+
+**Current events** (`js/events.js`). An event starts at dawn when its condition becomes true and moves through stages. Each stage adds actions to one place, lasts a set number of days and then expires into another stage or ends. Actions can also move the event on. Events built so far:
+
+| Event | Starts | What happens |
+|---|---|---|
+| Trouble in the Yards | April 10 | Wage cut → strike → three endings. Break it for the packers (money, Machine approval, the workers turn on you), carry messages for the strikers (they win if the workers trust you enough), or broker a settlement (needs standing with both sides). If the workers win, or you broker the deal, Dora Kaspar's people put incense aside for you at the Rendering Works from then on. |
+| The First Ward Race | April 16 | "Honest Mike" Rourke against the reformer Ellen Vance. Stuff the ballot boxes with imps, tip off the reformers, or just drink to Mike. If Rourke wins, the alley toughs leave you alone and suspicion fades faster. If Vance wins, the Imp Pit is padlocked and suspicion fades slower. |
+| The World's Fair | May 1 | The Midway opens. For opening week, the Electricity Building has extra work for servants and gossip from visiting magicians. |
+| A Knock at the Door | 4 days after you free the bottled foliot | Phebbet comes back to pay its debt by telling you its whole true name. |
+| The Crackdown | Whenever suspicion reaches 6 (repeatable) | Inspectors are coming. Pay their "fine", have the ward boss make it go away (costs Machine favor), or let them raid you. |
+
+**Hidden standings.** Three numbers the player never sees directly: **the Machine**, **the workers** and **police suspicion**. Actions shift them, and some choices need a minimum standing. City Hall describes them in words ("To the Machine, you are a useful friend"), and outcomes report the direction ("the police take an interest"). Suspicion fades by itself over time.
 
 ---
 
@@ -139,19 +157,98 @@ Lantern and signet choices are invisible until the vessel is strong enough. When
 
 The familiar is the stepping stone to step 4: the earned companion is a familiar you can't simply summon.
 
-### Step 3: district places and current events
-Replace the random encounter draw with something more tangible:
+### Step 3: district places and current events ✅
+Built as described under **City** above. The magic-immune workers took the form of Dora Kaspar's packinghouse hands, "some of whom can see straight through a glamour." Their immunity is flavor for now and could become a mechanic later.
 
-- **Fixed places** in each district, like the Gilded Anchor, the Board of Trade floor and the Street in Cairo, each with standing actions.
-- **Current events** that change what's available. A daily newspaper headline announces them. Events have durations and play out over several steps.
-  - **Historical:** the Fair opening, the strike building at the Stock Yards.
-  - **Political:** fights inside the Machine, such as a First Ward election.
-  - **Consequences of your actions:** a freed spirit coming back later.
-- Hidden stats per district or faction (for example *Suspicion* or *Debt to the Machine*) gate and color events.
-- Possible faction: workers with an immunity to magic, echoing the labor movement. Fear them, use them or join them.
+### Step 4: Ithzar, the earned companion (planned)
 
-### Step 4: the earned companion
-One specific sarcastic djinni with its own story arc spread across places and events. You meet it, it doesn't trust you, and the two of you trade favors, betrayals and deals. Eventually it **offers** to become your familiar on its own terms. It is never given to the player for free.
+You never summon Ithzar. You earn it over most of the game, through a story arc threaded across the city and its events. The arc ends with a lab puzzle in your own chamber, and the relationship it builds is called in near the end of the game.
+
+#### The character
+
+**Ithzar**, a djinni about 2,600 years old. It has served Babylonian kings, Persian governors and one very disappointing Venetian. It's vain, sarcastic and footnotes everything, but it's curious about you because you're new enough to still be surprised. What sets it apart:
+
+- It's **obsessed with modern things**: electric light, telephones, the Ferris Wheel.
+- It's **furious about how history books describe it**.
+- It **secretly writes the Clarion's sillier filler headlines**.
+
+At the start it is bound to **Cornelia Ashby**, the rival magician in the silk hat who insults you outside the Rookery. She treats it like a coat rack. It wants out.
+
+#### A second familiar slot
+
+Ithzar takes a **second familiar slot**, alongside whatever familiar you've bound yourself. It never replaces your own familiar, and can't be released or replaced in the Workshop the way an ordinary familiar can.
+
+- **Familiar abilities don't stack.** You get each ability at the class of your stronger familiar, and the injury reduction counts once.
+- **Either familiar counts as "a spirit at your side"** for city choices.
+- Ithzar adds its own extras on top (see *What Ithzar does*).
+
+#### The arc
+
+| Chapter | Starts | What happens |
+|---|---|---|
+| **1. The watcher** | Ward Magician rank, and either meeting Cornelia in the LaSalle Street streets or April 20, whichever comes first | Signs of an intruder at your doorstep: your chalk rearranged into a rude word, your notes read and corrected. If your scrying glass holds a spirit, it reports "something watching from the chimney." Waiting up for the intruder brings Ithzar out. It insults your chalk work and leaves. |
+| **2. Favors** | A few days later, then every few days | Ithzar asks for small, risky favors, delivered at your doorstep or at places tied to running events. Each favor raises a hidden **trust** standing (0–10), and refusing lowers it. It pays in kind: lore, warnings, hints. |
+| **3. The leash** | Trust at 5 or more | It asks you to break Cornelia's binding, which it is forbidden to describe. You piece the binding together and perform a **counter-binding** in your chamber. |
+| **4. The offer** | 2–4 days after it's freed | It returns to your doorstep with terms. If you accept, it becomes your second familiar. |
+| **The call** | After you complete the afrit commission (the seventh) | Ithzar asks you to keep your promise and let it go before you wake the marid. |
+
+**Chapter 2 favors** (first pass):
+
+- **"Hide me for a night."** Needs an empty vessel. Ithzar sleeps in your lantern or glass to escape Cornelia. The trust gain is large.
+- **"Galbanum, and don't ask."** Give up one galbanum. It pays you back with lore.
+- **"Don't tell City Hall."** During the strike, Ithzar admits Cornelia is the packers' magician.
+  - Keeping quiet raises trust.
+  - Reporting her pleases the Machine but costs a lot of trust. The arc stalls until trust recovers.
+- **A tip before the crackdown.** If your suspicion is climbing, Ithzar warns you a day before the inspectors come. This is passive and only fires when trust is high enough.
+
+**Chapter 3, the counter-binding.** Cornelia's binding is a puzzle target with its own notebook sheet: the circle class she used, her three runes and her incense. You gather clues from:
+
+- a new servant errand, *spy on Cornelia Ashby*
+- her notes in the Lake Shore Circle library
+- your scrying glass, if it holds a spirit strong enough to look into her workshop
+- Ithzar itself, which can't say anything but can wince at the wrong guesses
+
+Then you perform the rite in the chamber. The spirit is "Ithzar (bound to Cornelia Ashby)", with a new clause, ***of Release***, learned in this chapter, plus her runes, her incense and a circle strong enough for a djinni. **You never learn Ithzar's true name:** it insists on speaking its own name inside your circle. If the rite fails, it rebounds on you (injury) and Cornelia notices (trust and suspicion effects). If it succeeds, Ithzar is free, and vanishes.
+
+**Chapter 4, the terms.** You accept all three or refuse:
+
+1. **You never speak its true name in a summons.** It comes and goes as it pleases, so it is occasionally away for a day.
+2. **It keeps one secret.** A story hook for later; no mechanic.
+3. **"One day I'll ask you to let me go. When I do, you will."** Open-ended on purpose; it's called in late in the game.
+
+Refusing sends it away. It makes the offer once more about a week later.
+
+**The call.** After the afrit commission, with the marid in view, Ithzar asks to leave before you wake the thing under the lake; it was there the last time someone tried. You let it go. As a parting gift it gives you one of the marid's missing syllables and a last footnote. You face the marid without it: no extra abilities, no heckling through the hardest summoning in the game. The ending's epilogue acknowledges it.
+
+#### What Ithzar does
+
+1. **The voice.** It comments on nearly everything, with footnotes:
+   - summonings, especially failures, broken bindings and wrong-name accidents
+   - districts you visit, and Clarion headlines
+   - your servants and your other familiar
+
+   Roughly 60–80 lines, keyed to triggers. This is what makes the game feel like the books.
+2. **"Ask Ithzar."** Once a day you can ask it about any spirit you know, and it adds a notebook fact. At low trust it sometimes lies: facts from Ithzar are marked "Ithzar says…" in the notebook until the chamber confirms them.
+3. **A favor a week.** At high trust it will run one errand a week, despite familiars never running errands. It's framed as a personal favor and costs a little trust.
+4. **Banter with your other familiar.** When both familiars are with you in the city, a city action has about a 1-in-4 chance (at most once per district per day) of setting off a short exchange between them. It appears in the result and in the chronicle. Lines are keyed to your other familiar: specific lines for each spirit, falling back to lines for its class. Some lines also react to the district or to a running event. Ithzar condescends to imps, needles foliots, competes with djinn, and goes quiet around anything bigger. For example:
+   - *Ithzar:* "Your imp is eating the wallpaper." *Nibbet:* "It started it."
+   - *Querrin:* "Message for the djinni." *Ithzar:* "If it's from you, I've already read it."
+5. **The endgame.** It knows Shem-Ashara, and its parting gift at the call is one of the marid's syllables.
+
+**Trust** is a hidden standing like the others. The Workshop describes it in words ("It tolerates you", "It's starting to like you, against its better judgment").
+
+#### Build plan
+
+- **Part A:** Ithzar's data, the second familiar slot, the commentary system and banter, chapters 1 and 2.
+- **Part B:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, chapters 3 and 4, "Ask Ithzar" and the weekly favor.
+- **Part C:** the call and the ending's epilogue.
+
+#### Deferred: dark paths
+
+Not in this step, but the arc is shaped to allow them later:
+
+- **Forced binding.** In chapter 3, keep Ithzar's name and bind it by force instead of freeing it. It works, but it hates you, its commentary turns poisonous, and it sabotages you once at the worst moment.
+- **Refusing the call.** Break your promise and keep Ithzar for the marid. It stays, bitterly, as the forced-familiar version.
 
 ---
 
@@ -162,12 +259,17 @@ One specific sarcastic djinni with its own story arc spread across places and ev
 - **Rival magicians and the Machine.** Should rivals raid your workshop and try to steal your vessels? Wards could be a sixth vessel, or part of step 3.
 - **Rune positions.** The circle has three rune slots, but position doesn't matter yet. Placing runes at specific points is a candidate for deepening the lab puzzle later.
 - **Repeat visits.** What should happen after a spirit is bound once? Should rebinding get easier, and do spirits remember how you treated them?
+- **More events.** Only five events exist, and all but the crackdown happen once. Candidates: the Sanitary Canal (the plan to reverse the river) tied to the marid, the Fair's closing in October, rival magicians targeting your workshop, and a second round of labor trouble.
+- **Event pacing.** The strike and the election overlap in mid-April, which may be too much at once for a new player.
+- **Ithzar's absences.** Is "occasionally away for a day" a fun cost of its first term, or just annoying? The fallback is to make the term pure flavor.
+- **Cornelia after the release.** Does she become a recurring rival who comes after your workshop once she knows you freed her djinni?
 
 ## Content conventions
 
 - All content is data:
   - `js/data.js`: spirits, lore, materials, errands, commissions
-  - `js/districts.js`: districts and encounters
+  - `js/districts.js`: districts, places and street encounters (the effect format is documented at the top)
+  - `js/events.js`: the calendar, the newspaper and current events
 - **Lore fragments** need `facts` (the formats are documented above `DEMONS`). Their prose must agree with their facts, and every syllable fact must appear in the text as `[SYL]`.
 - **Spirits:** a name length of class + 1, no repeated syllables, no two spirits with the same name, exactly one liked and one hated incense.
 - **Tone:** dry, period-flavored, funny. Each spirit gets an appearance, a greeting and a footnote. Use American spelling.

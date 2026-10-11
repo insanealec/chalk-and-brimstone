@@ -1,10 +1,18 @@
-// Districts of Chicago, visited from the City tab. Each visit costs an hour and draws one encounter.
+// Districts of Chicago, shown on the City map. Each district has fixed places with standing actions,
+// and most have streets: walking them draws a one-off encounter with choices. Current events
+// (js/events.js) add more actions to particular places for a while.
 //
-// Encounter choices may have:
-//   cost      dollars paid up front
-//   req       { rank, servantTier, known } needed to pick it (known: a spirit you have heard of)
-//             { lantern, ring } hide the choice entirely unless that vessel holds a spirit of at least this class
+// District: { id, name, rank, opensDay?, danger, x, y, desc, places, street, streetLabel? }
+// Place:    { id, name, desc, actions, unless?, closed? }   unless: a flag that closes the place (closed: why)
+// Action / encounter choice:
+//   label, cost (dollars, paid up front), once (gone after use), cooldown (days before it can be used again)
+//   req       { rank, servantTier, known, machine, union } needed to pick it
+//             (servantTier: a servant or your familiar; known: a spirit you have heard of;
+//              machine / union: at least this standing with the Machine / the workers)
+//             { lantern, ring, flag } hide it entirely unless that vessel holds a spirit of at least
+//             this class, or that flag has been set
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
+// Street encounter: { id, title, text, choices, once?, unless? }
 //
 // Outcome effects (fx):
 //   dollars        n or [min, max] (negative takes money, never below zero)
@@ -13,34 +21,65 @@
 //   incense        { id: n }
 //   incenseRandom  [count, maxRank] random incense up to that market rank
 //   lore           [minTier, maxTier], or r => [min, max] given your rank tier (1-5)
+//   loreCount      how many fragments `lore` gives (default 1)
 //   loreDemon      a specific spirit's lore, falling back to lore of its class
 //   rune           teaches a rune (or yields lore if already known)
-//
-// Encounters marked `once` disappear after they are resolved.
+//   revealName     a spirit whose whole true name goes into the notebook
+//   standing       { machine, union, suspicion } changes to your hidden standings
+//   flag           sets a story flag (remembered with the day it was set)
+//   advance        (event actions only) moves the event to a stage index, or 'end'
 
 const DISTRICTS = [
   {
+    id: 'clark', name: 'Clark Street', rank: 0, danger: 0, x: 345, y: 110,
+    desc: 'Your street. The workshop is up the stairs above Kinsella’s saloon, and anything that wants you knows where to knock.',
+    places: [
+      {
+        id: 'doorstep', name: 'Your Doorstep',
+        desc: 'Letters, visitors and trouble arrive here. So does the milk, eventually.',
+        actions: [
+          { label: 'Sleep off your injuries', cooldown: 1, outcomes: [
+            { w: 1, text: 'You sleep through the afternoon, to the sound of Kinsella’s customers disagreeing downstairs.', fx: { health: 2 } },
+          ] },
+        ],
+      },
+    ],
+    street: [],
+  },
+
+  {
     id: 'maxwell', name: 'Maxwell Street', rank: 0, danger: 1, x: 278, y: 262,
     desc: 'An open-air market west of the river. A dozen languages, everything for sale, and some of it real.',
-    encounters: [
+    places: [
       {
-        id: 'peddler', title: 'A Peddler of Holy Smoke',
-        text: 'A peddler with a cart of burlap sacks swears his incense comes "from the Holy Land, by way of Cincinnati."',
-        choices: [
-          { label: 'Buy a sack', cost: 6, outcomes: [
+        id: 'stalls', name: 'The Market Stalls',
+        desc: 'Sacks, crates and barrows from Halsted to Jefferson. One peddler swears his incense comes "from the Holy Land, by way of Cincinnati."',
+        actions: [
+          { label: 'Buy a sack of the peddler’s incense', cost: 6, outcomes: [
             { w: 7, text: 'The sack is mostly genuine. Mostly.', fx: { incenseRandom: [3, 1] } },
             { w: 3, text: 'It is sawdust and cinnamon. The peddler and his cart have already vanished into the crowd.', fx: {} },
           ] },
-          { label: 'Haggle', req: { dollars: 3 }, outcomes: [
+          { label: 'Haggle with the peddler', req: { dollars: 3 }, outcomes: [
             { w: 5, text: 'After ten minutes of theatrical outrage on both sides, you walk away with two sacks for three dollars.', fx: { dollars: -3, incenseRandom: [2, 1] } },
             { w: 5, text: 'He takes your offer as a personal insult to his mother, his village and his incense. No sale.', fx: {} },
           ] },
           { label: 'Hold your lantern to the sacks', cost: 6, req: { lantern: 1 }, outcomes: [
-            { w: 1, text: 'In the lantern\u2019s light one sack glows faintly: genuine stock. You buy that one.', fx: { incenseRandom: [4, 2] } },
+            { w: 1, text: 'In the lantern’s light one sack glows faintly: genuine stock. You buy that one.', fx: { incenseRandom: [4, 2] } },
           ] },
-          { label: 'Walk on', outcomes: [{ w: 1, text: 'You leave the peddler to his next mark.', fx: {} }] },
         ],
       },
+      {
+        id: 'bookstall', name: 'The Bookstall',
+        desc: 'A trestle table sagging under water-stained books in Yiddish, Polish, Greek and Latin. The bookseller is usually asleep.',
+        actions: [
+          { label: 'Wake him and search the stacks', cost: 4, outcomes: [
+            { w: 6, text: 'Between a hymnal and a cookbook you find a few pages torn from something much older.', fx: { lore: r => [1, r + 1] } },
+            { w: 4, text: 'An hour of dust and nothing. The bookseller keeps your money anyway, on principle.', fx: {} },
+          ] },
+        ],
+      },
+    ],
+    street: [
       {
         id: 'herring', once: true, title: 'The Herring Woman',
         text: 'An old woman selling pickled herring absently traces a rune in the brine with one finger. It glows, faintly, then fades.',
@@ -61,23 +100,12 @@ const DISTRICTS = [
           ] },
           { label: 'Snap a binding word at it', outcomes: [
             { w: 6, text: 'It freezes mid-step, then grins. "Fair cop." It returns your purse and sweetens the deal with a little gossip.', fx: { lore: [1, 2] } },
-            { w: 4, text: 'Your Latin is a fraction too slow. It bites your hand and is gone.', fx: { robbed: [3, 6], health: -1 } },
+            { w: 4, text: 'You are a fraction too slow. It bites your hand and is gone.', fx: { robbed: [3, 6], health: -1 } },
           ] },
           { label: 'Catch its true shape in your lantern', req: { lantern: 1 }, outcomes: [
             { w: 1, text: 'The light pins the imp in its real shape, mid-step and mortified. It hands back your purse, adds a coin for its dignity, and talks.', fx: { dollars: 4, lore: [1, 2] } },
           ] },
           { label: 'Let it go', outcomes: [{ w: 1, text: 'You decide it isn’t worth the trouble. The imp agrees, and waves.', fx: { robbed: [3, 6] } }] },
-        ],
-      },
-      {
-        id: 'bookstall', title: 'The Bookstall',
-        text: 'A trestle table sags under water-stained books in Yiddish, Polish, Greek and Latin. The bookseller is asleep.',
-        choices: [
-          { label: 'Wake him and search the stacks', cost: 4, outcomes: [
-            { w: 6, text: 'Between a hymnal and a cookbook you find a few pages torn from something much older.', fx: { lore: r => [1, r + 1] } },
-            { w: 4, text: 'An hour of dust and nothing. The bookseller keeps your money anyway, on principle.', fx: {} },
-          ] },
-          { label: 'Let him sleep', outcomes: [{ w: 1, text: 'You tiptoe away. He snores on.', fx: {} }] },
         ],
       },
     ],
@@ -86,79 +114,74 @@ const DISTRICTS = [
   {
     id: 'levee', name: 'The Levee', rank: 0, danger: 2, x: 398, y: 270,
     desc: 'Saloons, gambling halls and dime museums south of the Loop. The aldermen take their cut; the spirits take the rest.',
-    encounters: [
+    places: [
       {
-        id: 'faro', title: 'The Faro Table',
-        text: 'At the back of a saloon called the Gilded Anchor, a faro dealer with very clean cuffs beckons you over.',
-        choices: [
-          { label: 'Bet $5', cost: 5, outcomes: [
+        id: 'anchor', name: 'The Gilded Anchor',
+        desc: 'A saloon with a faro table at the back, a bartender who hears everything, and sawdust that has seen things.',
+        actions: [
+          { label: 'Bet $5 at faro', cost: 5, outcomes: [
             { w: 45, text: 'The cards fall your way.', fx: { dollars: 10 } },
             { w: 55, text: 'The cards do not fall your way. They rarely do, here.', fx: {} },
           ] },
-          { label: 'Bet $20', cost: 20, outcomes: [
+          { label: 'Bet $20 at faro', cost: 20, outcomes: [
             { w: 45, text: 'You win, loudly. Several people remember your face.', fx: { dollars: 40 } },
             { w: 55, text: 'The dealer sweeps your money away with a sympathetic smile.', fx: {} },
           ] },
-          { label: 'Open your lantern on the dealing box', req: { lantern: 2 }, outcomes: [
-            { w: 1, text: 'The imp in the box shrieks in the light. The dealer pays you a good deal to close the shutter and leave.', fx: { dollars: [15, 25] } },
-          ] },
-          { label: 'Watch the dealer instead', outcomes: [
+          { label: 'Watch the faro dealer', outcomes: [
             { w: 5, text: 'On the third hand you see it: an imp curled in the dealing box, whispering the cards. For a dollar, it whispers other things too.', fx: { dollars: -1, lore: [1, 2] } },
             { w: 5, text: 'You watch for an hour and learn nothing, except that the house always wins.', fx: {} },
           ] },
-        ],
-      },
-      {
-        id: 'bartender', title: 'A Talkative Bartender',
-        text: 'The bartender at the Bucket of Blood polishes the same glass for ten minutes while watching you. In the Levee, that is an invitation.',
-        choices: [
-          { label: 'Buy a drink and listen', cost: 3, outcomes: [
+          { label: 'Open your lantern on the dealing box', req: { lantern: 2 }, cooldown: 3, outcomes: [
+            { w: 1, text: 'The imp in the box shrieks in the light. The dealer pays you a good deal to close the shutter and leave.', fx: { dollars: [15, 25], standing: { suspicion: 1 } } },
+          ] },
+          { label: 'Buy the bartender a drink and listen', cost: 3, outcomes: [
             { w: 7, text: 'He leans in. "You didn’t hear this from me…"', fx: { lore: r => [1, r + 1] } },
             { w: 3, text: 'He tells you a long story about his brother-in-law. None of it is useful.', fx: {} },
           ] },
           { label: 'Buy the house a round', cost: 12, outcomes: [
             { w: 1, text: 'The whole saloon drinks your health, and the rumors start flowing faster than the beer.', fx: { lore: r => [1, r + 1], loreCount: 2 } },
           ] },
-          { label: 'Leave', outcomes: [{ w: 1, text: 'You leave him to his glass.', fx: {} }] },
         ],
       },
       {
-        id: 'pit', title: 'The Imp Pit',
-        text: 'Behind a dime museum, magicians crowd around a chalk ring where two bound imps are tearing at each other. Money is changing hands fast.',
-        choices: [
+        id: 'pit', name: 'The Imp Pit', unless: 'vance', closed: 'Padlocked by order of Alderman Vance.',
+        desc: 'Behind a dime museum, magicians crowd a chalk ring where bound imps tear at each other. Money changes hands fast.',
+        actions: [
           { label: 'Enter your own servant', cost: 5, req: { servantTier: 1 }, outcomes: [
-            { w: 55, text: 'Your servant wins with a dirty trick it refuses to explain. The purse is yours.', fx: { dollars: 20 } },
-            { w: 45, text: 'Your servant loses, then spends the walk home explaining why it was not its fault.', fx: {} },
+            { w: 55, text: 'Your servant wins with a dirty trick it refuses to explain. The purse is yours.', fx: { dollars: 20, standing: { suspicion: 1 } } },
+            { w: 45, text: 'Your servant loses, then spends the walk home explaining why it was not its fault.', fx: { standing: { suspicion: 1 } } },
           ] },
           { label: 'Bet on the favorite', cost: 5, outcomes: [
             { w: 6, text: 'The favorite wins, as favorites do.', fx: { dollars: 8 } },
             { w: 4, text: 'The favorite trips over its own tail.', fx: {} },
           ] },
-          { label: 'Tip off City Hall', outcomes: [
-            { w: 6, text: 'City Hall pays a small bounty for the tip.', fx: { dollars: 8 } },
-            { w: 4, text: 'City Hall pays a small bounty. The pit’s owners catch up with you in an alley before you can spend it.', fx: { dollars: 8, health: -2 } },
+          { label: 'Tip off City Hall', cooldown: 4, outcomes: [
+            { w: 6, text: 'City Hall pays a small bounty for the tip.', fx: { dollars: 8, standing: { machine: 1 } } },
+            { w: 4, text: 'City Hall pays a small bounty. The pit’s owners catch up with you in an alley before you can spend it.', fx: { dollars: 8, health: -2, standing: { machine: 1 } } },
           ] },
         ],
       },
+    ],
+    street: [
       {
         id: 'museum', once: true, title: 'A Genuine Bottled Djinni',
-        text: 'A dime museum on State Street advertises A GENUINE BOTTLED DJINNI! Inside, on a velvet cushion, sits a green glass bottle. Something in it is swearing in Aramaic.',
+        text: 'A dime museum on State Street advertises A GENUINE BOTTLED DJINNI! Inside, on a velvet cushion, sits a green glass bottle. Something in it is swearing, fluently, in several dead languages.',
         choices: [
           { label: 'Pay your dime and press your ear to the glass', cost: 1, outcomes: [
             { w: 1, text: 'It is a foliot, not a djinni, and it is very bored. It will talk to anyone who listens.', fx: { lore: [2, 3] } },
           ] },
           { label: 'Smash the bottle and free it', outcomes: [
-            { w: 5, text: 'The foliot streaks out the window. That night a purse drops onto your doorstep with a note: "We’re even."', fx: { dollars: [15, 25] } },
-            { w: 5, text: 'The foliot is grateful for about half a second, then remembers you are a magician.', fx: { health: -2 } },
+            { w: 5, text: 'The foliot streaks out the window, shouting something that might be thanks.', fx: { standing: { suspicion: 1 }, flag: 'freed-foliot' } },
+            { w: 5, text: 'The foliot is grateful for about half a second, then remembers you are a magician.', fx: { health: -2, standing: { suspicion: 1 } } },
           ] },
           { label: 'Leave it', outcomes: [{ w: 1, text: 'The swearing follows you out onto the street.', fx: {} }] },
         ],
       },
       {
-        id: 'toughs', title: 'Three Men in an Alley',
+        id: 'toughs', unless: 'rourke', title: 'Three Men in an Alley',
         text: 'Three toughs step out of an alley off Custom House Place. One of them is holding a lead pipe and a very old grudge against magicians.',
         choices: [
-          { label: 'Show them the Machine\u2019s signet', req: { ring: 1 }, outcomes: [
+          { label: 'Show them the Machine’s signet', req: { ring: 1 }, outcomes: [
             { w: 1, text: 'They see the ring and melt back into the alley, apologizing to your boots.', fx: {} },
           ] },
           { label: 'Hand over your purse', outcomes: [{ w: 1, text: 'They take it and leave, almost politely.', fx: { robbed: [5, 15] } }] },
@@ -167,7 +190,7 @@ const DISTRICTS = [
             { w: 6, text: 'The lead pipe wins.', fx: { health: -3, robbed: [3, 8] } },
           ] },
           { label: 'Set your servant on them', req: { servantTier: 1 }, outcomes: [
-            { w: 85, text: 'Your servant appears behind them in a shape best left undescribed. They run, dropping their own purses.', fx: { dollars: [5, 12] } },
+            { w: 85, text: 'Your servant appears behind them in a shape best left undescribed. They run, dropping their own purses.', fx: { dollars: [5, 12], standing: { suspicion: 1 } } },
             { w: 15, text: 'Your servant takes its time arriving. Deliberately.', fx: { health: -1 } },
           ] },
         ],
@@ -178,25 +201,42 @@ const DISTRICTS = [
   {
     id: 'lasalle', name: 'LaSalle Street', rank: 1, danger: 1, x: 388, y: 202,
     desc: 'The Board of Trade, the banks, and the offices of the city’s richest magicians, who do not like to be bothered.',
-    encounters: [
+    places: [
       {
-        id: 'tip', title: 'A Tip on Wheat',
-        text: 'A broker on the steps of the Board of Trade grabs your sleeve. He has a tip on wheat futures, and the frantic eyes of a man whose imp has been reading other people’s telegrams.',
-        choices: [
-          { label: 'Ask the Machine\u2019s friends on the floor instead', req: { ring: 1 }, outcomes: [
-            { w: 1, text: 'A man with a ring like yours murmurs a better tip than the broker\u2019s. It pays.', fx: { dollars: [25, 35] } },
-          ] },
-          { label: 'Invest $20', cost: 20, outcomes: [
+        id: 'board', name: 'The Board of Trade',
+        desc: 'Brokers shouting in the wheat pit, and imps reading telegrams over their shoulders.',
+        actions: [
+          { label: 'Take a broker’s tip: invest $20', cost: 20, outcomes: [
             { w: 5, text: 'Wheat goes up. Your money comes back fatter.', fx: { dollars: 45 } },
             { w: 5, text: 'Wheat goes down, and your twenty dollars go with it.', fx: {} },
           ] },
-          { label: 'Invest $60', cost: 60, outcomes: [
+          { label: 'Take a broker’s tip: invest $60', cost: 60, outcomes: [
             { w: 5, text: 'Wheat goes through the roof. You are briefly the toast of LaSalle Street.', fx: { dollars: 135 } },
             { w: 5, text: 'Wheat collapses. You are briefly the punchline of LaSalle Street.', fx: {} },
           ] },
-          { label: 'Decline', outcomes: [{ w: 1, text: 'He finds another sleeve to grab.', fx: {} }] },
+          { label: 'Ask the Machine’s friends on the floor', req: { ring: 1 }, cooldown: 2, outcomes: [
+            { w: 1, text: 'A man with a ring like yours murmurs a better tip than any broker’s. It pays.', fx: { dollars: [25, 35], standing: { suspicion: 1 } } },
+          ] },
         ],
       },
+      {
+        id: 'club', name: 'The Lake Shore Circle',
+        desc: 'The city’s oldest club for magicians, and its best library. Members only. The doorman is enormous and not entirely human.',
+        actions: [
+          { label: 'Bribe the doorman', cost: 12, outcomes: [
+            { w: 7, text: 'He looks the other way for exactly one hour. You use it well.', fx: { lore: r => [r, r + 2] } },
+            { w: 3, text: 'He takes the money and does not look the other way.', fx: {} },
+          ] },
+          { label: 'Present yourself as a member', req: { rank: 2 }, outcomes: [
+            { w: 1, text: 'An alderman of the Machine is always expected. The librarian finds you something rare.', fx: { lore: r => [r, r + 1] } },
+          ] },
+          { label: 'Show your signet to the doorman', req: { ring: 2 }, outcomes: [
+            { w: 1, text: 'The doorman bows. Friends of the Machine are always members.', fx: { lore: r => [r, r + 2] } },
+          ] },
+        ],
+      },
+    ],
+    street: [
       {
         id: 'rival', title: 'A Rival Magician',
         text: 'A magician in a silk hat recognizes you outside the Rookery. "Thwaite’s apprentice," she says, as if naming a stain.',
@@ -212,28 +252,11 @@ const DISTRICTS = [
         ],
       },
       {
-        id: 'club', title: 'The Lake Shore Circle',
-        text: 'The library of the Lake Shore Circle, the city’s oldest club for magicians, is members only. The doorman is enormous and, you suspect, not entirely human.',
-        choices: [
-          { label: 'Bribe the doorman', cost: 12, outcomes: [
-            { w: 7, text: 'He looks the other way for exactly one hour. You use it well.', fx: { lore: r => [r, r + 2] } },
-            { w: 3, text: 'He takes the money and does not look the other way.', fx: {} },
-          ] },
-          { label: 'Show your signet to the doorman', req: { ring: 2 }, outcomes: [
-            { w: 1, text: 'The doorman bows. Friends of the Machine are always members.', fx: { lore: r => [r, r + 2] } },
-          ] },
-          { label: 'Present yourself as a member', req: { rank: 2 }, outcomes: [
-            { w: 1, text: 'An alderman of the Machine is always expected. The librarian finds you something rare.', fx: { lore: r => [r, r + 1] } },
-          ] },
-          { label: 'Leave', outcomes: [{ w: 1, text: 'The doorman watches you all the way down the block.', fx: {} }] },
-        ],
-      },
-      {
         id: 'banker', once: true, title: 'The Banker’s Problem',
         text: 'A bank president takes you aside. Something has been rearranging the numbers in his ledgers at night, and his own magicians are stumped.',
         choices: [
           { label: 'Lend him a servant', req: { servantTier: 2 }, outcomes: [
-            { w: 1, text: 'Your servant finds a foliot living in the inkwell. The bank president is grateful, and very well connected.', fx: { dollars: 40, rep: 1 } },
+            { w: 1, text: 'Your servant finds a foliot living in the inkwell. The bank president is grateful, and very well connected.', fx: { dollars: 40, rep: 1, standing: { machine: 1 } } },
           ] },
           { label: 'Look into it yourself', outcomes: [
             { w: 5, text: 'You find the culprit: a junior clerk with a bad imp habit. The president pays a finder’s fee.', fx: { dollars: 20 } },
@@ -247,31 +270,34 @@ const DISTRICTS = [
   {
     id: 'stockyards', name: 'Union Stock Yards', rank: 1, danger: 2, x: 205, y: 405,
     desc: 'A square mile of pens, packinghouses and smoke. On a south wind you can smell it in the Loop. Imps adore it.',
-    encounters: [
+    places: [
       {
-        id: 'spoil', title: 'Something in the Cold Room',
-        text: 'A packinghouse foreman says something has been spoiling a side of beef every night and leaving tiny bootprints in the frost. He’ll pay to be rid of it.',
-        choices: [
-          { label: 'Send your servant into the cold room', req: { servantTier: 2 }, outcomes: [
+        id: 'row', name: 'Packinghouse Row',
+        desc: 'Brick packinghouses, cold rooms, and foremen with problems. Something is always spoiling the meat.',
+        actions: [
+          { label: 'Send your servant to clear a cold room', req: { servantTier: 2 }, cooldown: 2, outcomes: [
             { w: 75, text: 'Your servant drags out a frost-imp by the ear. The foreman pays up, and tells the other foremen.', fx: { dollars: 30 } },
             { w: 25, text: 'Your servant and the imp come to an arrangement, which does not include you.', fx: {} },
           ] },
-          { label: 'Go in yourself', outcomes: [
-            { w: 5, text: 'You find a nest of three imps behind the ice and drive them out with salt and Latin.', fx: { dollars: 15 } },
+          { label: 'Clear a cold room yourself', cooldown: 2, outcomes: [
+            { w: 5, text: 'You find a nest of three imps behind the ice and drive them out with salt and stern words.', fx: { dollars: 15 } },
             { w: 5, text: 'The imps find you first.', fx: { health: -2 } },
           ] },
-          { label: 'Decline', outcomes: [{ w: 1, text: 'The foreman shrugs and goes back to his ledgers.', fx: {} }] },
         ],
       },
       {
-        id: 'tallow', title: 'The Renderer',
-        text: 'Behind the rendering works, a woman sells scraped resins and incense dregs out of a wheelbarrow. It smells of everything at once.',
-        choices: [
-          { label: 'Buy a bundle', cost: 5, outcomes: [{ w: 1, text: 'Rough, but it will burn.', fx: { incenseRandom: [3, 1] } }] },
+        id: 'rendering', name: 'The Rendering Works',
+        desc: 'Behind the works, a woman sells scraped resins and incense dregs out of a wheelbarrow. It smells of everything at once.',
+        actions: [
+          { label: 'Buy a bundle of dregs', cost: 5, outcomes: [{ w: 1, text: 'Rough, but it will burn.', fx: { incenseRandom: [3, 1] } }] },
           { label: 'Buy a big bundle', cost: 12, outcomes: [{ w: 1, text: 'She throws in something green and bitter she found "at the bottom."', fx: { incenseRandom: [6, 2] } }] },
-          { label: 'Hold your nose and leave', outcomes: [{ w: 1, text: 'You leave. The smell follows you home.', fx: {} }] },
+          { label: 'Collect what Dora’s people set aside', req: { flag: 'packingtown-friends' }, cooldown: 3, outcomes: [
+            { w: 1, text: 'A bundle wrapped in newspaper, with a note in Dora Kaspar’s hand: "From the Yards."', fx: { incenseRandom: [4, 3] } },
+          ] },
         ],
       },
+    ],
+    street: [
       {
         id: 'mole', once: true, title: 'Diggings under Packingtown',
         text: 'Under a boardwalk you spot a lumpish thing with a monocle, tunneling with great dignity through the muck.',
@@ -298,13 +324,13 @@ const DISTRICTS = [
   },
 
   {
-    id: 'midway', name: 'The Midway Plaisance', rank: 2, danger: 1, x: 432, y: 455,
+    id: 'midway', name: 'The Midway Plaisance', rank: 2, opensDay: 29, danger: 1, x: 432, y: 455,
     desc: 'The World’s Columbian Exposition: electric light, the great Wheel, and a "Street in Cairo" where, rumor says, not all the Egyptians are human.',
-    encounters: [
+    places: [
       {
-        id: 'cairo', title: 'A Street in Cairo',
-        text: 'Among the donkeys and dancers on the Street in Cairo, a spice merchant sits very still, and the smoke from his brazier moves against the wind.',
-        choices: [
+        id: 'cairo', name: 'A Street in Cairo',
+        desc: 'Donkeys, dancers and a spice merchant who sits very still. The smoke from his brazier moves against the wind.',
+        actions: [
           { label: 'Buy galbanum (2 for $16)', cost: 16, outcomes: [
             { w: 1, text: 'He wraps it in paper printed with Coptic letters. You keep the paper too.', fx: { incense: { galbanum: 2 } } },
           ] },
@@ -315,9 +341,9 @@ const DISTRICTS = [
         ],
       },
       {
-        id: 'wheel', title: 'The Great Wheel',
-        text: 'Mr. Ferris’s Wheel lifts you 264 feet above the fairgrounds. From the top, through your spectacles of second sight, the whole city glitters with bound spirits.',
-        choices: [
+        id: 'wheel', name: 'The Great Wheel',
+        desc: 'Mr. Ferris’s Wheel lifts you 264 feet above the fairgrounds. From the top, through your spectacles of second sight, the whole city glitters with bound spirits.',
+        actions: [
           { label: 'Study the city from the top', cost: 1, outcomes: [
             { w: 6, text: 'You spot a trail of scorched essence across the rooftops and trace it to its source.', fx: { lore: [3, 4] } },
             { w: 4, text: 'You see a great deal and understand none of it. The view, at least, is restful.', fx: { health: 1 } },
@@ -326,23 +352,23 @@ const DISTRICTS = [
         ],
       },
       {
-        id: 'dynamo', title: 'Trouble at the Dynamo',
-        text: 'The lights of the Electricity Building are flickering. An engineer swears there is something living inside the dynamo, and it is eating the current.',
-        choices: [
-          { label: 'Send your servant in', req: { servantTier: 2 }, outcomes: [
+        id: 'electricity', name: 'The Electricity Building',
+        desc: 'Dynamos the size of houses, and lights that flicker whenever something inside them gets hungry.',
+        actions: [
+          { label: 'Send your servant into the dynamo', req: { servantTier: 2 }, cooldown: 2, outcomes: [
             { w: 8, text: 'Your servant hauls out a fat, glowing imp. The fair’s managers pay handsomely and ask no questions.', fx: { dollars: 40 } },
             { w: 2, text: 'Your servant comes out singed, furious and empty-handed.', fx: {} },
           ] },
-          { label: 'Tinker with it yourself', outcomes: [
-            { w: 4, text: 'You coax the imp out with a copper coin. The engineer tips you well.', fx: { dollars: 20 } },
+          { label: 'Tinker with the dynamo yourself', cooldown: 2, outcomes: [
+            { w: 4, text: 'You coax an imp out with a copper coin. The engineer tips you well.', fx: { dollars: 20 } },
             { w: 6, text: 'You touch the wrong part of the dynamo.', fx: { health: -2 } },
           ] },
         ],
       },
       {
-        id: 'sarcophagus', title: 'The Egyptian Exhibit',
-        text: 'In the Egyptian exhibit, a sarcophagus lid is carved with Coptic warnings. The guard is asleep. The warnings are not.',
-        choices: [
+        id: 'egypt', name: 'The Egyptian Exhibit',
+        desc: 'A sarcophagus whose lid is carved with Coptic warnings. The guard is asleep. The warnings are not.',
+        actions: [
           { label: 'Copy the inscriptions', outcomes: [
             { w: 6, text: 'The warnings are about an afrit. They are very specific.', fx: { loreDemon: 'ulgaroth' } },
             { w: 4, text: 'The guard wakes up and throws you out by the collar.', fx: { health: -1 } },
@@ -350,46 +376,43 @@ const DISTRICTS = [
           { label: 'Read the inscription only the lantern shows', req: { lantern: 3 }, outcomes: [
             { w: 1, text: 'Under the carved warnings is a second inscription, written in light. It was meant for magicians.', fx: { lore: [3, 5] } },
           ] },
-          { label: 'Move along', outcomes: [{ w: 1, text: 'Something in the sarcophagus shifts as you leave.', fx: {} }] },
         ],
       },
     ],
+    street: [],
   },
 
   {
-    id: 'crib', name: 'The Water Crib', rank: 3, danger: 3, x: 572, y: 150,
+    id: 'crib', name: 'The Water Crib', rank: 3, danger: 3, x: 572, y: 150, streetLabel: 'Walk the gallery',
     desc: 'Two miles out in Lake Michigan, the intake crib that drinks for the whole city. The engineers say the water down there is very deep and very cold, and that something in it is listening.',
-    encounters: [
+    places: [
       {
-        id: 'shaft', title: 'The Intake Shaft',
-        text: 'The night engineer lets you lower a lantern into the intake shaft. The water below is black, and the light does not reach as far as it should.',
-        choices: [
+        id: 'shaft', name: 'The Intake Shaft',
+        desc: 'Black water, a long way down. The lantern light does not reach as far as it should.',
+        actions: [
           { label: 'Look into the water with your second sight', outcomes: [
             { w: 6, text: 'Far below, something vast turns over in its sleep. You feel its name before you hear it.', fx: { loreDemon: 'shemashara' } },
             { w: 4, text: 'Something looks back.', fx: { health: -3 } },
           ] },
-          { label: 'Lower your bound lantern instead', req: { lantern: 4 }, outcomes: [
+          { label: 'Lower your bound lantern into the shaft', req: { lantern: 4 }, outcomes: [
             { w: 1, text: 'The spirit in your lantern goes down without fear and comes back with something the lake did not mean to give.', fx: { loreDemon: 'shemashara' } },
           ] },
-          { label: 'Pull the lantern up', outcomes: [{ w: 1, text: 'The lantern comes up wet, though it never touched the water.', fx: {} }] },
         ],
       },
       {
-        id: 'engineer', title: 'The Engineer’s Logbook',
-        text: 'The crib’s engineer keeps a logbook of strange tides, moon-phases, and the nights the pumps ran backward. He would sell it, for the right price.',
-        choices: [
-          { label: 'Buy the logbook', cost: 25, outcomes: [{ w: 1, text: 'Most of it is about pumps. Some of it is not.', fx: { lore: [4, 5] } }] },
-          { label: 'Decline', outcomes: [{ w: 1, text: 'He tucks the logbook back into his coat, relieved.', fx: {} }] },
+        id: 'quarters', name: 'The Engineer’s Quarters',
+        desc: 'A warm room full of pump schedules, and an engineer with a logbook he would rather not discuss. The supply boat ties up below.',
+        actions: [
+          { label: 'Buy the engineer’s logbook of strange tides', cost: 25, outcomes: [
+            { w: 1, text: 'Most of it is about pumps. Some of it is not.', fx: { lore: [4, 5] } },
+          ] },
+          { label: 'Buy ambergris from the old whaler (2 for $40)', cost: 40, outcomes: [
+            { w: 1, text: '"Off Nantucket, in ’61," he says. It smells of the sea, and of nothing you can name.', fx: { incense: { ambergris: 2 } } },
+          ] },
         ],
       },
-      {
-        id: 'whaler', title: 'An Old Whaler',
-        text: 'An old whaler who works the crib’s supply boat has a lump of something grey and waxy wrapped in oilcloth. "Ambergris," he says. "Off Nantucket, in ’61."',
-        choices: [
-          { label: 'Buy it (2 for $40)', cost: 40, outcomes: [{ w: 1, text: 'It smells of the sea, and of nothing you can name.', fx: { incense: { ambergris: 2 } } }] },
-          { label: 'Decline', outcomes: [{ w: 1, text: 'He shrugs and goes back to mending his net.', fx: {} }] },
-        ],
-      },
+    ],
+    street: [
       {
         id: 'fog', title: 'Fog on the Water',
         text: 'A fog rolls across the lake toward the crib. As it passes, it speaks to you in Greek, in a woman’s voice, bored and amused.',

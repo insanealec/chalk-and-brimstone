@@ -1,6 +1,6 @@
 'use strict';
 
-const SAVE_KEY = 'chalk-and-brimstone-v2';
+const SAVE_KEY = 'chalk-and-brimstone-v3';
 const MAX_HEALTH = 10;
 const ACTIONS_PER_DAY = 3;
 const MAX_RUNES = 3;
@@ -48,10 +48,13 @@ function newState() {
     vessels: {},            // vessel type -> { cap, spirit } for vessels you own
     familiar: null,         // demon id of your familiar
     district: 'maxwell',    // district selected on the city map
-    encounter: null,        // { district, id } awaiting a choice
-    encounterResult: null,  // what happened on the last visit
-    lastEncounter: {},      // district id -> last encounter id, to avoid immediate repeats
-    doneEncounters: [],     // 'district:encounter' ids of resolved one-time encounters
+    encounter: null,        // { district, id } street encounter awaiting a choice
+    lastResult: null,       // what happened on the last action in the city
+    lastStreet: {},         // district id -> last street encounter, to avoid immediate repeats
+    used: {},               // action key -> day last used (for once and cooldown)
+    events: {},             // event id -> { stage, since, done }
+    flags: {},              // story flag -> day it was set
+    standing: { machine: 0, union: 0, suspicion: 0 },
   };
 }
 
@@ -672,7 +675,9 @@ function endDay() {
     state.health = Math.min(MAX_HEALTH, state.health + 1);
     state.day++;
     state.actions = maxActions();
-    log(`Day ${state.day} dawns.`, 'info');
+    log(`${dateLabel(state.day, 'long')} dawns.`, 'info');
+    processEvents();
+    coolSuspicion();
     scry();
     if (state.familiar && Math.random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
   }
@@ -713,34 +718,103 @@ function completeCommission() {
 // ---------- the city
 
 const districtById = id => DISTRICTS.find(d => d.id === id);
+const placeById = (dist, id) => dist.places.find(p => p.id === id);
+const eventById = id => EVENTS.find(e => e.id === id);
 
-function currentEncounter() {
-  if (!state.encounter) return null;
-  const dist = districtById(state.encounter.district);
-  const enc = dist && dist.encounters.find(e => e.id === state.encounter.id);
-  return enc ? { dist, enc } : null;
+// ---- the calendar and the news
+
+function dateLabel(day, style = 'short') {
+  const date = new Date(START_DATE[0], START_DATE[1], START_DATE[2] + day - 1);
+  return date.toLocaleDateString('en-US', style === 'long'
+    ? { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+    : { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-function visitBlocker(dist) {
-  if (state.over) return 'The game is over.';
+function activeEvents() {
+  return EVENTS.filter(ev => state.events[ev.id] && !state.events[ev.id].done)
+    .map(ev => ({ ev, st: state.events[ev.id], stage: ev.stages[state.events[ev.id].stage] }));
+}
+
+// Today's front page: running events, newest first, or filler when nothing much is happening.
+function headlines() {
+  const news = activeEvents().filter(a => a.stage.headline)
+    .sort((a, b) => b.st.since - a.st.since).map(a => a.stage.headline);
+  return news.length ? news : [FILLER_HEADLINES[state.day % FILLER_HEADLINES.length]];
+}
+
+function setStage(ev, next) {
+  const st = state.events[ev.id];
+  if (next === 'end') {
+    st.done = true;
+    return;
+  }
+  st.stage = next;
+  st.since = state.day;
+  const stage = ev.stages[next];
+  if (stage.headline) {
+    log(`<span class="paper">${NEWSPAPER}:</span> ${stage.headline}`, 'news');
+  } else {
+    const [d, p] = stage.place.split(':');
+    log(`<b>${ev.title}.</b> Something is waiting for you at ${placeById(districtById(d), p).name.replace(/^Your /, 'your ')}.`, 'news');
+  }
+}
+
+// Starts, expires and advances current events. Runs at dawn.
+function processEvents() {
+  for (const ev of EVENTS) {
+    const st = state.events[ev.id];
+    if (st && !st.done) {
+      const stage = ev.stages[st.stage];
+      if (stage.days && state.day - st.since >= stage.days) {
+        const ex = typeof stage.expire === 'function' ? stage.expire(state) : stage.expire;
+        if (ex.text || ex.fx) {
+          const entry = log(`<b>${ev.title}.</b> ${ex.text || ''}`, 'news');
+          if (ex.fx) {
+            const { notes } = applyEffects(ex.fx, `caught up in ${ev.title.toLowerCase()}`);
+            if (notes.length) entry.html += ` <span class="fx">(${notes.join(', ')})</span>`;
+          }
+        }
+        setStage(ev, ex.next);
+      }
+    } else if ((!st || ev.repeat) && ev.starts(state)) {
+      state.events[ev.id] = { stage: 0, since: state.day, done: false };
+      setStage(ev, 0);
+    }
+  }
+}
+
+// ---- hidden standings
+
+const STANDING_WORDS = {
+  machine: [[-99, 'distrusted'], [-1, 'nobody in particular'], [2, 'a useful friend'], [5, 'one of their own']],
+  union: [[-99, 'an enemy'], [-1, 'a stranger'], [2, 'a friend'], [5, 'trusted']],
+  suspicion: [[0, 'not interested in you'], [3, 'watching you'], [6, 'closing in']],
+};
+const STANDING_NOTES = {
+  machine: ['the Machine disapproves', 'the Machine approves'],
+  union: ['the workers trust you less', 'the workers trust you more'],
+  suspicion: ['the police lose interest', 'the police take an interest'],
+};
+const isBadNote = n => n.startsWith('−') || /disapproves|trust you less|take an interest/.test(n);
+
+function standingWord(kind) {
+  let word = '';
+  for (const [min, w] of STANDING_WORDS[kind]) if (state.standing[kind] >= min) word = w;
+  return word;
+}
+
+// Suspicion fades with time: faster under the Machine's alderman, slower under the reformer.
+function coolSuspicion() {
+  const every = state.flags.rourke !== undefined ? 1 : state.flags.vance !== undefined ? 3 : 2;
+  if (state.standing.suspicion > 0 && state.day % every === 0) state.standing.suspicion--;
+}
+
+// ---- requirements shared by place actions and street choices
+
+function districtBlocker(dist) {
   if (dist.rank > rankIndex()) return `Only a ${RANKS[dist.rank].name} or higher has business here.`;
-  if (state.encounter) return 'Finish what you started first.';
-  if (state.actions < 1) return 'It is too late in the day. End the day and rest.';
+  if (dist.opensDay && state.day < dist.opensDay) return `The Fair opens on ${dateLabel(dist.opensDay, 'long')}.`;
   return null;
-}
-
-function visitDistrict(id) {
-  const dist = districtById(id);
-  if (!dist || visitBlocker(dist)) return;
-  const available = dist.encounters.filter(e => !(e.once && state.doneEncounters.includes(`${id}:${e.id}`)));
-  const fresh = available.filter(e => e.id !== state.lastEncounter[id]);
-  const enc = pick(fresh.length ? fresh : available);
-  state.actions--;
-  state.encounter = { district: id, id: enc.id };
-  state.lastEncounter[id] = enc.id;
-  state.encounterResult = null;
-  log(`You spend an hour in ${dist.name}.`);
-  render();
 }
 
 function choiceBlocker(ch) {
@@ -753,13 +827,16 @@ function choiceBlocker(ch) {
     return `Requires a servant or familiar: ${TIER_NAMES[r.servantTier]} or stronger.`;
   }
   if (r.known && !isKnown(demonById(r.known))) return 'You would need to know what it is.';
+  if (r.machine !== undefined && state.standing.machine < r.machine) return 'The Machine does not know you well enough.';
+  if (r.union !== undefined && state.standing.union < r.union) return 'The workers do not trust you enough.';
   return null;
 }
 
-// Lantern and signet choices are invisible until the vessel holds a strong enough spirit.
+// Lantern, signet and story-flag choices are invisible until you qualify for them.
 function choiceHidden(ch) {
   const r = ch.req || {};
-  return Boolean((r.lantern && vesselTier('lantern') < r.lantern) || (r.ring && vesselTier('ring') < r.ring));
+  return Boolean((r.lantern && vesselTier('lantern') < r.lantern) || (r.ring && vesselTier('ring') < r.ring)
+    || (r.flag && state.flags[r.flag] === undefined));
 }
 
 // A familiar warns about choices that can hurt you; a strong one tells you the odds.
@@ -773,29 +850,115 @@ function familiarWarning(ch) {
   return ft >= 4 ? `${fam}: ${Math.round(risk * 100)}% chance this hurts` : `${fam} looks uneasy about this`;
 }
 
+// ---- places
+
+// Everything you can do at a place right now: its standing actions plus any from current events.
+// Keys: 'p:district:place:index' for standing actions, 'e:event:stage:index' for event actions.
+function placeActions(dist, place) {
+  const where = `${dist.id}:${place.id}`;
+  const list = place.actions.map((a, i) => ({ a, key: `p:${where}:${i}` }));
+  for (const { ev, st, stage } of activeEvents()) {
+    if (stage.place === where) stage.actions.forEach((a, i) => list.push({ a, key: `e:${ev.id}:${st.stage}:${i}`, ev }));
+  }
+  return list.filter(({ a, key }) => !choiceHidden(a) && !(a.once && state.used[key] !== undefined));
+}
+
+function findAction(key) {
+  const [kind, x, y, i] = key.split(':');
+  if (kind === 'p') {
+    const dist = districtById(x);
+    const place = dist && placeById(dist, y);
+    return place && place.actions[i] ? { a: place.actions[i], dist, place } : null;
+  }
+  const ev = eventById(x);
+  const st = ev && state.events[ev.id];
+  if (!st || st.done || st.stage !== Number(y)) return null; // the event has moved on
+  const stage = ev.stages[st.stage];
+  const [d, p] = stage.place.split(':');
+  const dist = districtById(d);
+  return stage.actions[i] ? { a: stage.actions[i], dist, place: placeById(dist, p), ev } : null;
+}
+
+function actionBlocker(a, key) {
+  if (state.over) return 'The game is over.';
+  if (state.encounter) return 'Finish what you started in the streets first.';
+  if (state.actions < 1) return 'It is too late in the day.';
+  const last = state.used[key];
+  if (a.cooldown && last !== undefined && state.day < last + a.cooldown) {
+    const wait = last + a.cooldown - state.day;
+    return wait === 1 ? 'Not again until tomorrow.' : `Not again for ${wait} days.`;
+  }
+  return choiceBlocker(a);
+}
+
+function doAction(key) {
+  const found = findAction(key);
+  if (!found) return;
+  const { a, dist, place, ev } = found;
+  const closed = place.unless && state.flags[place.unless] !== undefined;
+  if (closed || districtBlocker(dist) || choiceHidden(a) || actionBlocker(a, key) || (a.once && state.used[key] !== undefined)) return;
+  state.actions--;
+  state.used[key] = state.day;
+  const out = resolveChoice(a, ev ? ev.title : place.name, dist, place.id);
+  if (ev && out.fx.advance !== undefined && !state.over) setStage(ev, out.fx.advance);
+  render();
+}
+
+// ---- the streets
+
+function streetEncounters(dist) {
+  return dist.street.filter(e => !(e.once && state.used[`s:${dist.id}:${e.id}`] !== undefined)
+    && !(e.unless && state.flags[e.unless] !== undefined));
+}
+
+function currentEncounter() {
+  if (!state.encounter) return null;
+  const dist = districtById(state.encounter.district);
+  const enc = dist && dist.street.find(e => e.id === state.encounter.id);
+  return enc ? { dist, enc } : null;
+}
+
+function walkStreets(id) {
+  const dist = districtById(id);
+  const pool = dist ? streetEncounters(dist) : [];
+  if (!pool.length || districtBlocker(dist) || state.encounter || state.actions < 1 || state.over) return;
+  const fresh = pool.filter(e => e.id !== state.lastStreet[id]);
+  const enc = pick(fresh.length ? fresh : pool);
+  state.actions--;
+  state.encounter = { district: id, id: enc.id };
+  state.lastStreet[id] = enc.id;
+  state.lastResult = null;
+  log(`You spend an hour wandering ${dist.name}.`);
+  render();
+}
+
 function chooseOption(i) {
   const cur = currentEncounter();
   if (!cur || state.over) return;
   const { dist, enc } = cur;
   const ch = enc.choices[i];
   if (!ch || choiceHidden(ch) || choiceBlocker(ch)) return;
+  state.encounter = null;
+  if (enc.once) state.used[`s:${dist.id}:${enc.id}`] = state.day;
+  resolveChoice(ch, enc.title, dist, null);
+  render();
+}
 
+// Pays a choice's cost, draws its outcome, applies the effects and records the result for display.
+function resolveChoice(ch, title, dist, placeId) {
   if (ch.cost) state.dollars -= ch.cost;
   let roll = Math.random() * ch.outcomes.reduce((a, o) => a + o.w, 0);
   const out = ch.outcomes.find(o => (roll -= o.w) < 0) || ch.outcomes[ch.outcomes.length - 1];
-
-  state.encounter = null;
-  if (enc.once) state.doneEncounters.push(`${dist.id}:${enc.id}`);
   // log the outcome first so any lore it reveals appears after it in the chronicle
-  const entry = log(`<b>${enc.title}.</b> ${out.text}`);
+  const entry = log(`<b>${title}.</b> ${out.text}`);
   const { notes, frags } = applyEffects(out.fx, `lost in ${dist.name}`);
   if (ch.cost) notes.unshift(`−$${ch.cost}`);
   if (notes.length) entry.html += ` <span class="fx">(${notes.join(', ')})</span>`;
-  const bad = notes.some(n => n.startsWith('−'));
-  const good = notes.some(n => !n.startsWith('−'));
+  const bad = notes.some(isBadNote);
+  const good = notes.some(n => !isBadNote(n));
   entry.kind = good && !bad ? 'good' : bad && !good ? 'bad' : '';
-  state.encounterResult = { district: dist.id, title: enc.title, choice: ch.label, text: out.text, notes, frags: frags.map(f => f.id) };
-  render();
+  state.lastResult = { district: dist.id, place: placeId, title, choice: ch.label, text: out.text, notes, frags: frags.map(f => f.id) };
+  return out;
 }
 
 function applyEffects(fx, cause) {
@@ -850,6 +1013,19 @@ function applyEffects(fx, cause) {
   if (frags.length) notes.push(`new lore: ${frags.map(f => f.demon.name).join(', ')}`);
   else if (wantedLore) notes.push('nothing you didn’t already know');
 
+  if (fx.revealName) {
+    const d = demonById(fx.revealName);
+    d.trueName.forEach((syl, i) => recordFact(d.id, `syl:${i}:${syl}`));
+    if (!state.met.includes(d.id)) state.met.push(d.id);
+    notes.push(`${d.name}\u2019s true name is in your notebook`);
+  }
+  if (fx.standing) {
+    for (const [k, v] of Object.entries(fx.standing)) {
+      state.standing[k] = clamp(state.standing[k] + v, k === 'suspicion' ? 0 : -10, 10);
+      notes.push(STANDING_NOTES[k][v > 0 ? 1 : 0]);
+    }
+  }
+  if (fx.flag && state.flags[fx.flag] === undefined) state.flags[fx.flag] = state.day;
   if (fx.rep) {
     notes.push(`+${fx.rep} reputation`);
     gainRep(fx.rep);
@@ -914,7 +1090,7 @@ function render() {
 function renderStats() {
   const hearts = Array.from({ length: MAX_HEALTH }, (_, i) => `<span class="heart ${i < state.health ? 'full' : ''}"></span>`).join('');
   $('#stats').innerHTML = `
-    <div class="stat"><span class="k">Day</span><span class="v">${state.day} · ${HOUR_NAMES[Math.ceil(state.actions / maxActions() * 3)]}</span></div>
+    <div class="stat"><span class="k">Date</span><span class="v">${dateLabel(state.day)} · ${HOUR_NAMES[Math.ceil(state.actions / maxActions() * 3)]}</span></div>
     <div class="stat"><span class="k">Hours left</span><span class="v">${state.actions}</span></div>
     <div class="stat"><span class="k">Dollars</span><span class="v">$${state.dollars}</span></div>
     <div class="stat"><span class="k">Health</span><span class="v hearts" title="${state.health}/${MAX_HEALTH}">${hearts}</span></div>
@@ -926,7 +1102,7 @@ function renderTabs() {
   const badges = {
     journal: state.newLore ? `<span class="badge">${state.newLore}</span>` : '',
     servants: state.servants.length ? `<span class="badge quiet">${state.servants.length}</span>` : '',
-    city: state.encounter ? '<span class="badge alert">!</span>' : '',
+    city: state.encounter || activeEvents().some(a => a.stage.place.startsWith('clark:')) ? '<span class="badge alert">!</span>' : '',
   };
   document.querySelectorAll('#tabs [data-tab]').forEach(b => {
     const t = b.dataset.tab;
@@ -1158,6 +1334,10 @@ function viewCity() {
   const cur = currentEncounter();
   const dist = cur ? cur.dist : districtById(state.district) || DISTRICTS[0];
   return `
+  <div class="newspaper panel">
+    <div class="masthead"><span class="paper-name">${NEWSPAPER}</span><span class="paper-date">${dateLabel(state.day, 'long')}</span></div>
+    ${headlines().map(h => `<p class="headline">${h}</p>`).join('')}
+  </div>
   <div class="city">
     <div class="stage map">${cityMapSVG(dist.id)}</div>
     <div class="panel district">${cur ? encounterHTML(cur) : districtHTML(dist)}</div>
@@ -1168,21 +1348,57 @@ function dangerPips(n) {
   return `<span class="pips" title="Danger ${n} of 3">${[1, 2, 3].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
 }
 
+// One button for a place action or a street choice, with its cost, the familiar's warning and any blocker.
+function choiceButton(ch, action, value, blocker, eventTitle = '') {
+  const warning = familiarWarning(ch);
+  const via = ch.req && ch.req.lantern ? 'lantern' : ch.req && ch.req.ring ? 'signet' : '';
+  return `<button class="choice ${via ? 'revealed' : ''} ${eventTitle ? 'event' : ''}" data-action="${action}" data-value="${value}" ${blocker ? 'disabled' : ''}>
+    <span>${ch.label}</span>${eventTitle ? `<small class="via">${eventTitle}</small>` : ''}${via ? `<small class="via">${via}</small>` : ''}${ch.cost && !ch.label.includes('$') ? `<small class="cost">$${ch.cost}</small>` : ''}
+    ${warning ? `<small class="risk">⚠ ${warning}</small>` : ''}
+    ${blocker ? `<small class="why">${blocker}</small>` : ''}
+  </button>`;
+}
+
+function resultHTML(r) {
+  return `<div class="result">
+    <p>${r.text}</p>
+    ${r.frags.map(id => FRAGMENTS.find(f => f.id === id)).map(f => `<p class="frag"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
+    ${r.notes.length ? `<p class="fx">${r.notes.join(' · ')}</p>` : ''}
+  </div>`;
+}
+
 function districtHTML(dist) {
-  const blocker = visitBlocker(dist);
-  const r = state.encounterResult && state.encounterResult.district === dist.id ? state.encounterResult : null;
-  return `
-    <div class="d-head"><h2>${dist.name}</h2><span class="tag">Danger ${dangerPips(dist.danger)}</span></div>
-    <p>${dist.desc}</p>
-    <button class="primary big" data-action="visit" data-value="${dist.id}" ${blocker ? 'disabled' : ''}>Go there <small>(1 hour)</small></button>
-    <p class="hint">${blocker || 'Anything might happen. That is rather the point.'}</p>
-    ${r ? `<div class="result">
-      <h3>${r.title}</h3>
-      <p class="muted small">You chose: ${r.choice}</p>
-      <p>${r.text}</p>
-      ${r.frags.map(id => FRAGMENTS.find(f => f.id === id)).map(f => `<p class="frag"><span class="src">${f.src}</span>“${f.text}”</p>`).join('')}
-      ${r.notes.length ? `<p class="fx">${r.notes.join(' · ')}</p>` : ''}
-    </div>` : ''}`;
+  const blocked = districtBlocker(dist);
+  const head = `<div class="d-head"><h2>${dist.name}</h2>${dist.danger
+    ? `<span class="tag">Danger ${dangerPips(dist.danger)}</span>` : '<span class="tag">Home</span>'}</div>
+    <p>${dist.desc}</p>`;
+  if (blocked) return `${head}<p class="hint">${blocked}</p>`;
+  const r = state.lastResult && state.lastResult.district === dist.id ? state.lastResult : null;
+
+  const places = dist.places.map(place => {
+    if (place.unless && state.flags[place.unless] !== undefined) {
+      return `<section class="place closed"><h3>${place.name}</h3><p class="muted small">${place.closed}</p></section>`;
+    }
+    const acts = placeActions(dist, place);
+    return `<section class="place ${acts.some(x => x.ev) ? 'has-event' : ''}">
+      <h3>${place.name}</h3>
+      <p class="muted small">${place.desc}</p>
+      <div class="choices">${acts.map(({ a, key, ev }) => choiceButton(a, 'act', key, actionBlocker(a, key), ev ? ev.title : '')).join('')}</div>
+      ${r && r.place === place.id ? resultHTML(r) : ''}
+    </section>`;
+  }).join('');
+
+  const label = dist.streetLabel || 'Walk the streets';
+  const streetBlocker = state.over ? 'The game is over.' : state.actions < 1 ? 'It is too late in the day.' : null;
+  const streets = streetEncounters(dist).length ? `<section class="place streets">
+      <h3>${label}</h3>
+      <p class="muted small">Wander for an hour and see what turns up.</p>
+      <div class="choices"><button class="choice" data-action="walk" data-value="${dist.id}" ${streetBlocker ? 'disabled' : ''}>
+        <span>${label}</span>${streetBlocker ? `<small class="why">${streetBlocker}</small>` : ''}</button></div>
+      ${r && r.place === null ? `<h4>${r.title}</h4>${resultHTML(r)}` : ''}
+    </section>` : '';
+
+  return `${head}<p class="muted small">Everything here takes an hour. You have ${state.actions} left today.</p>${places}${streets}`;
 }
 
 function encounterHTML({ dist, enc }) {
@@ -1190,17 +1406,7 @@ function encounterHTML({ dist, enc }) {
     <div class="d-head"><h2>${enc.title}</h2><span class="tag">${dist.name}</span></div>
     <p>${enc.text}</p>
     <div class="choices">
-      ${enc.choices.map((ch, i) => {
-        if (choiceHidden(ch)) return '';
-        const blocker = choiceBlocker(ch);
-        const warning = familiarWarning(ch);
-        const via = ch.req && ch.req.lantern ? 'lantern' : ch.req && ch.req.ring ? 'signet' : '';
-        return `<button class="choice ${via ? 'revealed' : ''}" data-action="choose" data-value="${i}" ${blocker ? 'disabled' : ''}>
-          <span>${ch.label}</span>${via ? `<small class="via">${via}</small>` : ''}${ch.cost && !ch.label.includes('$') ? `<small class="cost">$${ch.cost}</small>` : ''}
-          ${warning ? `<small class="risk">⚠ ${warning}</small>` : ''}
-          ${blocker ? `<small class="why">${blocker}</small>` : ''}
-        </button>`;
-      }).join('')}
+      ${enc.choices.map((ch, i) => (choiceHidden(ch) ? '' : choiceButton(ch, 'choose', i, choiceBlocker(ch)))).join('')}
     </div>`;
 }
 
@@ -1209,18 +1415,22 @@ function cityMapSVG(selectedId) {
   for (let x = 20; x < 480; x += 28) grid.push(`<line x1="${x}" y1="0" x2="${x}" y2="520"/>`);
   for (let y = 14; y < 520; y += 28) grid.push(`<line x1="0" y1="${y}" x2="480" y2="${y}"/>`);
   const shore = 'M 478 0 C 468 90, 482 170, 470 250 S 462 400, 492 520';
+  const events = activeEvents();
 
   const markers = DISTRICTS.map(d => {
-    const locked = d.rank > rankIndex();
+    const locked = !!districtBlocker(d);
     const sel = d.id === selectedId;
     const pending = state.encounter && state.encounter.district === d.id;
+    const news = !locked && events.some(a => a.stage.place.startsWith(`${d.id}:`));
+    const lockText = d.rank > rankIndex() ? RANKS[d.rank].name : locked ? `Opens ${dateLabel(d.opensDay)}` : '';
     const labelY = d.y + 34;
-    return `<g class="d-marker ${locked ? 'locked' : ''} ${sel ? 'sel' : ''} ${pending ? 'pending' : ''}" data-district="${d.id}" tabindex="0" role="button" aria-label="${d.name}">
+    return `<g class="d-marker ${locked ? 'locked' : ''} ${sel ? 'sel' : ''} ${pending ? 'pending' : ''} ${d.id === 'clark' ? 'home' : ''}" data-district="${d.id}" tabindex="0" role="button" aria-label="${d.name}">
       <circle class="halo" cx="${d.x}" cy="${d.y}" r="24"/>
       <circle class="dot" cx="${d.x}" cy="${d.y}" r="15"/>
-      <text class="initial" x="${d.x}" y="${d.y + 5}" text-anchor="middle">${d.name.replace(/^The /, '')[0]}</text>
+      <text class="initial" x="${d.x}" y="${d.y + 5}" text-anchor="middle">${d.id === 'clark' ? '⌂' : d.name.replace(/^The /, '')[0]}</text>
+      ${news ? `<circle class="news" cx="${d.x + 13}" cy="${d.y - 13}" r="6"/>` : ''}
       <text class="name" x="${d.x}" y="${labelY}" text-anchor="middle">${d.name}</text>
-      ${locked ? `<text class="lock" x="${d.x}" y="${labelY + 15}" text-anchor="middle">${RANKS[d.rank].name}</text>` : ''}
+      ${lockText ? `<text class="lock" x="${d.x}" y="${labelY + 15}" text-anchor="middle">${lockText}</text>` : ''}
     </g>`;
   }).join('');
 
@@ -1236,7 +1446,7 @@ function cityMapSVG(selectedId) {
     <path class="river" d="M 474 176 L 332 178"/>
     <path class="river" d="M 332 178 C 316 130, 292 80, 250 0"/>
     <path class="river" d="M 332 178 C 336 240, 322 292, 292 322 C 262 352, 222 362, 120 368"/>
-    <text class="river-label" x="410" y="168" text-anchor="middle">Chicago River</text>
+    <text class="river-label" x="420" y="166" text-anchor="middle">Chicago River</text>
     <text class="area-label" x="447" y="208" text-anchor="middle">THE LOOP</text>
     ${markers}
   </svg>`;
@@ -1466,6 +1676,9 @@ function viewCityHall() {
       ${c ? `<h3>${c.title}</h3><p>${c.text}</p><p>${req}</p><p class="muted">Reward: ${c.rep} reputation, $${commissionPay(c)}${c.gift ? `, a ${VESSELS[c.gift].name.toLowerCase()}` : ''}${c.teaches ? `, and the Clause ${CLAUSES[c.teaches].name}` : ''}.</p>`
           : '<p>City Hall has nothing further to ask of you. It is, frankly, a little afraid of you.</p>'}
     </section>
+    <section class="panel"><h2>Your standing</h2>
+      <p>To the Machine, you are <b>${standingWord('machine')}</b>. To the workers in the Yards, you are <b>${standingWord('union')}</b>. The police are <b>${standingWord('suspicion')}</b>.</p>
+    </section>
     <section class="panel"><h2>Ranks</h2><ol class="ladder">${ladder}</ol></section>
     ${done ? `<section class="panel"><h2>Completed commissions</h2><ul class="done">${done}</ul></section>` : ''}
   </div>`;
@@ -1492,12 +1705,12 @@ function renderOverlay() {
       <button class="primary big" data-action="close-intro">Pick up the chalk</button>`;
   } else if (state.over === 'dead') {
     html = `<h1>The Chalk Is Swept Away</h1>
-      <p>On day ${state.day}, you were ${state.deathCause}.</p>
+      <p>On ${dateLabel(state.day, 'long')}, you were ${state.deathCause}.</p>
       <p>City Hall sends a clerk to inventory your workshop. He finds a scorched pair of shoes and a journal, which he files under <i>Cautionary</i>.</p>
       <button class="primary big" data-action="restart">Begin anew</button>`;
   } else if (state.over === 'won') {
     html = `<h1>The Deep One Is Bound</h1>
-      <p>On day ${state.day}, Shem-Ashara rose from beneath Lake Michigan and knelt — after a fashion — within your obsidian rings.</p>
+      <p>On ${dateLabel(state.day, 'long')}, Shem-Ashara rose from beneath Lake Michigan and knelt — after a fashion — within your obsidian rings.</p>
       <p>You are, by any measure, the most powerful magician in Chicago. Which is, of course, precisely when the trouble starts.</p>
       <button class="primary big" data-action="restart">Begin anew</button>
       <button class="ghost" data-action="close-overlay">Admire your handiwork</button>`;
@@ -1562,7 +1775,8 @@ document.addEventListener('click', e => {
       currentTab = 'chamber';
       render();
       break;
-    case 'visit': visitDistrict(el.dataset.value); break;
+    case 'walk': walkStreets(el.dataset.value); break;
+    case 'act': doAction(el.dataset.value); break;
     case 'choose': chooseOption(Number(el.dataset.value)); break;
     case 'dismiss': dismiss(Number(el.dataset.value)); break;
     case 'prepare':
