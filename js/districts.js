@@ -12,7 +12,7 @@
 //             { lantern, ring, flag } hide it entirely unless that vessel holds a spirit of at least
 //             this class, or that flag has been set
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
-// Street encounter: { id, title, text, choices, once?, unless? }
+// Street encounter: { id, title, text, choices, once?, unless?, flag? }   flag: set when the encounter happens
 //
 // Outcome effects (fx):
 //   dollars        n or [min, max] (negative takes money, never below zero)
@@ -238,8 +238,8 @@ const DISTRICTS = [
     ],
     street: [
       {
-        id: 'rival', title: 'A Rival Magician',
-        text: 'A magician in a silk hat recognizes you outside the Rookery. "Thwaite’s apprentice," she says, as if naming a stain.',
+        id: 'rival', title: 'A Rival Magician', flag: 'met-cornelia',
+        text: 'A magician in a silk hat recognizes you outside the Rookery: Mrs. Cornelia Ashby, who has a djinni, a seat on the Lake Shore Circle’s committee, and opinions. "Thwaite’s apprentice," she says, as if naming a stain.',
         choices: [
           { label: 'Exchange pleasantries', outcomes: [
             { w: 5, text: 'She can’t resist showing off what she knows. You let her.', fx: { lore: r => [1, r + 1] } },

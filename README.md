@@ -17,6 +17,7 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
   - Your pentacle decides how hurt you get when a spirit breaks free, or when an uneasy one tests you.
 - **City:** a map of Chicago, starting Monday, April 3, 1893. Each district has places with things to do, and most can be wandered for random street encounters. Every action takes an hour. *The Chicago Clarion* prints the day's news, and current events (a packinghouse strike, a ward election, the World's Fair opening, a police crackdown) add new actions to particular places for a while and play out in stages depending on what you do. Your hidden standing with the Machine, the workers and the police shapes what's possible.
 - **Workshop:** every incantation ends in a binding clause. *Of Service* makes a timed servant; later you learn *of the Vessel*, which seals a spirit into a tool (scrying glass, lantern, sword-cane, pocket watch, signet ring) whose power grows with the spirit inside, and *of the Familiar*, which binds a companion that follows you and helps. Both need a firm binding.
+- **Ithzar:** a djinni bound to a rival magician starts taking an interest in you. It comments on your work (with footnotes), trades barbs with your familiar, and asks favors that build a hidden trust. In time it may become a second familiar.
 - **Servants:** bound spirits run errands overnight (coin, stolen incense, gossip, spying) until their patience runs out. Uneasily bound spirits sometimes twist their orders against you.
 - **City Hall:** a chain of commissions that raises your rank. Rank unlocks stronger circles, rarer incense and new districts. Binding the marid wins the game.
 
@@ -27,5 +28,6 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - `js/data.js`: all content (spirits, lore, items, errands, commissions). Add new spirits here.
 - `js/districts.js`: city districts, their places and street encounters. The header comment documents the effect format.
 - `js/events.js`: the calendar, the newspaper and current events.
+- `js/ithzar.js`: Ithzar's lines, banter and story arc.
 - `js/game.js`: state, rules and rendering.
 - `css/style.css`: styling.

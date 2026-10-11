@@ -160,7 +160,7 @@ The familiar is the stepping stone to step 4: the earned companion is a familiar
 ### Step 3: district places and current events ✅
 Built as described under **City** above. The magic-immune workers took the form of Dora Kaspar's packinghouse hands, "some of whom can see straight through a glamour." Their immunity is flavor for now and could become a mechanic later.
 
-### Step 4: Ithzar, the earned companion (planned)
+### Step 4: Ithzar, the earned companion (Part A built)
 
 You never summon Ithzar. You earn it over most of the game, through a story arc threaded across the city and its events. The arc ends with a lab puzzle in your own chamber, and the relationship it builds is called in near the end of the game.
 
@@ -192,14 +192,18 @@ Ithzar takes a **second familiar slot**, alongside whatever familiar you've boun
 | **4. The offer** | 2–4 days after it's freed | It returns to your doorstep with terms. If you accept, it becomes your second familiar. |
 | **The call** | After you complete the afrit commission (the seventh) | Ithzar asks you to keep your promise and let it go before you wake the marid. |
 
-**Chapter 2 favors** (first pass):
+**Ithzar hangs around from chapter 2.** Once you've met it, Ithzar starts visiting even though it still belongs to Cornelia. It remarks on your summonings "from the chimney", tags along in the city, and banters with your familiar if you have one. It gives no familiar abilities until it actually joins you in chapter 4. This way its voice is part of the game long before the offer.
 
-- **"Hide me for a night."** Needs an empty vessel. Ithzar sleeps in your lantern or glass to escape Cornelia. The trust gain is large.
-- **"Galbanum, and don't ask."** Give up one galbanum. It pays you back with lore.
-- **"Don't tell City Hall."** During the strike, Ithzar admits Cornelia is the packers' magician.
-  - Keeping quiet raises trust.
-  - Reporting her pleases the Machine but costs a lot of trust. The arc stalls until trust recovers.
-- **A tip before the crackdown.** If your suspicion is climbing, Ithzar warns you a day before the inspectors come. This is passive and only fires when trust is high enough.
+**Chapter 2 favors** (built; content in `js/ithzar.js`):
+
+- **"Hide me for a night."** At your doorstep, two days after you meet it. Hiding it in an empty vessel gives +2 trust, the coal scuttle +1, and sending it away −1.
+- **"Sandalwood, and don't ask."** Three days later. Burning a stick of sandalwood for it gives +1 trust and lore one class above your rank; refusing gives −1. (Galbanum in the first draft, but galbanum isn't on sale until Alderman.)
+- **"Don't tell City Hall."** Two days later, behind the packinghouses, Ithzar admits Cornelia is the packers' magician.
+  - Keeping quiet gives +2 trust.
+  - Reporting her pays $20 and pleases the Machine (+2) but costs 3 trust. The arc stalls until trust recovers.
+
+Each favor waits a few days and then expires, which costs 1 trust. Playing every favor the friendly way reaches trust 5, the threshold for chapter 3.
+- **A tip before the crackdown.** At dawn, if trust is 3 or more and police suspicion reaches 4 (the crackdown starts at 6), Ithzar warns you once. The warning resets when suspicion falls back below 4.
 
 **Chapter 3, the counter-binding.** Cornelia's binding is a puzzle target with its own notebook sheet: the circle class she used, her three runes and her incense. You gather clues from:
 
@@ -239,7 +243,7 @@ Refusing sends it away. It makes the offer once more about a week later.
 
 #### Build plan
 
-- **Part A:** Ithzar's data, the second familiar slot, the commentary system and banter, chapters 1 and 2.
+- **Part A ✅:** Ithzar's data, the second familiar slot (abilities at the stronger familiar, Ithzar's voice for warnings once joined), remarks on summonings, districts and headlines, banter, morning notes, chapters 1 and 2, the crackdown tip, and Ithzar's card in the Workshop showing trust in words. Cornelia is now named in the LaSalle Street rival encounter, and meeting her there can start chapter 1 early.
 - **Part B:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, chapters 3 and 4, "Ask Ithzar" and the weekly favor.
 - **Part C:** the call and the ending's epilogue.
 
@@ -270,6 +274,7 @@ Not in this step, but the arc is shaped to allow them later:
   - `js/data.js`: spirits, lore, materials, errands, commissions
   - `js/districts.js`: districts, places and street encounters (the effect format is documented at the top)
   - `js/events.js`: the calendar, the newspaper and current events
+  - `js/ithzar.js`: Ithzar's lines, banter and story arc (its chapters are events appended to `EVENTS`)
 - **Lore fragments** need `facts` (the formats are documented above `DEMONS`). Their prose must agree with their facts, and every syllable fact must appear in the text as `[SYL]`.
 - **Spirits:** a name length of class + 1, no repeated syllables, no two spirits with the same name, exactly one liked and one hated incense.
 - **Tone:** dry, period-flavored, funny. Each spirit gets an appearance, a greeting and a footnote. Use American spelling.

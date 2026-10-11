@@ -54,7 +54,8 @@ function newState() {
     used: {},               // action key -> day last used (for once and cooldown)
     events: {},             // event id -> { stage, since, done }
     flags: {},              // story flag -> day it was set
-    standing: { machine: 0, union: 0, suspicion: 0 },
+    standing: { machine: 0, union: 0, suspicion: 0, trust: 0 },  // trust: Ithzar's
+    ithzar: { joined: false, heard: {}, asideDay: {}, warned: false },
   };
 }
 
@@ -66,7 +67,11 @@ function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return Object.assign(newState(), JSON.parse(raw));
+    const saved = Object.assign(newState(), JSON.parse(raw));
+    // fill in nested fields added since the save was made
+    saved.standing = { ...newState().standing, ...saved.standing };
+    saved.ithzar = { ...newState().ithzar, ...saved.ithzar };
+    return saved;
   } catch (e) { /* corrupt or unavailable */ }
   return null;
 }
@@ -112,8 +117,96 @@ const vesselTier = type => {
   const v = state.vessels[type];
   return v && v.spirit ? demonById(v.spirit).tier : 0;
 };
-const familiarTier = () => (state.familiar ? demonById(state.familiar).tier : 0);
+const familiarTier = () => Math.max(state.familiar ? demonById(state.familiar).tier : 0, state.ithzar.joined ? ITHZAR.tier : 0);
+// whoever speaks up with warnings: Ithzar once it has joined you, otherwise your own familiar
+const familiarVoice = () => (state.ithzar.joined ? ITHZAR.name : state.familiar ? demonById(state.familiar).name : '');
 const maxActions = () => ACTIONS_PER_DAY + (vesselTier('watch') ? watchHours(vesselTier('watch')) : 0) + (familiarTier() >= 5 ? 1 : 0);
+
+// ---------- Ithzar (content in js/ithzar.js)
+
+// Ithzar hangs around once you have met it, and is properly yours once it joins you (step 4, part B).
+const ithzarPresent = () => state.ithzar.joined || state.flags['met-ithzar'] !== undefined;
+
+// Picks from a pool of lines, avoiding repeats until the pool has been used up.
+function pickFresh(key, pool) {
+  const heard = state.ithzar.heard[key] || (state.ithzar.heard[key] = []);
+  let fresh = pool.map((_, i) => i).filter(i => !heard.includes(i));
+  if (!fresh.length) {
+    heard.length = 0;
+    fresh = pool.map((_, i) => i);
+  }
+  const i = pick(fresh);
+  heard.push(i);
+  return pool[i];
+}
+
+// An aside is { lines: [{ name, text }], note }: a remark or an exchange, shown under a result and in the chronicle.
+function ithzarLine(key, label = ITHZAR.name) {
+  const pool = ITHZAR_LINES[key];
+  if (!pool || !pool.length) return null;
+  const line = pickFresh(key, pool);
+  return typeof line === 'string'
+    ? { lines: [{ name: label, text: line }] }
+    : { lines: [{ name: label, text: line.text }], note: line.note };
+}
+
+function banter(familiar) {
+  const key = BANTER[familiar.id] ? familiar.id : `class:${familiar.tier}`;
+  const exchange = pickFresh(`banter:${key}`, BANTER[key]);
+  return { lines: exchange.map(([who, text]) => ({ name: who === 'I' ? ITHZAR.name : familiar.name, text })) };
+}
+
+function summonAside(m) {
+  if (!ithzarPresent() || Math.random() > (state.ithzar.joined ? 0.7 : 0.5)) return null;
+  return ithzarLine(m.accident ? 'summon:accident' : `summon:${m.outcome}`,
+    state.ithzar.joined ? ITHZAR.name : `${ITHZAR.name}, from the chimney`);
+}
+
+// After a city action Ithzar may remark on the district, or trade words with your familiar.
+// At most once per district per day.
+function cityAside(dist) {
+  if (!ithzarPresent() || state.ithzar.asideDay[dist.id] === state.day) return null;
+  const fam = state.familiar && demonById(state.familiar);
+  let aside = null;
+  if (fam && Math.random() < 0.25) aside = banter(fam);
+  else if (Math.random() < 0.3) aside = ithzarLine(`city:${dist.id}`);
+  if (aside) state.ithzar.asideDay[dist.id] = state.day;
+  return aside;
+}
+
+function asideHTML(a) {
+  return `<div class="aside">${a.lines.map(l => `<p><b>${l.name}:</b> ${l.text}</p>`).join('')}${a.note ? `<p class="footnote">${a.note}</p>` : ''}</div>`;
+}
+
+function logAside(a) {
+  log(a.lines.map(l => `<b>${l.name}:</b> ${l.text}`).join(' ') + (a.note ? ` <span class="note">${a.note}</span>` : ''), 'aside');
+}
+
+// Each morning while Ithzar is around: a warning if the police are getting close, or a note on its doings.
+function ithzarDawn() {
+  if (!ithzarPresent()) return;
+  const crackdown = state.events.crackdown && !state.events.crackdown.done;
+  if (state.standing.suspicion < 4) state.ithzar.warned = false;
+  if (state.standing.trust >= 3 && state.standing.suspicion >= 4 && !crackdown && !state.ithzar.warned) {
+    state.ithzar.warned = true;
+    log(`<b>${ITHZAR.name}:</b> "Cornelia dined with the Mayor’s inspectors last night, and your name came up. I would tidy the workshop, if I were you."`, 'aside');
+  } else if (Math.random() < 0.3) {
+    log(pickFresh('dawn', ITHZAR_LINES.dawn), 'aside');
+  }
+}
+
+function ithzarCard() {
+  if (!ithzarPresent()) return '';
+  return `<h2 class="section-title">Ithzar</h2>
+    <article class="panel card ithzar">
+      <header><h3>${ITHZAR.name}</h3><span class="tag">${TIER_NAMES[ITHZAR.tier]}</span></header>
+      <p class="muted">Appears as ${ITHZAR.form}.</p>
+      <p>${state.ithzar.joined
+        ? 'Your second familiar. Familiar abilities work at the class of the stronger of your two familiars.'
+        : 'Bound to Mrs. Cornelia Ashby. It visits when it likes, and lately it likes to. It is no use to you as a familiar while she holds its leash, but it does talk.'}</p>
+      <p>Ithzar <b>${standingWord('trust')}</b>.</p>
+    </article>`;
+}
 
 // How a spirit is currently bound to you, as a phrase ("in your service"), or null if it is free.
 function boundPhrase(demonId) {
@@ -384,6 +477,8 @@ function beginSummon() {
   render();
   setTimeout(() => {
     manifestation = resolveSummon();
+    manifestation.aside = summonAside(manifestation);
+    if (manifestation.aside) logAside(manifestation.aside);
     busy = false;
     resetIncantation();
     render();
@@ -677,6 +772,7 @@ function endDay() {
     state.actions = maxActions();
     log(`${dateLabel(state.day, 'long')} dawns.`, 'info');
     processEvents();
+    ithzarDawn();  // before suspicion fades, so its warning sees today's danger
     coolSuspicion();
     scry();
     if (state.familiar && Math.random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
@@ -753,10 +849,14 @@ function setStage(ev, next) {
   const stage = ev.stages[next];
   if (stage.headline) {
     log(`<span class="paper">${NEWSPAPER}:</span> ${stage.headline}`, 'news');
+    const remark = ithzarPresent() && Math.random() < 0.6 && ithzarLine(`news:${ev.id}`);
+    if (remark) logAside(remark);
   } else {
     const [d, p] = stage.place.split(':');
-    log(`<b>${ev.title}.</b> Something is waiting for you at ${placeById(districtById(d), p).name.replace(/^Your /, 'your ')}.`, 'news');
+    log(`<b>${ev.title}.</b> ${stage.text || `Something is waiting for you at ${placeById(districtById(d), p).name.replace(/^Your /, 'your ')}.`}`, 'news');
   }
+  const extra = stage.announce && stage.announce(state);
+  if (extra) log(extra, 'news');
 }
 
 // Starts, expires and advances current events. Runs at dawn.
@@ -789,13 +889,15 @@ const STANDING_WORDS = {
   machine: [[-99, 'distrusted'], [-1, 'nobody in particular'], [2, 'a useful friend'], [5, 'one of their own']],
   union: [[-99, 'an enemy'], [-1, 'a stranger'], [2, 'a friend'], [5, 'trusted']],
   suspicion: [[0, 'not interested in you'], [3, 'watching you'], [6, 'closing in']],
+  trust: [[-99, 'wants nothing to do with you'], [0, 'tolerates you'], [3, 'finds you interesting'], [5, 'likes you, against its better judgment'], [8, 'trusts you']],
 };
 const STANDING_NOTES = {
   machine: ['the Machine disapproves', 'the Machine approves'],
   union: ['the workers trust you less', 'the workers trust you more'],
   suspicion: ['the police lose interest', 'the police take an interest'],
+  trust: ['Ithzar thinks less of you', 'Ithzar thinks better of you'],
 };
-const isBadNote = n => n.startsWith('−') || /disapproves|trust you less|take an interest/.test(n);
+const isBadNote = n => n.startsWith('−') || /disapproves|trust you less|take an interest|thinks less/.test(n);
 
 function standingWord(kind) {
   let word = '';
@@ -827,6 +929,10 @@ function choiceBlocker(ch) {
     return `Requires a servant or familiar: ${TIER_NAMES[r.servantTier]} or stronger.`;
   }
   if (r.known && !isKnown(demonById(r.known))) return 'You would need to know what it is.';
+  if (r.emptyVessel && !Object.values(state.vessels).some(v => !v.spirit)) return 'You need an empty vessel.';
+  for (const [k, n] of Object.entries(r.incense || {})) {
+    if ((state.incense[k] || 0) < n) return `You need ${INCENSE[k].name.toLowerCase()}.`;
+  }
   if (r.machine !== undefined && state.standing.machine < r.machine) return 'The Machine does not know you well enough.';
   if (r.union !== undefined && state.standing.union < r.union) return 'The workers do not trust you enough.';
   return null;
@@ -846,7 +952,7 @@ function familiarWarning(ch) {
   const total = ch.outcomes.reduce((a, o) => a + o.w, 0);
   const risk = ch.outcomes.filter(o => o.fx.health < 0).reduce((a, o) => a + o.w, 0) / total;
   if (!risk) return '';
-  const fam = demonById(state.familiar).name;
+  const fam = familiarVoice();
   return ft >= 4 ? `${fam}: ${Math.round(risk * 100)}% chance this hurts` : `${fam} looks uneasy about this`;
 }
 
@@ -927,6 +1033,7 @@ function walkStreets(id) {
   state.actions--;
   state.encounter = { district: id, id: enc.id };
   state.lastStreet[id] = enc.id;
+  if (enc.flag && state.flags[enc.flag] === undefined) state.flags[enc.flag] = state.day;
   state.lastResult = null;
   log(`You spend an hour wandering ${dist.name}.`);
   render();
@@ -958,6 +1065,11 @@ function resolveChoice(ch, title, dist, placeId) {
   const good = notes.some(n => !isBadNote(n));
   entry.kind = good && !bad ? 'good' : bad && !good ? 'bad' : '';
   state.lastResult = { district: dist.id, place: placeId, title, choice: ch.label, text: out.text, notes, frags: frags.map(f => f.id) };
+  const aside = !state.over && cityAside(dist);
+  if (aside) {
+    state.lastResult.aside = aside;
+    logAside(aside);
+  }
   return out;
 }
 
@@ -979,8 +1091,8 @@ function applyEffects(fx, cause) {
   }
   if (fx.incense) {
     for (const [k, n] of Object.entries(fx.incense)) {
-      state.incense[k] = (state.incense[k] || 0) + n;
-      notes.push(`+${n} ${INCENSE[k].name.toLowerCase()}`);
+      state.incense[k] = Math.max(0, (state.incense[k] || 0) + n);
+      notes.push(`${n > 0 ? '+' : '\u2212'}${Math.abs(n)} ${INCENSE[k].name.toLowerCase()}`);
     }
   }
   if (fx.incenseRandom) notes.push(`+${grantRandomIncense(...fx.incenseRandom)}`);
@@ -1025,7 +1137,7 @@ function applyEffects(fx, cause) {
       notes.push(STANDING_NOTES[k][v > 0 ? 1 : 0]);
     }
   }
-  if (fx.flag && state.flags[fx.flag] === undefined) state.flags[fx.flag] = state.day;
+  for (const f of [].concat(fx.flag || [])) if (state.flags[f] === undefined) state.flags[f] = state.day;
   if (fx.rep) {
     notes.push(`+${fx.rep} reputation`);
     gainRep(fx.rep);
@@ -1196,7 +1308,7 @@ function familiarAdvice(d) {
   k.runeYes.forEach(r => { if (!s.runes.includes(r)) notes.push(`you have left out the ${RUNES[r].name} rune`); });
   if (s.incense && s.incense === k.hates) notes.push(`it hates ${INCENSE[s.incense].name.toLowerCase()}`);
   if (!notes.length) return '';
-  return `<p class="familiar-says"><b>${demonById(state.familiar).name}</b> clears its throat: ${notes.join('; ')}.</p>`;
+  return `<p class="familiar-says"><b>${familiarVoice()}</b> clears its throat: ${notes.join('; ')}.</p>`;
 }
 
 // The true-name builder: one slot per syllable, and a palette of syllables colored by what the notebook knows.
@@ -1232,6 +1344,7 @@ function manifestHTML() {
     <div class="slots spoken">${m.spoken.map((syl, i) => sylHTML(syl, m.feedback[i])).join('<span class="dot">·</span>')}</div>
     ${m.lines.map(l => `<p>${l}</p>`).join('')}
     ${m.greet ? `<blockquote>${m.greet}</blockquote><p class="footnote">${m.footnote}</p>` : ''}
+    ${m.aside ? asideHTML(m.aside) : ''}
   </div>`;
 }
 
@@ -1364,6 +1477,7 @@ function resultHTML(r) {
     <p>${r.text}</p>
     ${r.frags.map(id => FRAGMENTS.find(f => f.id === id)).map(f => `<p class="frag"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
     ${r.notes.length ? `<p class="fx">${r.notes.join(' · ')}</p>` : ''}
+    ${r.aside ? asideHTML(r.aside) : ''}
   </div>`;
 }
 
@@ -1383,6 +1497,7 @@ function districtHTML(dist) {
     return `<section class="place ${acts.some(x => x.ev) ? 'has-event' : ''}">
       <h3>${place.name}</h3>
       <p class="muted small">${place.desc}</p>
+      ${activeEvents().filter(x => x.stage.place === `${dist.id}:${place.id}` && x.stage.text).map(x => `<p class="event-text">${x.stage.text}</p>`).join('')}
       <div class="choices">${acts.map(({ a, key, ev }) => choiceButton(a, 'act', key, actionBlocker(a, key), ev ? ev.title : '')).join('')}</div>
       ${r && r.place === place.id ? resultHTML(r) : ''}
     </section>`;
@@ -1567,6 +1682,7 @@ function viewWorkshop() {
       <p>Spirits bound here are yours for good. Vessels and familiars never run errands and never run out of patience, but binding one takes a firm, perfect binding.</p>
       <p class="muted small">Clauses you know: ${state.clauses.map(c => `<i>${CLAUSES[c].name}</i>`).join(', ')}.</p>
     </div>
+    ${ithzarCard()}
     <h2 class="section-title">Familiar</h2>
     ${familiarCard()}
     <h2 class="section-title">Vessels</h2>

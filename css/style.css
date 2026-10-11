@@ -388,6 +388,25 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 #log .entry.news { border-color: #b9a888; }
 .paper { font-style: italic; color: #d6c9a8; margin-right: 0.3em; }
 
+/* ---------- Ithzar's asides */
+
+.aside {
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.8rem;
+  border-left: 2px solid #c98a4a;
+  background: #231a12;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
+.aside p { margin: 0 0 0.25rem; }
+.aside b { color: #e8b27a; }
+.aside .footnote { margin: 0.3rem 0 0; }
+#log .entry.aside { border-color: #c98a4a; }
+#log .entry.aside b { color: #e8b27a; }
+#log .note { color: var(--dim); font-style: italic; font-size: 0.9em; }
+.event-text { font-style: italic; border-left: 2px solid var(--ember); padding-left: 0.6rem; margin: 0.4rem 0; }
+.card.ithzar { max-width: 640px; border-top: 2px solid #c98a4a; }
+
 .choice .via { color: var(--lore); font-style: italic; font-size: 0.8em; }
 .choice.revealed { border-color: #5a4a8a; background: #221d2c; }
 .choice .risk { flex-basis: 100%; color: var(--ember); font-size: 0.85em; }
