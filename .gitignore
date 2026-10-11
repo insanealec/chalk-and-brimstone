@@ -1,0 +1,6 @@
+# OS clutter
+.DS_Store
+Thumbs.db
+
+# personal Claude Code settings
+.claude/settings.local.json
