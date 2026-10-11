@@ -2,7 +2,7 @@
 //
 // Encounter choices may have:
 //   cost      dollars paid up front
-//   req       { rank, servantTier, language } needed to pick it
+//   req       { rank, servantTier, known } needed to pick it (known: a spirit you have heard of)
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
 //
 // Outcome effects (fx):
@@ -366,8 +366,8 @@ const DISTRICTS = [
         id: 'fog', title: 'Fog on the Water',
         text: 'A fog rolls across the lake toward the crib. As it passes, it speaks to you in Greek, in a woman’s voice, bored and amused.',
         choices: [
-          { label: 'Answer in Greek', req: { language: 'greek' }, outcomes: [
-            { w: 1, text: '"Finally," says the fog. "Someone with manners." It tells you about itself, at length.', fx: { loreDemon: 'tessaly' } },
+          { label: 'Greet it as Tessaly', req: { known: 'tessaly' }, outcomes: [
+            { w: 1, text: '"Finally," says the fog. "Someone who knows who I am." It tells you about itself, at length.', fx: { loreDemon: 'tessaly' } },
           ] },
           { label: 'Stay very still', outcomes: [
             { w: 6, text: 'The fog passes. Your coat smells of brine for a week.', fx: {} },

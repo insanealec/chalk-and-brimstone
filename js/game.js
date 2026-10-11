@@ -30,11 +30,12 @@ const bold = d => `<b>${d.name}</b>`;
 function newState() {
   return {
     day: 1, actions: ACTIONS_PER_DAY, dollars: 30, health: MAX_HEALTH, rep: 0,
-    circles: ['chalk'], pentacles: ['chalk'], runes: [...START_RUNES], languages: ['latin'],
+    circles: ['chalk'], pentacles: ['chalk'], runes: [...START_RUNES],
     incense: { rosemary: 2, cedar: 1, frankincense: 1 },
     lore: ['nibbet-0'],
     newLore: 1,
-    observations: {},
+    facts: {},  // demon id -> facts observed in the chamber (lore facts are derived from state.lore)
+    met: [],    // spirits that have appeared in your circle, even ones you never read about
     servants: [],
     nextUid: 1,
     commission: 0,
@@ -42,7 +43,7 @@ function newState() {
     over: null, // 'dead' | 'won'
     deathCause: '',
     seenIntro: false,
-    sel: { name: 'nibbet', language: 'latin', circle: 'chalk', pentacle: 'chalk', runes: [], incense: null },
+    sel: { name: 'nibbet', syllables: [], circle: 'chalk', pentacle: 'chalk', runes: [], incense: null },
     district: 'maxwell',    // district selected on the city map
     encounter: null,        // { district, id } awaiting a choice
     encounterResult: null,  // what happened on the last visit
@@ -58,7 +59,14 @@ function save() {
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) return Object.assign(newState(), JSON.parse(raw));
+    if (!raw) return null;
+    const saved = Object.assign(newState(), JSON.parse(raw));
+    // saves from before true names: languages and free-text observations are gone
+    delete saved.languages;
+    delete saved.observations;
+    delete saved.sel.language;
+    if (!Array.isArray(saved.sel.syllables)) saved.sel.syllables = [];
+    return saved;
   } catch (e) { /* corrupt or unavailable */ }
   return null;
 }
@@ -98,11 +106,6 @@ function grantRandomIncense(count, maxRank) {
   return Object.entries(got).map(([k, n]) => `${n} ${INCENSE[k].name.toLowerCase()}`).join(', ');
 }
 
-function observe(demonId, text) {
-  const list = state.observations[demonId] || (state.observations[demonId] = []);
-  if (!list.includes(text)) list.push(text);
-}
-
 function hurt(n, cause) {
   state.health -= n;
   if (state.health <= 0) {
@@ -112,10 +115,17 @@ function hurt(n, cause) {
   }
 }
 
-// ---------- lore
+// ---------- lore and the notebook
+
+const fmtLore = text => text.replace(/\[([A-Z]+)\]/g, '<span class="syl">$1</span>');
+const sylHTML = (syl, cls = '') => `<span class="syl ${cls}">${syl}</span>`;
+
+function isKnown(d) {
+  return state.met.includes(d.id) || d.lore.some((_, i) => state.lore.includes(`${d.id}-${i}`));
+}
 
 function knownDemons() {
-  return DEMONS.filter(d => d.lore.some((_, i) => state.lore.includes(`${d.id}-${i}`)));
+  return DEMONS.filter(isKnown);
 }
 
 function learnFragment(minTier, maxTier, demonId = null) {
@@ -125,7 +135,7 @@ function learnFragment(minTier, maxTier, demonId = null) {
   const f = pick(pool);
   state.lore.push(f.id);
   state.newLore++;
-  log(`<span class="src">${f.src}:</span> “${f.text}”`, 'lore');
+  log(`<span class="src">${f.src}:</span> “${fmtLore(f.text)}”`, 'lore');
   return f;
 }
 
@@ -137,16 +147,131 @@ function study() {
   render();
 }
 
+// Facts use the formats documented above DEMONS in data.js.
+function recordFact(demonId, fact) {
+  const list = state.facts[demonId] || (state.facts[demonId] = []);
+  if (!list.includes(fact)) list.push(fact);
+}
+
+// Everything the notebook knows about a spirit: facts from lore read and from chamber observations,
+// plus whatever follows from them by elimination. Deduced entries are flagged so the sheet can mark them.
+function dossier(d) {
+  const facts = [
+    ...FRAGMENTS.filter(f => f.demon === d && state.lore.includes(f.id)).flatMap(f => f.facts || []),
+    ...(state.facts[d.id] || []),
+  ].map(f => f.split(':'));
+
+  const len = d.trueName.length;
+  const name = Array(len).fill(null);        // confirmed syllable at each position
+  const nameDeduced = Array(len).fill(false);
+  const present = new Set();                 // syllables known to be in the name somewhere
+  const absent = new Set();
+  const notAt = {};                          // syllable -> positions it is known not to occupy
+  const runeYes = new Set(), runeNo = new Set(), runeDeduced = new Set();
+  let runeCount = null;
+  let likes = null, hates = null, likesDeduced = false, hatesDeduced = false;
+  const notLiked = new Set(), notHated = new Set();
+
+  for (const [t, a, b] of facts) {
+    switch (t) {
+      case 'syl': name[+a] = b; present.add(b); break;
+      case 'has': present.add(a); break;
+      case 'at!': present.add(a); (notAt[a] || (notAt[a] = new Set())).add(+b); break;
+      case 'not': absent.add(a); break;
+      case 'rune': runeYes.add(a); break;
+      case 'norune': runeNo.add(a); break;
+      case 'runes': runeCount = +a; break;
+      case 'likes': likes = a; break;
+      case 'hates': hates = a; break;
+      case 'neutral': notLiked.add(a); notHated.add(a); break;
+    }
+  }
+
+  // name: place syllables that can only go one way, until nothing changes
+  const candidates = pos => SYLLABLES.filter(s => !absent.has(s) && !(notAt[s] && notAt[s].has(pos))
+    && !name.some((n, i) => n === s && i !== pos));
+  for (let changed = true; changed;) {
+    changed = false;
+    const open = name.map((n, i) => (n ? -1 : i)).filter(i => i >= 0);
+    const unplaced = [...present].filter(s => !name.includes(s));
+    if (open.length && unplaced.length === open.length) {
+      // the known syllables fill every gap, so nothing else is in the name
+      SYLLABLES.forEach(s => { if (!present.has(s) && !absent.has(s)) { absent.add(s); changed = true; } });
+    }
+    for (const pos of open) {
+      const c = candidates(pos);
+      if (!name[pos] && c.length === 1) { name[pos] = c[0]; nameDeduced[pos] = true; present.add(c[0]); changed = true; }
+    }
+    for (const s of unplaced) {
+      if (name.includes(s)) continue;
+      const spots = open.filter(pos => !name[pos] && candidates(pos).includes(s));
+      if (spots.length === 1) { name[spots[0]] = s; nameDeduced[spots[0]] = true; changed = true; }
+    }
+  }
+
+  // runes: once the count is known, the rest can follow
+  const allRunes = Object.keys(RUNES);
+  runeYes.forEach(r => runeNo.delete(r));
+  if (runeCount !== null) {
+    if (runeYes.size === runeCount) {
+      allRunes.forEach(r => { if (!runeYes.has(r) && !runeNo.has(r)) { runeNo.add(r); runeDeduced.add(r); } });
+    }
+    const open = allRunes.filter(r => !runeYes.has(r) && !runeNo.has(r));
+    if (open.length && open.length === runeCount - runeYes.size) open.forEach(r => { runeYes.add(r); runeDeduced.add(r); });
+  }
+
+  // incense: every spirit likes exactly one and hates exactly one
+  const incKeys = Object.keys(INCENSE);
+  if (likes) { incKeys.forEach(k => k !== likes && notLiked.add(k)); notHated.add(likes); }
+  if (hates) { incKeys.forEach(k => k !== hates && notHated.add(k)); notLiked.add(hates); }
+  if (!likes) {
+    const c = incKeys.filter(k => !notLiked.has(k));
+    if (c.length === 1) { likes = c[0]; likesDeduced = true; notHated.add(likes); }
+  }
+  if (!hates) {
+    const c = incKeys.filter(k => !notHated.has(k));
+    if (c.length === 1) { hates = c[0]; hatesDeduced = true; }
+  }
+  const neutral = incKeys.filter(k => k !== likes && k !== hates && notLiked.has(k) && notHated.has(k));
+
+  return {
+    name, nameDeduced, absent,
+    nearby: [...present].filter(s => !name.includes(s)),
+    nameComplete: name.every(Boolean),
+    runeYes: [...runeYes], runeNo: [...runeNo], runeDeduced, runeCount,
+    likes, hates, likesDeduced, hatesDeduced, neutral,
+  };
+}
+
 // ---------- summoning
+
+// Rebuilds the incantation slots for the selected spirit, prefilled with every confirmed syllable.
+function resetIncantation() {
+  const s = state.sel;
+  const d = s.name && demonById(s.name);
+  s.syllables = d ? [...dossier(d).name] : [];
+}
+
+function toggleSyllable(syl) {
+  const slots = state.sel.syllables;
+  const at = slots.indexOf(syl);
+  if (at >= 0) slots[at] = null;
+  else {
+    const empty = slots.indexOf(null);
+    if (empty >= 0) slots[empty] = syl;
+  }
+}
 
 function summonBlocker() {
   const s = state.sel;
   if (state.over) return 'The game is over.';
   if (state.actions < 1) return 'It is too late in the day. End the day and rest.';
-  if (!s.name) return 'Choose the true name of a spirit.';
+  if (!s.name) return 'Choose the spirit you mean to call.';
+  const d = demonById(s.name);
+  if (s.syllables.some(x => !x)) return `Speak all ${d.trueName.length} syllables of its true name.`;
   if (!s.incense) return 'Choose an incense to burn.';
   if ((state.incense[s.incense] || 0) < 1) return `You have no ${INCENSE[s.incense].name.toLowerCase()} left.`;
-  if (state.servants.some(sv => sv.demonId === s.name)) return `${demonById(s.name).name} is already in your service.`;
+  if (state.servants.some(sv => sv.demonId === s.name)) return `${d.name} is already in your service.`;
   if (state.servants.length >= maxServants()) return `At your rank you can hold only ${maxServants()} spirit${maxServants() > 1 ? 's' : ''} at once. Dismiss one first.`;
   return null;
 }
@@ -159,64 +284,96 @@ function beginSummon() {
   setTimeout(() => {
     manifestation = resolveSummon();
     busy = false;
+    resetIncantation();
     render();
   }, 1500);
 }
 
+function nameFeedback(spoken, fb, target) {
+  const groups = { exact: [], near: [], none: [] };
+  spoken.forEach((syl, i) => groups[fb[i]].push(sylHTML(syl, fb[i])));
+  const list = a => (a.length > 1 ? `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}` : a[0]);
+  const many = (a, one, more) => (a.length > 1 ? more : one);
+  const out = [];
+  if (groups.exact.length) out.push(`${list(groups.exact)} ${many(groups.exact, 'rings', 'ring')} true, in place.`);
+  if (groups.near.length) out.push(`${list(groups.near)} ${many(groups.near, 'belongs', 'belong')} in ${target.name}’s name, but not there.`);
+  if (groups.none.length) out.push(`${list(groups.none)} ${many(groups.none, 'means', 'mean')} nothing to it.`);
+  return out.join(' ');
+}
+
 function resolveSummon() {
   const s = state.sel;
-  const d = demonById(s.name);
+  const target = demonById(s.name);
+  const spoken = [...s.syllables];
   const circle = circleById(s.circle);
   const pent = pentacleById(s.pentacle);
   const inc = INCENSE[s.incense];
   const incName = inc.name.toLowerCase();
-  const lang = LANGUAGES[s.language].name;
   state.actions--;
   state.incense[s.incense]--;
 
-  const m = { demon: d, outcome: null, lines: [], greet: '', footnote: '' };
-  log(`You light the ${incName} and call upon ${bold(d)} in ${lang}.`);
+  // each spoken syllable resonates against the spirit you meant to call
+  const feedback = spoken.map((syl, i) => (syl === target.trueName[i] ? 'exact' : target.trueName.includes(syl) ? 'near' : 'none'));
+  spoken.forEach((syl, i) => recordFact(target.id,
+    feedback[i] === 'exact' ? `syl:${i}:${syl}` : feedback[i] === 'near' ? `at!:${syl}:${i}` : `not:${syl}`));
 
-  if (s.language !== d.language) {
+  const m = { demon: target, target, spoken, feedback, outcome: null, lines: [], greet: '', footnote: '' };
+  log(`You light the ${incName} and speak a name meant for ${bold(target)}: ${spoken.map(x => sylHTML(x)).join('·')}.`);
+
+  const d = DEMONS.find(x => x.trueName.join() === spoken.join());
+  if (!d || state.servants.some(sv => sv.demonId === d.id)) {
     m.outcome = 'silence';
-    m.lines.push(`The ${lang} words fall dead upon the air. The ${incName} smoke curls, unbothered. Nothing answers.`);
-    m.lines.push(`<i>Perhaps ${d.name} does not know that tongue.</i>`);
-    observe(d.id, `Did not answer to ${lang}.`);
+    m.lines.push(nameFeedback(spoken, feedback, target));
+    m.lines.push(d
+      ? `${d.name} — already bound to you — flickers in the circle, irritated, and is gone.`
+      : feedback.includes('exact') || feedback.includes('near')
+        ? `Something stirs at the edge of hearing, then subsides. The ${incName} is spent.`
+        : `The ${incName} smoke curls, unbothered. Nothing answers.`);
     log('Nothing answered. The incense is spent.', 'bad');
     return m;
   }
 
-  observe(d.id, `Answers to ${lang}.`);
+  m.demon = d;
+  if (!state.met.includes(d.id)) state.met.push(d.id);
+  if (d !== target) {
+    m.accident = true;
+    d.trueName.forEach((syl, i) => recordFact(d.id, `syl:${i}:${syl}`));
+    m.lines.push(nameFeedback(spoken, feedback, target));
+    m.lines.push(`But that name is not ${target.name}’s. It belongs to someone else — and <b>${d.name}</b>, ${TIER_NAMES[d.tier].toLowerCase()}, answers instead.`);
+    log(`The wrong spirit answered: ${bold(d)}.`, 'bad');
+  } else {
+    m.lines.push(`Every syllable rings true. ${d.name} cannot refuse its own name.`);
+  }
   m.lines.push(`The smoke thickens and turns. Something is in the circle: ${d.form}.`);
 
   const right = s.runes.filter(r => d.runes.includes(r));
   const wrong = s.runes.filter(r => !d.runes.includes(r));
   const missing = d.runes.filter(r => !s.runes.includes(r));
+  recordFact(d.id, `runes:${d.runes.length}`);
   right.forEach(r => {
     m.lines.push(`The <b>${RUNES[r].name}</b> rune burns clean and steady.`);
-    observe(d.id, `The ${RUNES[r].name} rune holds it.`);
+    recordFact(d.id, `rune:${r}`);
   });
   wrong.forEach(r => {
     m.lines.push(`The <b>${RUNES[r].name}</b> rune sputters and smokes — it has no hold here.`);
-    observe(d.id, `The ${RUNES[r].name} rune does nothing.`);
+    recordFact(d.id, `norune:${r}`);
   });
   if (missing.length) {
     m.lines.push(`There is a gap in the binding. ${d.name} is held by ${d.runes.length} rune${d.runes.length > 1 ? 's' : ''}; you drew ${right.length} of them.`);
-    observe(d.id, `Held by ${d.runes.length} rune${d.runes.length > 1 ? 's' : ''} in all.`);
   }
 
   let incMod = 0;
   if (d.likes === s.incense) {
     incMod = 2;
     m.lines.push(`${d.name} breathes in the ${incName} with evident pleasure.`);
-    observe(d.id, `Likes ${incName}.`);
+    recordFact(d.id, `likes:${s.incense}`);
   } else if (d.hates === s.incense) {
     incMod = -2;
     m.lines.push(`${d.name} recoils from the ${incName}, snarling.`);
-    observe(d.id, `Hates ${incName}.`);
+    recordFact(d.id, `hates:${s.incense}`);
   } else {
     m.lines.push(`${d.name} seems indifferent to the ${incName}.`);
-    observe(d.id, `Indifferent to ${incName}.`);
+    recordFact(d.id, `neutral:${s.incense}`);
   }
 
   const circleBonus = clamp(circle.tier - d.tier, 0, 2);
@@ -457,7 +614,7 @@ function choiceBlocker(ch) {
   if (r.servantTier && !state.servants.some(sv => demonById(sv.demonId).tier >= r.servantTier)) {
     return `Requires a bound ${TIER_NAMES[r.servantTier]} or stronger.`;
   }
-  if (r.language && !state.languages.includes(r.language)) return `Requires ${LANGUAGES[r.language].name}.`;
+  if (r.known && !isKnown(demonById(r.known))) return 'You would need to know what it is.';
   return null;
 }
 
@@ -567,8 +724,6 @@ function buy(kind, id, qty = 1) {
       apply = () => state.pentacles.push(id); break;
     case 'rune': ({ price, rank } = RUNES[id]);
       apply = () => state.runes.push(id); break;
-    case 'language': ({ price, rank } = LANGUAGES[id]);
-      apply = () => state.languages.push(id); break;
     case 'grimoire': price = grimoirePrice(); rank = 0;
       apply = () => {
         if (!learnFragment(1, Math.min(5, rankTier() + 1))) {
@@ -654,8 +809,8 @@ function viewChamber() {
       ${manifestHTML()}
     </div>
     <div class="controls panel">
-      ${ctl('True name', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join(''))}
-      ${ctl('Tongue', state.languages.map(l => chip('language', l, LANGUAGES[l].name, s.language === l)).join(''))}
+      ${ctl('Spirit to call', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join(''))}
+      ${d ? incantationHTML(d) : ''}
       ${ctl('Summoning circle', CIRCLES.filter(c => state.circles.includes(c.id)).map(c =>
         chip('circle', c.id, `${c.name}<small>holds up to ${TIER_NAMES[c.tier]}</small>`, s.circle === c.id)).join(''))}
       ${ctl('Your pentacle', PENTACLES.filter(p => state.pentacles.includes(p.id)).map(p =>
@@ -665,20 +820,44 @@ function viewChamber() {
           !s.runes.includes(r) && s.runes.length >= MAX_RUNES)).join(''))}
       ${ctl('Incense', Object.keys(INCENSE).filter(k => state.incense[k] !== undefined).map(k =>
         chip('incense', k, `${INCENSE[k].name}<small>×${state.incense[k]}</small>`, s.incense === k, state.incense[k] < 1)).join(''))}
-      <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Begin the summoning <small>(1 hour)</small></button>
+      <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Speak the summons <small>(1 hour)</small></button>
       <p class="hint">${busy ? 'The air grows thick…' : blocker || 'Speak carefully.'}</p>
-      ${d ? `<div class="notes"><h3>Your notes on ${d.name}</h3>${demonNotes(d)}</div>` : ''}
+      ${d ? `<div class="notes"><h3>Notebook: ${d.name}</h3>${demonNotes(d, false)}</div>` : ''}
     </div>
+  </div>`;
+}
+
+// The true-name builder: one slot per syllable, and a palette of syllables colored by what the notebook knows.
+function incantationHTML(d) {
+  const s = state.sel;
+  const k = dossier(d);
+  const slots = s.syllables.map((syl, i) => {
+    const cls = !syl ? 'empty' : k.name[i] === syl ? 'exact' : '';
+    return `<button class="slot ${cls}" data-action="slot" data-value="${i}" ${busy ? 'disabled' : ''}
+      title="${syl ? 'Click to clear' : 'Choose a syllable below'}">${syl || '?'}</button>`;
+  }).join('<span class="dot">·</span>');
+  const keyState = syl => (k.name.includes(syl) ? 'exact' : k.nearby.includes(syl) ? 'near' : k.absent.has(syl) ? 'none' : '');
+  const keyTitle = { exact: 'Confirmed in the name', near: 'In the name, position unknown', none: 'Not in this name', '': 'Untested' };
+  const palette = SYLLABLES.map(syl => {
+    const st = keyState(syl);
+    return `<button class="syl-key ${st} ${s.syllables.includes(syl) ? 'used' : ''}" data-action="syl" data-value="${syl}"
+      title="${keyTitle[st]}" ${busy ? 'disabled' : ''}>${syl}</button>`;
+  }).join('');
+  return `<div class="ctl incantation">
+    <h3>True name <small>${d.trueName.length} syllables</small></h3>
+    <div class="slots">${slots}</div>
+    <div class="palette">${palette}</div>
   </div>`;
 }
 
 function manifestHTML() {
   if (busy) return `<div class="manifest pending"><p>You begin the incantation. The candles gutter; the chalk lines shiver…</p></div>`;
-  if (!manifestation) return `<div class="manifest empty"><p>Choose a true name, a tongue, a circle, runes and incense. Get them right and the spirit is yours. Get them wrong and you had better trust your pentacle.</p></div>`;
+  if (!manifestation) return `<div class="manifest empty"><p>Choose a spirit, speak its true name syllable by syllable, and set out the right circle, runes and incense. Every attempt teaches you something, and your notebook keeps track. Get it wrong and you had better trust your pentacle.</p></div>`;
   const m = manifestation;
   const labels = { firm: 'Bound firmly', uneasy: 'Bound uneasily', broken: 'Broke free', silence: 'No answer' };
   return `<div class="manifest outcome-${m.outcome}">
     <div class="m-head"><h3>${m.demon.name} <small>${TIER_NAMES[m.demon.tier]}</small></h3><span class="tag">${labels[m.outcome]}</span></div>
+    <div class="slots spoken">${m.spoken.map((syl, i) => sylHTML(syl, m.feedback[i])).join('<span class="dot">·</span>')}</div>
     ${m.lines.map(l => `<p>${l}</p>`).join('')}
     ${m.greet ? `<blockquote>${m.greet}</blockquote><p class="footnote">${m.footnote}</p>` : ''}
   </div>`;
@@ -747,7 +926,7 @@ function chamberSVG() {
   const smoke = inc ? [0, 1, 2].map(i =>
     `<path class="smoke s${i}" d="M ${425 + i * 8} 340 q -12 -25 0 -50 q 12 -25 0 -50" stroke="${inc.color}" fill="none" stroke-width="3" stroke-linecap="round"/>`).join('') : '';
 
-  const name = s.name ? demonById(s.name).name : '';
+  const spoken = s.syllables.map(x => x || '\u2014').join(' \u00b7 ');
 
   return `<svg viewBox="0 0 640 400" class="${cls}" role="img" aria-label="Summoning chamber">
     <defs>
@@ -760,7 +939,7 @@ function chamberSVG() {
     <g class="spin" style="transform-origin:${cx}px ${cy}px">${ringGroup(circle.tier, cx, cy, r, 'c')}</g>
     ${slots}
     <circle class="essence" cx="${cx}" cy="${cy}" r="70" fill="url(#ess-grad)"/>
-    <text x="${cx}" y="${cy + 6}" text-anchor="middle" class="true-name">${name}</text>
+    <text x="${cx}" y="${cy + 6}" text-anchor="middle" class="true-name ${s.syllables.length > 3 ? 'long' : ''}">${spoken}</text>
     <text x="${cx}" y="390" text-anchor="middle" class="label">${circle.name}</text>
 
     <g>${ringGroup(pent.tier, px, py, pr, 'p')}</g>
@@ -865,12 +1044,46 @@ function cityMapSVG(selectedId) {
 
 // ---- journal
 
-function demonNotes(d) {
-  const frags = d.lore.map((f, i) => state.lore.includes(`${d.id}-${i}`) ? f : null).filter(Boolean);
-  const obs = state.observations[d.id] || [];
-  return `
-    ${frags.map(f => `<p class="frag"><span class="src">${f.src}</span>“${f.text}”</p>`).join('')}
-    ${obs.length ? `<h4>Observed in the chamber</h4><ul class="obs">${obs.map(o => `<li>${o}</li>`).join('')}</ul>` : ''}`;
+const DEDUCED = '<span class="ded" title="Worked out by elimination">✶</span>';
+
+// The requirements sheet: everything known about a spirit, filled in automatically.
+function dossierHTML(d) {
+  const k = dossier(d);
+  const nameRow = k.name.map((syl, i) => (syl
+    ? sylHTML(syl, 'exact') + (k.nameDeduced[i] ? DEDUCED : '')
+    : '<span class="syl unknown">?</span>')).join('<span class="dot">·</span>');
+  const nameExtra = [];
+  if (!k.nameComplete && k.nearby.length) nameExtra.push(`also in it: ${k.nearby.map(x => sylHTML(x, 'near')).join(' ')}`);
+  if (!k.nameComplete && k.absent.size) nameExtra.push(`not in it: ${[...k.absent].map(x => sylHTML(x, 'none')).join(' ')}`);
+
+  const runeLabel = r => `${RUNES[r].name}${k.runeDeduced.has(r) ? DEDUCED : ''}`;
+  const runeBits = [];
+  if (k.runeCount !== null) runeBits.push(`needs ${k.runeCount}`);
+  if (k.runeYes.length) runeBits.push(`✓ ${k.runeYes.map(runeLabel).join(', ')}`);
+  if (k.runeCount !== null && k.runeYes.length === k.runeCount) runeBits.push('no others');
+  else if (k.runeNo.length) runeBits.push(`✗ ${k.runeNo.map(runeLabel).join(', ')}`);
+
+  const incName = i => INCENSE[i].name.toLowerCase();
+  const incBits = [
+    `likes ${k.likes ? incName(k.likes) + (k.likesDeduced ? DEDUCED : '') : '?'}`,
+    `hates ${k.hates ? incName(k.hates) + (k.hatesDeduced ? DEDUCED : '') : '?'}`,
+  ];
+  if (k.neutral.length && !(k.likes && k.hates)) incBits.push(`indifferent to ${k.neutral.map(incName).join(', ')}`);
+
+  return `<dl class="sheet">
+    <dt>Name</dt><dd><div class="slots small">${nameRow}</div>${nameExtra.length ? `<div class="small muted">${nameExtra.join(' · ')}</div>` : ''}</dd>
+    <dt>Runes</dt><dd>${runeBits.join(' · ') || '?'}</dd>
+    <dt>Incense</dt><dd>${incBits.join(' · ')}</dd>
+    <dt>Circle</dt><dd>one that holds ${TIER_NAMES[d.tier].toLowerCase()}s</dd>
+  </dl>`;
+}
+
+function demonNotes(d, openLore) {
+  const frags = d.lore.filter((_, i) => state.lore.includes(`${d.id}-${i}`));
+  return `${dossierHTML(d)}
+    ${frags.length ? `<details class="lore" ${openLore ? 'open' : ''}><summary>Lore (${frags.length} of ${d.lore.length})</summary>
+      ${frags.map(f => `<p class="frag"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
+    </details>` : '<p class="muted small">You have read nothing about it. Everything here came from the chamber.</p>'}`;
 }
 
 function viewJournal() {
@@ -890,7 +1103,7 @@ function viewJournal() {
       ${known.map(d => `
         <article class="panel card tier-${d.tier}">
           <header><h3>${d.name}</h3><span class="tag">${TIER_NAMES[d.tier]}</span></header>
-          ${demonNotes(d)}
+          ${demonNotes(d, true)}
           <button class="ghost" data-action="prepare" data-value="${d.id}">Prepare a summoning</button>
         </article>`).join('')}
     </div>
@@ -952,13 +1165,12 @@ function viewMarket() {
   const circles = CIRCLES.filter(c => c.price).map(c => shopRow(`${c.name} <small>holds up to ${TIER_NAMES[c.tier]}</small>`, c.desc, c.price, c.rank, state.circles.includes(c.id), `circle:${c.id}`)).join('');
   const pents = PENTACLES.filter(p => p.price).map(p => shopRow(`${p.name} <small>shields from ${TIER_NAMES[p.tier]}</small>`, p.desc, p.price, p.rank, state.pentacles.includes(p.id), `pentacle:${p.id}`)).join('');
   const runes = Object.entries(RUNES).filter(([, r]) => r.price).map(([k, r]) => shopRow(`<span class="glyph">${r.glyph}</span> Primer of the ${r.name}`, 'Teaches you to inscribe the rune.', r.price, r.rank, state.runes.includes(k), `rune:${k}`)).join('');
-  const langs = Object.entries(LANGUAGES).filter(([, l]) => l.price).map(([k, l]) => shopRow(`Lessons in ${l.name}`, l.desc, l.price, l.rank, state.languages.includes(k), `language:${k}`)).join('');
   return `
   <div class="market">
     <section class="panel"><h2>Hobb &amp; Daughters, Maxwell Street</h2><p class="muted">Incense, candles, and no questions.</p>${incense}</section>
     <section class="panel"><h2>A Dearborn Street Bookseller</h2>
       ${shopRow('A battered grimoire', 'May contain lore on spirits up to one rank above your own. May contain recipes.', grimoirePrice(), 0, false, 'grimoire:x')}
-      ${runes}${langs}
+      ${runes}
     </section>
     <section class="panel"><h2>The South Branch Foundries</h2><p class="muted">Circles for your spirits; pentacles for yourself.</p>${circles}${pents}</section>
     <section class="panel"><h2>The Apothecary</h2>
@@ -1001,9 +1213,9 @@ function renderOverlay() {
       <p>City Hall has taken notice. Bind a spirit, and the Machine may have work for you. Fail, and — well. Mr. Thwaite was an expert, and look what happened to him.</p>
       <ul>
         <li>Learn spirits’ <b>true names</b> and what binds them in the <b>Journal</b>.</li>
-        <li>In the <b>Chamber</b>, combine the right name, tongue, circle, runes and incense.</li>
+        <li>In the <b>Chamber</b>, speak a spirit’s <b>true name</b> syllable by syllable, and set out the right circle, runes and incense. Every failure teaches you something, and your notebook fills itself in.</li>
         <li>Bound spirits run <b>errands</b> overnight: coin, stolen incense, secrets.</li>
-        <li>Complete <b>City Hall</b> commissions to rise through the Machine and unlock stronger circles, rarer incense and older tongues.</li>
+        <li>Complete <b>City Hall</b> commissions to rise through the Machine and unlock stronger circles, rarer incense and new parts of the city.</li>
         <li>A failed binding sets the spirit loose. Only your <b>pentacle</b> stands between you and it.</li>
       </ul>
       <button class="primary big" data-action="close-intro">Pick up the chalk</button>`;
@@ -1058,6 +1270,7 @@ document.addEventListener('click', e => {
         else if (s.runes.length < MAX_RUNES) s.runes.push(v);
         break;
       case 'incense': s.incense = s.incense === v ? null : v; break;
+      case 'name': s.name = v; resetIncantation(); break;
       default: s[el.dataset.pick] = v;
     }
     render();
@@ -1066,6 +1279,8 @@ document.addEventListener('click', e => {
 
   switch (el.dataset.action) {
     case 'summon': beginSummon(); break;
+    case 'syl': if (!busy) { toggleSyllable(el.dataset.value); render(); } break;
+    case 'slot': if (!busy) { state.sel.syllables[Number(el.dataset.value)] = null; render(); } break;
     case 'end-day': endDay(); break;
     case 'study': study(); break;
     case 'visit': visitDistrict(el.dataset.value); break;
@@ -1073,6 +1288,7 @@ document.addEventListener('click', e => {
     case 'dismiss': dismiss(Number(el.dataset.value)); break;
     case 'prepare':
       state.sel.name = el.dataset.value;
+      resetIncantation();
       currentTab = 'chamber';
       render();
       break;
@@ -1106,6 +1322,7 @@ function restart(showIntro) {
   state.seenIntro = !showIntro;
   manifestation = null;
   currentTab = 'chamber';
+  resetIncantation();
   log('You unlock the door of Mr. Thwaite’s workshop. It smells of chalk and something burnt.', 'info');
   render();
 }
@@ -1114,4 +1331,8 @@ function restart(showIntro) {
 
 state = load();
 if (!state) restart(true);
-else render();
+else {
+  const d = state.sel.name && demonById(state.sel.name);
+  if (!d || state.sel.syllables.length !== d.trueName.length) resetIncantation();
+  render();
+}

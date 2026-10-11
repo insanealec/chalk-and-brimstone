@@ -24,13 +24,9 @@ const RUNES = {
 };
 const START_RUNES = ['thorn', 'gale', 'stone'];
 
-const LANGUAGES = {
-  latin:    { name: 'Latin',    price: 0,   rank: 0, desc: 'Every schoolboy magician mangles it.' },
-  greek:    { name: 'Greek',    price: 20,  rank: 0, desc: 'A retired classics master, paid by the lesson.' },
-  aramaic:  { name: 'Aramaic',  price: 45,  rank: 1, desc: 'A scholar at the new University of Chicago who asks no questions.' },
-  coptic:   { name: 'Coptic',   price: 90,  rank: 2, desc: 'Tutelage from a very old, very dry Egyptologist.' },
-  sumerian: { name: 'Sumerian', price: 180, rank: 4, desc: 'The oldest tongue of binding. Few living men speak it.' },
-};
+// The syllables of the binding tongue. Every true name is built from these, with no syllable used twice
+// in one name. A spirit's true name has one syllable more than its class: imps 2, foliots 3 ... marids 6.
+const SYLLABLES = ['ASH', 'BEL', 'ITH', 'KHA', 'KOR', 'MAR', 'NEB', 'OTH', 'RU', 'SAR', 'UL', 'ZEPH'];
 
 const INCENSE = {
   rosemary:     { name: 'Rosemary',     price: 2,  rank: 0, color: '#9fc39a' },
@@ -64,120 +60,164 @@ const PENTACLES = [
 // days a spirit will serve before its bonds wear thin (firm bindings add 2)
 const PATIENCE = [0, 3, 4, 4, 5, 6];
 
+// Each spirit likes exactly one incense and hates exactly one; the notebook's deductions rely on that.
+//
+// Lore fragments carry `facts` the notebook records automatically when the fragment is read.
+// [SYL] in lore text is rendered as a syllable. Fact formats (also used for chamber observations):
+//   syl:POS:SYL   SYL is the syllable at position POS (0-based)
+//   has:SYL       SYL is somewhere in the name
+//   at!:SYL:POS   SYL is in the name, but not at POS
+//   not:SYL       SYL is not in the name
+//   rune:R / norune:R / runes:N     R holds it / R does nothing / it needs N runes in all
+//   likes:I / hates:I / neutral:I   its feelings about incense I
 const DEMONS = [
   // ---- Imps
   {
-    id: 'nibbet', name: 'Nibbet', tier: 1, language: 'latin', runes: ['thorn'], likes: 'rosemary', hates: 'cedar',
+    id: 'nibbet', name: 'Nibbet', tier: 1, trueName: ['NEB', 'ITH'], runes: ['thorn'], likes: 'rosemary', hates: 'cedar',
     form: 'a warty green toad in a waistcoat two sizes too small',
     greet: `"Oh, it's <i>you</i>. Another one." It surveys your chalk lines with professional disdain.¹`,
     footnote: '¹ The circle was, Nibbet later told its friends, "wobbly enough to drive a cart through."',
     lore: [
-      { src: 'Your late master’s notebook', text: 'Nibbet — an imp of no consequence. Answers to plain Latin, provided one draws the sign of the Thorn at the circle’s edge.' },
-      { src: 'Hollingsworth’s Compendium, vol. II', text: 'The imp Nibbet is a creature of kitchen-gardens. Give it the smoke of rosemary and it grows almost civil.' },
-      { src: 'Marginalia of Agnes Pell', text: 'Never burn cedar for Nibbet. It sulked for a week and bit the cat.' },
+      { src: 'Your late master’s notebook', facts: ['syl:0:NEB', 'syl:1:ITH', 'rune:thorn', 'runes:1'],
+        text: 'Nibbet — an imp of no consequence. True name [NEB]·[ITH]. Draw the Thorn at the circle’s edge and nothing else; it is not worth the chalk.' },
+      { src: 'Hollingsworth’s Compendium, vol. II', facts: ['likes:rosemary'],
+        text: 'The imp Nibbet is a creature of kitchen-gardens. Give it the smoke of rosemary and it grows almost civil.' },
+      { src: 'Marginalia of Agnes Pell', facts: ['hates:cedar'],
+        text: 'Never burn cedar for Nibbet. It sulked for a week and bit the cat.' },
     ],
   },
   {
-    id: 'squall', name: 'Squall', tier: 1, language: 'latin', runes: ['gale'], likes: 'cedar', hates: 'frankincense',
+    id: 'squall', name: 'Squall', tier: 1, trueName: ['ZEPH', 'RU'], runes: ['gale'], likes: 'cedar', hates: 'frankincense',
     form: 'a sooty sparrow with eyes like two hot coals',
     greet: `"Chimneys!" it squawks. "Do you know how many smokestacks there are in Chicago? <i>I</i> do."¹`,
     footnote: '¹ 412,906. It counted. It had a great deal of free time between summonings.',
     lore: [
-      { src: 'A sweep’s almanac', text: 'Squall, an imp of the chimney-pots, is called in Latin like most of its cheap kind.' },
-      { src: 'Hollingsworth’s Compendium, vol. II', text: 'Squall rides the draughts. It will not hold to any rune save the Gale.' },
-      { src: 'Marginalia of Agnes Pell', text: 'Cedar-smoke soothes Squall wonderfully. Frankincense, by contrast, sets it shrieking like a kettle.' },
+      { src: 'A sweep’s almanac', facts: ['syl:0:ZEPH'],
+        text: 'Squall, an imp of the chimney-pots. Its true name begins [ZEPH], like a draft under the door.' },
+      { src: 'Hollingsworth’s Compendium, vol. II', facts: ['rune:gale', 'runes:1', 'syl:1:RU'],
+        text: 'Squall rides the drafts and will hold to no rune save the Gale. Its name ends in [RU], a sound like wind in a flue.' },
+      { src: 'Marginalia of Agnes Pell', facts: ['likes:cedar', 'hates:frankincense'],
+        text: 'Cedar-smoke soothes Squall wonderfully. Frankincense, by contrast, sets it shrieking like a kettle.' },
     ],
   },
   {
-    id: 'grubwick', name: 'Grubwick', tier: 1, language: 'greek', runes: ['stone'], likes: 'myrrh', hates: 'rosemary',
+    id: 'grubwick', name: 'Grubwick', tier: 1, trueName: ['KOR', 'UL'], runes: ['stone'], likes: 'myrrh', hates: 'rosemary',
     form: 'a lumpish mole-thing wearing a monocle',
     greet: `"Kaliméra," it says, in a voice like gravel. "You'll be wanting something dug, I expect."¹`,
     footnote: '¹ Magicians always want something dug. Usually a grave. Usually someone else’s.',
     lore: [
-      { src: 'Ledger of a Smyrna merchant', text: 'Grubwick, an imp of cellars and coal-holes, was first raised in the Levant and still insists on being addressed in Greek.' },
-      { src: 'Hollingsworth’s Compendium, vol. II', text: 'To hold Grubwick, inscribe the Stone. It is a heavy, earthbound little beast.' },
-      { src: 'Marginalia of Agnes Pell', text: 'Grubwick favors myrrh. It considers rosemary "vegetable impertinence."' },
+      { src: 'Ledger of a Smyrna merchant', facts: ['syl:1:UL'],
+        text: 'Grubwick, an imp of cellars and coal-holes. The merchant called it by a true name ending in [UL], but would not write the rest.' },
+      { src: 'Hollingsworth’s Compendium, vol. II', facts: ['rune:stone', 'runes:1', 'syl:0:KOR'],
+        text: 'To hold Grubwick, inscribe the Stone, and only the Stone. Its name begins with [KOR], heavy as a dropped sack.' },
+      { src: 'Marginalia of Agnes Pell', facts: ['likes:myrrh', 'hates:rosemary'],
+        text: 'Grubwick favors myrrh. It considers rosemary "vegetable impertinence."' },
     ],
   },
   // ---- Foliots
   {
-    id: 'tessaly', name: 'Tessaly', tier: 2, language: 'greek', runes: ['tide', 'moon'], likes: 'sandalwood', hates: 'wormwood',
+    id: 'tessaly', name: 'Tessaly', tier: 2, trueName: ['MAR', 'ITH', 'SAR'], runes: ['tide', 'moon'], likes: 'sandalwood', hates: 'wormwood',
     form: 'a pale woman made of drifting fog, smelling of a sea a long way from here',
-    greet: `"Greek. How refreshing. The last one tried to summon me in Swedish."¹`,
+    greet: `"How refreshing. The last one called me by the wrong name entirely, and in Swedish."¹`,
     footnote: '¹ He is still, in a sense, in Minnesota. Several parts of Minnesota.',
     lore: [
-      { src: 'Logbook of the brig <i>Persephone</i>', text: 'Tessaly, a foliot of the harbor fogs, answers to Greek and to nothing else.' },
-      { src: 'The Piraeus Fragments', text: 'Tessaly was bound at Piraeus beneath the runes of Tide and Moon. Draw both, or the fog slips through your fingers.' },
-      { src: 'Marginalia of Agnes Pell', text: 'The foliot Tessaly is vain of her scent — burn sandalwood for her. Wormwood she reckons a deliberate insult.' },
+      { src: 'Logbook of the brig <i>Persephone</i>', facts: ['syl:0:MAR'],
+        text: 'Tessaly, a foliot of the harbor fogs. Sailors who know its true name say it begins [MAR], like the sea.' },
+      { src: 'The Piraeus Fragments', facts: ['rune:tide', 'rune:moon', 'runes:2', 'syl:2:SAR'],
+        text: 'Tessaly was bound at Piraeus beneath the Tide and the Moon. Draw both, or the fog slips through your fingers. The name closes with [SAR].' },
+      { src: 'Marginalia of Agnes Pell', facts: ['likes:sandalwood', 'hates:wormwood'],
+        text: 'The foliot Tessaly is vain of her scent — burn sandalwood for her. Wormwood she reckons a deliberate insult.' },
     ],
   },
   {
-    id: 'querrin', name: 'Querrin', tier: 2, language: 'latin', runes: ['gale', 'thorn'], likes: 'wormwood', hates: 'myrrh',
+    id: 'querrin', name: 'Querrin', tier: 2, trueName: ['ZEPH', 'OTH', 'NEB'], runes: ['gale', 'thorn'], likes: 'wormwood', hates: 'myrrh',
     form: 'a long-legged heron in a postman’s cap',
     greet: `"Message for you," says Querrin. "It reads: <i>you are going to regret this.</i>"¹`,
     footnote: '¹ Querrin writes these messages itself. It finds it saves time.',
     lore: [
-      { src: 'Post Office (Arcane) circular', text: 'Querrin — foliot, messenger, tattletale. Summoned in Latin since the days of the Caesars.' },
-      { src: 'Hollingsworth’s Compendium, vol. III', text: 'Querrin is held by the Gale and the Thorn together: swift, and prickly.' },
-      { src: 'A rival’s stolen diary', text: 'Contrary creature, Querrin. It delights in bitter wormwood and loathes the sweetness of myrrh.' },
+      { src: 'Post Office (Arcane) circular', facts: ['syl:1:OTH'],
+        text: 'Querrin — foliot, messenger, tattletale. Its true name has [OTH] at its heart; the postmasters will say no more.' },
+      { src: 'Hollingsworth’s Compendium, vol. III', facts: ['rune:gale', 'rune:thorn', 'runes:2', 'syl:0:ZEPH'],
+        text: 'Querrin is held by the Gale and the Thorn together: swift, and prickly. It comes fastest to a name that starts with [ZEPH].' },
+      { src: 'A rival’s stolen diary', facts: ['likes:wormwood', 'hates:myrrh', 'has:NEB'],
+        text: 'Contrary creature, Querrin. It delights in bitter wormwood and loathes the sweetness of myrrh. I heard it shriek once when someone said [NEB] — that is in its name somewhere.' },
     ],
   },
   {
-    id: 'phebbet', name: 'Phebbet', tier: 2, language: 'aramaic', runes: ['flame', 'stone'], likes: 'frankincense', hates: 'rosemary',
+    id: 'phebbet', name: 'Phebbet', tier: 2, trueName: ['ASH', 'KOR', 'BEL'], runes: ['flame', 'stone'], likes: 'frankincense', hates: 'rosemary',
     form: 'a squat brass kettle with a face, and an attitude',
-    greet: `Steam whistles from Phebbet's spout. "Aramaic. Good accent. <i>Terrible</i> posture."¹`,
+    greet: `Steam whistles from Phebbet's spout. "Good pronunciation. <i>Terrible</i> posture."¹`,
     footnote: '¹ Phebbet’s views on posture date back to the Assyrians, who stood very straight, mostly out of fear.',
     lore: [
-      { src: 'A Damascene smith’s prayer-roll', text: 'Phebbet, a foliot of the forge, came west from Damascus and answers to Aramaic.' },
-      { src: 'Hollingsworth’s Compendium, vol. III', text: 'Phebbet is a hearth-thing. It must be bound with Flame and Stone.' },
-      { src: 'A rival’s stolen diary', text: 'Phebbet takes frankincense as its due. Rosemary it spits back at you, burning.' },
+      { src: 'A Damascene smith’s prayer-roll', facts: ['syl:0:ASH'],
+        text: 'Phebbet, a foliot of the forge, came west from Damascus. The smiths began its true name with [ASH], for the cinders.' },
+      { src: 'Hollingsworth’s Compendium, vol. III', facts: ['rune:flame', 'rune:stone', 'runes:2', 'has:KOR', 'has:BEL'],
+        text: 'Phebbet is a hearth-thing; bind it with Flame and Stone. [KOR] and [BEL] are both in its name, though I forget in which order.' },
+      { src: 'A rival’s stolen diary', facts: ['likes:frankincense', 'hates:rosemary'],
+        text: 'Phebbet takes frankincense as its due. Rosemary it spits back at you, burning.' },
     ],
   },
   // ---- Djinn
   {
-    id: 'azrimel', name: 'Azrimel', tier: 3, language: 'aramaic', runes: ['flame', 'serpent'], likes: 'myrrh', hates: 'sandalwood',
+    id: 'azrimel', name: 'Azrimel', tier: 3, trueName: ['ASH', 'ITH', 'SAR', 'KHA'], runes: ['flame', 'serpent'], likes: 'myrrh', hates: 'sandalwood',
     form: 'a handsome youth wreathed in lazy blue flame',
     greet: `"Azrimel, Breaker of Lesser Bonds, Scourge of—" It notices your runes, and sighs. "Fine. What do you want?"¹`,
     footnote: '¹ The full title runs to nineteen clauses. It has been workshopping a twentieth.',
     lore: [
-      { src: 'The Babylonian Index', text: 'Azrimel, a djinni of middling rank and immoderate opinions, answers to Aramaic.' },
-      { src: 'Proceedings of the Lake Shore Circle', text: 'Azrimel’s binding: the Flame and the Serpent. It has slipped lesser bonds, and boasted of it after.' },
-      { src: 'Marginalia of Agnes Pell', text: 'Azrimel says myrrh reminds it of the tombs of kings, and is mollified. Sandalwood it calls "cheap perfume for cheap magicians."' },
+      { src: 'The Babylonian Index', facts: ['syl:0:ASH', 'syl:3:KHA'],
+        text: 'Azrimel, a djinni of middling rank and immoderate opinions. Its true name opens with [ASH] and closes with [KHA].' },
+      { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:flame', 'rune:serpent', 'runes:2', 'has:SAR'],
+        text: 'Azrimel’s binding: the Flame and the Serpent. It has slipped lesser bonds and boasted of it after. There is a hiss of [SAR] somewhere in its name.' },
+      { src: 'Marginalia of Agnes Pell', facts: ['likes:myrrh', 'hates:sandalwood'],
+        text: 'Azrimel says myrrh reminds it of the tombs of kings, and is mollified. Sandalwood it calls "cheap perfume for cheap magicians."' },
     ],
   },
   {
-    id: 'kethuun', name: 'Kethuun', tier: 3, language: 'coptic', runes: ['tide', 'crown'], likes: 'galbanum', hates: 'frankincense',
+    id: 'kethuun', name: 'Kethuun', tier: 3, trueName: ['KHA', 'MAR', 'RU', 'BEL'], runes: ['tide', 'crown'], likes: 'galbanum', hates: 'frankincense',
     form: 'a jackal-headed figure in river-green linen',
     greet: `"You may address me as Your Radiance," says Kethuun. You do not.¹`,
     footnote: '¹ Kethuun keeps a list. You are on it now.',
     lore: [
-      { src: 'A papyrus from Thebes', text: 'Kethuun, a djinni of the Nile, answers only to Coptic.' },
-      { src: 'Proceedings of the Lake Shore Circle', text: 'Kethuun is held by the Tide and the Crown. It served in a temple once, and expects to be treated as royalty.' },
-      { src: 'An Egyptologist’s letters', text: 'Galbanum, bitter and green, pleases Kethuun. Frankincense it associates with priests who wronged it.' },
+      { src: 'A papyrus from Thebes', facts: ['syl:0:KHA', 'syl:3:BEL'],
+        text: 'Kethuun, a djinni of the Nile. The scribes wrote its true name beginning with [KHA] and ending with [BEL].' },
+      { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:tide', 'rune:crown', 'runes:2', 'syl:1:MAR'],
+        text: 'Kethuun is held by the Tide and the Crown. It served in a temple once and expects to be treated as royalty. Its second syllable is [MAR], the river’s.' },
+      { src: 'An Egyptologist’s letters', facts: ['likes:galbanum', 'hates:frankincense'],
+        text: 'Galbanum, bitter and green, pleases Kethuun. Frankincense it associates with priests who wronged it.' },
     ],
   },
   // ---- Afrit
   {
-    id: 'ulgaroth', name: 'Ulgaroth', tier: 4, language: 'coptic', runes: ['flame', 'stone', 'crown'], likes: 'galbanum', hates: 'cedar',
+    id: 'ulgaroth', name: 'Ulgaroth', tier: 4, trueName: ['UL', 'ASH', 'KOR', 'OTH', 'BEL'], runes: ['flame', 'stone', 'crown'], likes: 'galbanum', hates: 'cedar',
     form: 'a pillar of black smoke shot through with furnace-light, ten feet tall and stooping',
     greet: `The floorboards blister. "SPEAK, LITTLE MAGICIAN. QUICKLY."¹`,
     footnote: '¹ Afrits do not do lower case.',
     lore: [
-      { src: 'A City Hall file, marked SECRET', text: 'ULGAROTH. Afrit. Answers to Coptic. Do not summon unless you are very sure of yourself.' },
-      { src: 'Proceedings of the Lake Shore Circle', text: 'Three runes hold Ulgaroth: Flame, Stone and Crown. Two will not suffice. The magicians who tried two are not available for comment.' },
-      { src: 'An Egyptologist’s letters', text: 'Ulgaroth tolerates galbanum. Cedar-smoke enrages it. Somebody burned cedar for it in October of 1871, and the whole city learned that lesson. The cow got the blame.' },
+      { src: 'A City Hall file, marked SECRET', facts: ['syl:0:UL'],
+        text: 'ULGAROTH. Afrit. True name begins [UL]. Do not summon unless you are very sure of yourself.' },
+      { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:flame', 'rune:stone', 'rune:crown', 'runes:3'],
+        text: 'Three runes hold Ulgaroth: Flame, Stone and Crown. Two will not suffice. The magicians who tried two are not available for comment.' },
+      { src: 'An Egyptologist’s letters', facts: ['likes:galbanum', 'hates:cedar'],
+        text: 'Ulgaroth tolerates galbanum. Cedar-smoke enrages it. Somebody burned cedar for it in October of 1871, and the whole city learned that lesson. The cow got the blame.' },
+      { src: 'A scorched page from the 1871 ruins', facts: ['syl:1:ASH', 'syl:4:BEL', 'has:OTH'],
+        text: '…its name, [ASH] second, as the fire is second to the word… ending in [BEL]… and [OTH] somewhere I cannot… (the rest is ash).' },
     ],
   },
   // ---- Marid
   {
-    id: 'shemashara', name: 'Shem-Ashara', tier: 5, language: 'sumerian', runes: ['tide', 'moon', 'serpent'], likes: 'ambergris', hates: 'galbanum',
+    id: 'shemashara', name: 'Shem-Ashara', tier: 5, trueName: ['SAR', 'MAR', 'UL', 'KHA', 'ITH', 'RU'], runes: ['tide', 'moon', 'serpent'], likes: 'ambergris', hates: 'galbanum',
     form: 'a vast, slow tide of shadow that fills the room without seeming to enter it',
     greet: `When it speaks, it is the sound of water at the bottom of a well. "I remember when your city was a marsh. I will remember when it is a marsh again."¹`,
     footnote: '¹ It is not a threat. It is a forecast.',
     lore: [
-      { src: 'A clay tablet, much repaired', text: 'Shem-Ashara, a marid of the deep waters, older than Babylon. It hears only Sumerian.' },
-      { src: 'A City Hall file, marked MOST SECRET', text: 'The marid sleeps beneath the Tide, the Moon and the Serpent. All three must be drawn, and no other.' },
-      { src: 'A whaler’s journal', text: 'Ambergris, the whale’s gift, is the only offering Shem-Ashara does not scorn. Galbanum it holds in particular contempt.' },
+      { src: 'A clay tablet, much repaired', facts: ['syl:0:SAR', 'syl:1:MAR'],
+        text: 'Shem-Ashara, a marid of the deep waters, older than Babylon. Its true name begins [SAR]·[MAR], as the sea begins.' },
+      { src: 'A City Hall file, marked MOST SECRET', facts: ['rune:tide', 'rune:moon', 'rune:serpent', 'runes:3'],
+        text: 'The marid sleeps beneath the Tide, the Moon and the Serpent. All three must be drawn, and no other.' },
+      { src: 'A whaler’s journal', facts: ['likes:ambergris', 'hates:galbanum'],
+        text: 'Ambergris, the whale’s gift, is the only offering Shem-Ashara does not scorn. Galbanum it holds in particular contempt.' },
+      { src: 'The Water Crib engineer’s logbook', facts: ['syl:3:KHA', 'syl:4:ITH', 'syl:5:RU'],
+        text: 'On the nights the pumps ran backward the men heard the lake say [KHA], then [ITH], then [RU] — always in that order, always at the end of something longer.' },
     ],
   },
 ];
