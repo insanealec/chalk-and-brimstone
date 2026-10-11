@@ -9,8 +9,9 @@
 //   req       { rank, servantTier, known, machine, union } needed to pick it
 //             (servantTier: a servant or your familiar; known: a spirit you have heard of;
 //              machine / union: at least this standing with the Machine / the workers)
-//             { lantern, ring, flag } hide it entirely unless that vessel holds a spirit of at least
-//             this class, or that flag has been set
+//             { lantern, ring, flag, ithzar } hide it entirely unless that vessel holds a spirit of at
+//             least this class, that flag has been set, or Ithzar is around
+//   unless    a flag that hides the action once it has been set
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
 // Street encounter: { id, title, text, choices, once?, unless?, flag? }   flag: set when the encounter happens
 //

@@ -55,7 +55,7 @@ function newState() {
     events: {},             // event id -> { stage, since, done }
     flags: {},              // story flag -> day it was set
     standing: { machine: 0, union: 0, suspicion: 0, trust: 0 },  // trust: Ithzar's
-    ithzar: { joined: false, heard: {}, asideDay: {}, warned: false },
+    ithzar: { joined: false, heard: {}, asideDay: {}, warned: false, claims: {}, favor: null, favorDay: -99, askDay: null, awayDay: null },
   };
 }
 
@@ -117,15 +117,21 @@ const vesselTier = type => {
   const v = state.vessels[type];
   return v && v.spirit ? demonById(v.spirit).tier : 0;
 };
-const familiarTier = () => Math.max(state.familiar ? demonById(state.familiar).tier : 0, state.ithzar.joined ? ITHZAR.tier : 0);
-// whoever speaks up with warnings: Ithzar once it has joined you, otherwise your own familiar
-const familiarVoice = () => (state.ithzar.joined ? ITHZAR.name : state.familiar ? demonById(state.familiar).name : '');
+// Ithzar is with you today: it has joined you and isn't out (its first term: it comes and goes as it pleases).
+const ithzarHere = () => state.ithzar.joined && state.ithzar.awayDay !== state.day;
+const familiarTier = () => Math.max(state.familiar ? demonById(state.familiar).tier : 0, ithzarHere() ? ITHZAR.tier : 0);
+// whoever speaks up with warnings: Ithzar when it's with you, otherwise your own familiar
+const familiarVoice = () => (ithzarHere() ? ITHZAR.name : state.familiar ? demonById(state.familiar).name : '');
 const maxActions = () => ACTIONS_PER_DAY + (vesselTier('watch') ? watchHours(vesselTier('watch')) : 0) + (familiarTier() >= 5 ? 1 : 0);
 
 // ---------- Ithzar (content in js/ithzar.js)
 
-// Ithzar hangs around once you have met it, and is properly yours once it joins you (step 4, part B).
-const ithzarPresent = () => state.ithzar.joined || state.flags['met-ithzar'] !== undefined;
+// Ithzar is around to talk from the day you meet it. Once you free it, it vanishes until it comes back
+// with its terms; refuse twice and it's gone for good. Once it has joined you, it's around unless it's out.
+const ithzarPresent = () => (state.ithzar.joined ? ithzarHere()
+  : state.flags['met-ithzar'] !== undefined && state.flags['ithzar-freed'] === undefined && state.flags['ithzar-gone'] === undefined);
+// chapter 3: you've agreed to break Cornelia's binding and haven't yet
+const leashActive = () => state.flags['leash-agreed'] !== undefined && state.flags['ithzar-freed'] === undefined;
 
 // Picks from a pool of lines, avoiding repeats until the pool has been used up.
 function pickFresh(key, pool) {
@@ -182,8 +188,14 @@ function logAside(a) {
   log(a.lines.map(l => `<b>${l.name}:</b> ${l.text}`).join(' ') + (a.note ? ` <span class="note">${a.note}</span>` : ''), 'aside');
 }
 
-// Each morning while Ithzar is around: a warning if the police are getting close, or a note on its doings.
+// Each morning: Ithzar may be out for the day; otherwise a warning if the police are getting close,
+// or a note on its doings.
 function ithzarDawn() {
+  if (state.ithzar.joined && Math.random() < 1 / 7) {
+    state.ithzar.awayDay = state.day;
+    log(pickFresh('away', ITHZAR_LINES.away), 'aside');
+    return;
+  }
   if (!ithzarPresent()) return;
   const crackdown = state.events.crackdown && !state.events.crackdown.done;
   if (state.standing.suspicion < 4) state.ithzar.warned = false;
@@ -195,16 +207,237 @@ function ithzarDawn() {
   }
 }
 
+// ---- Cornelia's binding (chapter 3): a small notebook sheet of its own
+
+function corneliaSheet() {
+  const B = CORNELIA_BINDING;
+  const yes = new Set(), no = new Set(), notInc = new Set(), deduced = new Set();
+  let incense = null, incDeduced = false;
+  for (const [t, a] of (state.facts.cornelia || []).map(f => f.split(':'))) {
+    if (t === 'rune') yes.add(a);
+    if (t === 'norune') no.add(a);
+    if (t === 'incense') incense = a;
+    if (t === 'noincense') notInc.add(a);
+  }
+  const all = Object.keys(RUNES);
+  if (yes.size === B.runes.length) all.forEach(r => { if (!yes.has(r) && !no.has(r)) { no.add(r); deduced.add(r); } });
+  const open = all.filter(r => !yes.has(r) && !no.has(r));
+  if (open.length && open.length === B.runes.length - yes.size) open.forEach(r => { yes.add(r); deduced.add(r); });
+  if (!incense) {
+    const left = Object.keys(INCENSE).filter(k => !notInc.has(k));
+    if (left.length === 1) { incense = left[0]; incDeduced = true; }
+  }
+  return { yes: [...yes], no: [...no], deduced, incense, incDeduced, notInc: [...notInc] };
+}
+
+function corneliaFactText(fact) {
+  const [t, a] = fact.split(':');
+  if (t === 'rune') return `she used the ${RUNES[a].name} rune`;
+  if (t === 'norune') return `she did not use the ${RUNES[a].name} rune`;
+  if (t === 'incense') return `she burned ${INCENSE[a].name.toLowerCase()}`;
+  return `she did not burn ${INCENSE[a].name.toLowerCase()}`;
+}
+
+// Records one thing about her binding you didn't know (kind 'norune': a rune she didn't use) and describes it.
+function corneliaClue(kind) {
+  const B = CORNELIA_BINDING;
+  const k = corneliaSheet();
+  const options = kind === 'norune'
+    ? Object.keys(RUNES).filter(r => !B.runes.includes(r) && !k.no.includes(r)).map(r => `norune:${r}`)
+    : [...B.runes.filter(r => !k.yes.includes(r)).map(r => `rune:${r}`), ...(k.incense ? [] : [`incense:${B.incense}`])];
+  if (!options.length) return null;
+  const fact = pick(options);
+  recordFact('cornelia', fact);
+  return corneliaFactText(fact);
+}
+
+function corneliaSheetHTML() {
+  const B = CORNELIA_BINDING;
+  const k = corneliaSheet();
+  const rune = r => RUNES[r].name + (k.deduced.has(r) ? DEDUCED : '');
+  const runes = [`needs ${B.runes.length}`];
+  if (k.yes.length) runes.push(`✓ ${k.yes.map(rune).join(', ')}`);
+  if (k.yes.length === B.runes.length) runes.push('no others');
+  else if (k.no.length) runes.push(`✗ ${k.no.map(rune).join(', ')}`);
+  const incense = k.incense
+    ? INCENSE[k.incense].name.toLowerCase() + (k.incDeduced ? DEDUCED : '')
+    : `?${k.notInc.length ? ` · not ${k.notInc.map(i => INCENSE[i].name.toLowerCase()).join(', ')}` : ''}`;
+  return `<dl class="sheet">
+    <dt>Circle</dt><dd>one that holds ${TIER_NAMES[B.circle].toLowerCase()}s</dd>
+    <dt>Runes</dt><dd>${runes.join(' · ')}</dd>
+    <dt>Incense</dt><dd>${incense}</dd>
+  </dl>`;
+}
+
+// ---- the rite of Release, performed in the chamber with RITE as the "spirit"
+
+const RITE = 'ithzar';
+
+function resolveRite() {
+  const s = state.sel;
+  const B = CORNELIA_BINDING;
+  const circle = circleById(s.circle);
+  const incName = INCENSE[s.incense].name.toLowerCase();
+  state.actions--;
+  state.incense[s.incense]--;
+  const m = { demon: { name: ITHZAR.name, tier: ITHZAR.tier }, rite: true, spoken: [], feedback: [], outcome: null, lines: [], greet: '', footnote: '' };
+  log(`You light the ${incName} and begin the rite of Release.`);
+  m.lines.push('Ithzar steps into your circle, closes its eyes, and speaks its own name, too quickly for you to catch. Then you begin the Clause of Release.');
+
+  const right = s.runes.filter(r => B.runes.includes(r));
+  const wrong = s.runes.filter(r => !B.runes.includes(r));
+  const missing = B.runes.length - right.length;
+  right.forEach(r => {
+    m.lines.push(`The <b>${RUNES[r].name}</b> rune catches on something unseen and pulls it loose.`);
+    recordFact('cornelia', `rune:${r}`);
+  });
+  wrong.forEach(r => {
+    m.lines.push(`The <b>${RUNES[r].name}</b> rune finds nothing to unpick.`);
+    recordFact('cornelia', `norune:${r}`);
+  });
+  if (missing) m.lines.push(`Cornelia used ${B.runes.length} runes; you have found ${right.length} of them.`);
+  if (s.incense === B.incense) {
+    m.lines.push(`The ${incName} smoke curls around Ithzar’s wrists like a leash, and loosens.`);
+    recordFact('cornelia', `incense:${s.incense}`);
+  } else {
+    m.lines.push(`The ${incName} smoke means nothing to the binding.`);
+    recordFact('cornelia', `noincense:${s.incense}`);
+  }
+  const circleOk = circle.tier >= B.circle;
+  if (!circleOk) m.lines.push(`Your ${circle.name} cannot hold a djinni while its leash is being cut.`);
+
+  if (circleOk && !wrong.length && !missing && s.incense === B.incense) {
+    m.outcome = 'firm';
+    m.lines.push('Something in the room goes taut, then parts like a fiddle string. Ithzar opens its eyes. For the first time since you met it, it has nothing to say. Then it is gone.');
+    m.greet = '"Well," says a voice from somewhere near the ceiling, "that was competently done."¹';
+    m.footnote = '¹ It will deny saying this.';
+    state.flags['ithzar-freed'] = state.day;
+    state.sel.name = null;
+    log('<b>The rite holds.</b> Ithzar is free of Cornelia Ashby, and gone.', 'good');
+  } else {
+    m.outcome = 'broken';
+    const taken = hurt(2, 'caught in the backlash of a failed rite of Release');
+    state.standing.suspicion = Math.min(10, state.standing.suspicion + 1);
+    m.lines.push(`The leash holds, and snaps back. (${hurtNote(taken, 2)}) Somewhere on LaSalle Street, Cornelia Ashby looks up from her dinner.`);
+    log(`The rite of Release rebounds. (${hurtNote(taken, 2)}, the police take an interest)`, 'bad');
+  }
+  return m;
+}
+
+// ---- Ithzar as your familiar: asking it things, and its weekly favor
+
+function askBlocker(d) {
+  if (!ithzarHere()) return 'Ithzar is out today.';
+  if (state.ithzar.askDay === state.day) return 'You have already asked Ithzar something today.';
+  if (!unknownFacts(d).length) return 'There is nothing left to ask about it.';
+  return null;
+}
+
+// A plausible wrong version of a fact, for when Ithzar doesn't feel like telling the truth.
+function falseFact(d, fact) {
+  const [t, a] = fact.split(':');
+  if (t === 'syl') return `syl:${a}:${pick(SYLLABLES.filter(x => !d.trueName.includes(x)))}`;
+  if (t === 'rune') return `rune:${pick(Object.keys(RUNES).filter(r => !d.runes.includes(r)))}`;
+  if (t === 'runes') return `runes:${d.runes.length === 3 ? 2 : d.runes.length + 1}`;
+  if (t === 'likes') return `likes:${pick(Object.keys(INCENSE).filter(k => k !== d.likes && k !== d.hates))}`;
+  return `hates:${pick(Object.keys(INCENSE).filter(k => k !== d.likes && k !== d.hates))}`;
+}
+
+// Once a day Ithzar tells you something about a spirit. The less it trusts you, the more likely it lies;
+// its claims stay marked in the notebook until the chamber confirms or refutes them.
+function askIthzar(id) {
+  const d = demonById(id);
+  if (!d || !state.ithzar.joined || askBlocker(d)) return;
+  state.ithzar.askDay = state.day;
+  const lieChance = state.standing.trust >= 8 ? 0 : state.standing.trust >= 5 ? 0.1 : 0.4;
+  const truth = pick(unknownFacts(d));
+  const claim = Math.random() < lieChance ? falseFact(d, truth) : truth;
+  const claims = state.ithzar.claims[d.id] || (state.ithzar.claims[d.id] = []);
+  if (!claims.includes(claim)) claims.push(claim);
+  const said = factText(claim);
+  log(`<b>${pickFresh('ask:lead', ITHZAR_LINES['ask:lead'])}:</b> "About ${d.name}? ${said[0].toUpperCase()}${said.slice(1)}."`, 'aside');
+  render();
+}
+
+function claimStatus(k, claim) {
+  const [t, a, b] = claim.split(':');
+  if (t === 'syl') return k.name[a] ? (k.name[a] === b ? 'confirmed' : 'refuted') : k.absent.has(b) ? 'refuted' : 'unconfirmed';
+  if (t === 'rune') return k.runeYes.includes(a) ? 'confirmed' : k.runeNo.includes(a) ? 'refuted' : 'unconfirmed';
+  if (t === 'runes') return k.runeCount === null ? 'unconfirmed' : k.runeCount === Number(a) ? 'confirmed' : 'refuted';
+  const known = t === 'likes' ? k.likes : k.hates;
+  return known ? (known === a ? 'confirmed' : 'refuted') : 'unconfirmed';
+}
+
+// What Ithzar has told you about a spirit that the notebook hasn't settled yet, or that turned out to be a lie.
+function claimsHTML(d) {
+  const k = dossier(d);
+  const shown = (state.ithzar.claims[d.id] || []).map(c => [c, claimStatus(k, c)]).filter(([, st]) => st !== 'confirmed');
+  if (!shown.length) return '';
+  return `<div class="claims"><h4>Ithzar says</h4><ul>${shown.map(([c, st]) =>
+    `<li class="${st}">${factText(c)} <small>${st === 'refuted' ? 'a lie' : 'unconfirmed'}</small></li>`).join('')}</ul></div>`;
+}
+
+function askButton(d) {
+  if (!state.ithzar.joined) return '';
+  const blocker = askBlocker(d);
+  return `<button class="ghost" data-action="ask" data-value="${d.id}" ${blocker ? 'disabled' : ''}>Ask Ithzar about ${d.name}</button>
+    ${blocker ? `<p class="muted small">${blocker}</p>` : ''}`;
+}
+
+function favorBlocker() {
+  if (!ithzarHere()) return 'Ithzar is out today.';
+  if (state.standing.trust < 6) return 'Ithzar does not like you enough to run your errands.';
+  const since = state.day - state.ithzar.favorDay;
+  if (since < 7) return `Ithzar will do you another favor in ${7 - since} day${7 - since > 1 ? 's' : ''}.`;
+  return null;
+}
+
+// Runs at nightfall: Ithzar's errand, if you asked one of it and it still agrees.
+function runIthzarFavor() {
+  const errand = state.ithzar.favor;
+  state.ithzar.favor = null;
+  if (!errand || favorBlocker()) return;
+  state.ithzar.favorDay = state.day;
+  state.standing.trust = Math.max(-10, state.standing.trust - 1);
+  log(`As a favor, ${bold(ITHZAR)} runs an errand for you tonight. It will be insufferable about it. (Ithzar thinks less of you)`, 'aside');
+  runErrand({ binding: 'firm', errand }, ITHZAR);
+}
+
+function ithzarFavorCard() {
+  if (!state.ithzar.joined) return '';
+  const blocker = favorBlocker();
+  return `<article class="panel card servant ithzar">
+    <header><h3>${ITHZAR.name}</h3><span class="tag">Djinni · a favor, not a servant</span></header>
+    <p class="muted">Familiars do not run errands. Ithzar will make an exception, once a week, if it likes you enough, and it will cost you a little of its good opinion.</p>
+    ${blocker ? `<p class="muted small">${blocker}</p>` : `<label>Ask a favor tonight
+      <select data-favor="1">
+        <option value="">No favor tonight</option>
+        ${errandOptions({ binding: 'firm' }, ITHZAR.tier, state.ithzar.favor)}
+      </select>
+    </label>`}
+  </article>`;
+}
+
 function ithzarCard() {
-  if (!ithzarPresent()) return '';
+  if (state.flags['met-ithzar'] === undefined) return '';
+  let status;
+  if (state.ithzar.joined) {
+    status = `Your second familiar. Familiar abilities work at the class of the stronger of your two familiars. Ask it about spirits from the chamber’s notebook, once a day; at high trust it will run the odd errand as a favor.${state.ithzar.awayDay === state.day ? ' <b>It is out today.</b>' : ''}`;
+  } else if (state.flags['ithzar-gone'] !== undefined) {
+    status = 'Gone. You refused its terms twice.';
+  } else if (state.flags['ithzar-freed'] !== undefined) {
+    status = 'Free of Cornelia Ashby, and gone for now. It said it would be back.';
+  } else if (leashActive()) {
+    status = `Bound to Mrs. Cornelia Ashby. You have agreed to break her binding: piece it together, then perform the rite of Release in your chamber, choosing Ithzar as the spirit.</p>${corneliaSheetHTML()}<p>`;
+  } else {
+    status = 'Bound to Mrs. Cornelia Ashby. It visits when it likes, and lately it likes to. It is no use to you as a familiar while she holds its leash, but it does talk.';
+  }
   return `<h2 class="section-title">Ithzar</h2>
     <article class="panel card ithzar">
       <header><h3>${ITHZAR.name}</h3><span class="tag">${TIER_NAMES[ITHZAR.tier]}</span></header>
       <p class="muted">Appears as ${ITHZAR.form}.</p>
-      <p>${state.ithzar.joined
-        ? 'Your second familiar. Familiar abilities work at the class of the stronger of your two familiars.'
-        : 'Bound to Mrs. Cornelia Ashby. It visits when it likes, and lately it likes to. It is no use to you as a familiar while she holds its leash, but it does talk.'}</p>
-      <p>Ithzar <b>${standingWord('trust')}</b>.</p>
+      <p>${status}</p>
+      ${state.flags['ithzar-gone'] === undefined ? `<p>Ithzar <b>${standingWord('trust')}</b>.</p>` : ''}
     </article>`;
 }
 
@@ -273,6 +506,10 @@ function scry() {
   const t = vesselTier('scrying');
   if (!t) return;
   const glass = demonById(state.vessels.scrying.spirit);
+  if (leashActive() && t >= 2) {
+    const clue = corneliaClue(1);
+    if (clue) log(`In the scrying glass, ${bold(glass)} shows you Cornelia Ashby\u2019s workshop: ${clue}.`, 'lore');
+  }
   const viewable = d => isKnown(d) && d.tier <= t + 1 && unknownFacts(d).length;
   const selected = state.sel.name && demonById(state.sel.name);
   const d = selected && viewable(selected) ? selected : pick(knownDemons().filter(viewable));
@@ -452,6 +689,12 @@ function summonBlocker() {
   if (state.over) return 'The game is over.';
   if (state.actions < 1) return 'It is too late in the day. End the day and rest.';
   if (!s.name) return 'Choose the spirit you mean to call.';
+  if (s.name === RITE) {
+    if (!leashActive()) return 'Ithzar is no longer bound to anyone.';
+    if (!s.incense) return 'Choose an incense to burn.';
+    if ((state.incense[s.incense] || 0) < 1) return `You have no ${INCENSE[s.incense].name.toLowerCase()} left.`;
+    return null;
+  }
   const d = demonById(s.name);
   if (s.syllables.some(x => !x)) return `Speak all ${d.trueName.length} syllables of its true name.`;
   if (!s.incense) return 'Choose an incense to burn.';
@@ -476,8 +719,8 @@ function beginSummon() {
   manifestation = null;
   render();
   setTimeout(() => {
-    manifestation = resolveSummon();
-    manifestation.aside = summonAside(manifestation);
+    manifestation = state.sel.name === RITE ? resolveRite() : resolveSummon();
+    manifestation.aside = manifestation.rite ? null : summonAside(manifestation);
     if (manifestation.aside) logAside(manifestation.aside);
     busy = false;
     resetIncantation();
@@ -648,28 +891,28 @@ function resolveSummon() {
 
 // ---------- servants and errands
 
-function errandChance(sv, diff) {
-  const d = demonById(sv.demonId);
-  return clamp(0.55 + 0.2 * (d.tier - diff) + (sv.binding === 'firm' ? 0.15 : 0), 0.1, 0.95);
+function errandChance(sv, diff, tier = demonById(sv.demonId).tier) {
+  return clamp(0.55 + 0.2 * (tier - diff) + (sv.binding === 'firm' ? 0.15 : 0), 0.1, 0.95);
 }
 
-function errandDiff(sv, errand) {
+function errandDiff(errand, tier) {
   if (errand === 'commission') return currentCommission().diff;
-  return ERRANDS[errand].diff(demonById(sv.demonId).tier);
+  return ERRANDS[errand].diff(tier);
 }
 
 function coinAmount(tier) {
   return [0, rand(5, 9), rand(12, 18), rand(24, 34), rand(45, 60), rand(80, 100)][tier];
 }
 
-function runErrand(sv) {
-  const d = demonById(sv.demonId);
+function runErrand(sv, d = demonById(sv.demonId)) {
   const vars = { name: bold(d) };
   if (sv.errand === 'commission') {
     const c = currentCommission();
     if (!c || c.type !== 'errand') { sv.errand = null; return; }
   }
-  const succeeded = Math.random() < errandChance(sv, errandDiff(sv, sv.errand));
+  const e = ERRANDS[sv.errand];
+  if (e && e.available && !e.available(state)) { sv.errand = null; return; }
+  const succeeded = Math.random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier);
 
   if (!succeeded) {
     if (sv.binding === 'uneasy' && Math.random() < 0.5) return twist(d);
@@ -703,6 +946,11 @@ function runErrand(sv) {
       if (!learnFragment(target, target) && !learnFragment(1, target)) {
         log('The notes contain nothing you did not already know.');
       }
+      break;
+    }
+    case 'cornelia': {
+      const clue = corneliaClue(1);
+      log(`${fill(pick(ERRAND_TEXT.cornelia.ok), vars)} ${clue ? `From what it saw, ${clue}.` : 'It learned nothing you did not already know.'}`, 'lore');
       break;
     }
     case 'commission':
@@ -755,6 +1003,7 @@ function expire(sv) {
 function endDay() {
   if (state.over || busy) return;
   log(`Night falls on day ${state.day}.`, 'info');
+  runIthzarFavor();
   for (const sv of [...state.servants]) {
     if (sv.errand) runErrand(sv);
     if (state.over) break;
@@ -942,7 +1191,8 @@ function choiceBlocker(ch) {
 function choiceHidden(ch) {
   const r = ch.req || {};
   return Boolean((r.lantern && vesselTier('lantern') < r.lantern) || (r.ring && vesselTier('ring') < r.ring)
-    || (r.flag && state.flags[r.flag] === undefined));
+    || (r.flag && state.flags[r.flag] === undefined) || (r.ithzar && !ithzarPresent())
+    || (ch.unless && state.flags[ch.unless] !== undefined));
 }
 
 // A familiar warns about choices that can hurt you; a strong one tells you the odds.
@@ -1138,6 +1388,19 @@ function applyEffects(fx, cause) {
     }
   }
   for (const f of [].concat(fx.flag || [])) if (state.flags[f] === undefined) state.flags[f] = state.day;
+  if (fx.clause && !state.clauses.includes(fx.clause)) {
+    state.clauses.push(fx.clause);
+    notes.push(`learned the Clause ${CLAUSES[fx.clause].name}`);
+  }
+  if (fx.corneliaClue) {
+    const clue = corneliaClue(fx.corneliaClue);
+    notes.push(clue ? `Cornelia\u2019s binding: ${clue}` : 'nothing new about Cornelia\u2019s binding');
+  }
+  if (fx.joinIthzar) {
+    state.ithzar.joined = true;
+    if (state.flags['ithzar-joined'] === undefined) state.flags['ithzar-joined'] = state.day;
+    notes.push('Ithzar is your familiar');
+  }
   if (fx.rep) {
     notes.push(`+${fx.rep} reputation`);
     gainRep(fx.rep);
@@ -1254,9 +1517,10 @@ function viewChamber() {
       ${manifestHTML()}
     </div>
     <div class="controls panel">
-      ${ctl('Spirit to call', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join(''))}
-      ${d ? incantationHTML(d) : ''}
-      ${clauseHTML()}
+      ${ctl('Spirit to call', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join('')
+        + (leashActive() && state.clauses.includes('release') ? chip('name', RITE, 'Ithzar<small>release from Cornelia</small>', s.name === RITE) : ''))}
+      ${d ? incantationHTML(d) : s.name === RITE ? riteHTML() : ''}
+      ${s.name === RITE ? '' : clauseHTML()}
       ${ctl('Summoning circle', CIRCLES.filter(c => state.circles.includes(c.id)).map(c =>
         chip('circle', c.id, `${c.name}<small>holds up to ${TIER_NAMES[c.tier]}</small>`, s.circle === c.id)).join(''))}
       ${ctl('Your pentacle', PENTACLES.filter(p => state.pentacles.includes(p.id)).map(p =>
@@ -1269,7 +1533,8 @@ function viewChamber() {
       <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Speak the summons <small>(1 hour)</small></button>
       <p class="hint">${busy ? 'The air grows thick…' : blocker || 'Speak carefully.'}</p>
       ${d && !busy ? familiarAdvice(d) : ''}
-      ${d ? `<div class="notes"><h3>Notebook: ${d.name}</h3>${demonNotes(d, false)}</div>` : ''}
+      ${d ? `<div class="notes"><h3>Notebook: ${d.name}</h3>${demonNotes(d, false)}${askButton(d)}</div>`
+        : s.name === RITE ? `<div class="notes"><h3>Notebook: Cornelia\u2019s binding</h3>${corneliaSheetHTML()}</div>` : ''}
     </div>
   </div>`;
 }
@@ -1311,6 +1576,11 @@ function familiarAdvice(d) {
   return `<p class="familiar-says"><b>${familiarVoice()}</b> clears its throat: ${notes.join('; ')}.</p>`;
 }
 
+function riteHTML() {
+  return `<div class="ctl incantation"><h3>The rite of Release</h3>
+    <p class="muted small">Ithzar will speak its own name. Set out the circle, runes and incense Cornelia used, and you speak the Clause of Release. Get it wrong and the leash snaps back.</p></div>`;
+}
+
 // The true-name builder: one slot per syllable, and a palette of syllables colored by what the notebook knows.
 function incantationHTML(d) {
   const s = state.sel;
@@ -1338,7 +1608,8 @@ function manifestHTML() {
   if (busy) return `<div class="manifest pending"><p>You begin the incantation. The candles gutter; the chalk lines shiver…</p></div>`;
   if (!manifestation) return `<div class="manifest empty"><p>Choose a spirit, speak its true name syllable by syllable, and set out the right circle, runes and incense. Every attempt teaches you something, and your notebook keeps track. Get it wrong and you had better trust your pentacle.</p></div>`;
   const m = manifestation;
-  const labels = { firm: 'Bound firmly', uneasy: 'Bound uneasily', broken: 'Broke free', silence: 'No answer' };
+  const labels = m.rite ? { firm: 'Released', broken: 'Rebounded' }
+    : { firm: 'Bound firmly', uneasy: 'Bound uneasily', broken: 'Broke free', silence: 'No answer' };
   return `<div class="manifest outcome-${m.outcome}">
     <div class="m-head"><h3>${m.demon.name} <small>${TIER_NAMES[m.demon.tier]}</small></h3><span class="tag">${labels[m.outcome]}</span></div>
     <div class="slots spoken">${m.spoken.map((syl, i) => sylHTML(syl, m.feedback[i])).join('<span class="dot">·</span>')}</div>
@@ -1411,7 +1682,7 @@ function chamberSVG() {
   const smoke = inc ? [0, 1, 2].map(i =>
     `<path class="smoke s${i}" d="M ${425 + i * 8} 340 q -12 -25 0 -50 q 12 -25 0 -50" stroke="${inc.color}" fill="none" stroke-width="3" stroke-linecap="round"/>`).join('') : '';
 
-  const spoken = s.syllables.map(x => x || '\u2014').join(' \u00b7 ');
+  const spoken = s.name === RITE ? 'ITHZAR' : s.syllables.map(x => x || '\u2014').join(' \u00b7 ');
 
   return `<svg viewBox="0 0 640 400" class="${cls}" role="img" aria-label="Summoning chamber">
     <defs>
@@ -1605,7 +1876,7 @@ function dossierHTML(d) {
 
 function demonNotes(d, openLore) {
   const frags = d.lore.filter((_, i) => state.lore.includes(`${d.id}-${i}`));
-  return `${dossierHTML(d)}
+  return `${dossierHTML(d)}${claimsHTML(d)}
     ${frags.length ? `<details class="lore" ${openLore ? 'open' : ''}><summary>Lore (${frags.length} of ${d.lore.length})</summary>
       ${frags.map(f => `<p class="frag"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
     </details>` : '<p class="muted small">You have read nothing about it. Everything here came from the chamber.</p>'}`;
@@ -1637,21 +1908,30 @@ function viewJournal() {
 
 // ---- servants
 
+// The errands a spirit of this class could run tonight, with its odds, as <option>s.
+function errandOptions(sv, tier, selected) {
+  const c = currentCommission();
+  const opts = Object.entries(ERRANDS).filter(([, e]) => !e.available || e.available(state)).map(([k, e]) =>
+    `<option value="${k}" ${selected === k ? 'selected' : ''}>${e.name} (${Math.round(errandChance(sv, e.diff(tier), tier) * 100)}%)</option>`);
+  if (c && c.type === 'errand') {
+    opts.push(`<option value="commission" ${selected === 'commission' ? 'selected' : ''}>City Hall: ${c.title} (${Math.round(errandChance(sv, c.diff, tier) * 100)}%)</option>`);
+  }
+  return opts.join('');
+}
+
 function viewServants() {
   const cap = `<p>You may hold ${maxServants()} spirit${maxServants() > 1 ? 's' : ''} at your rank. Errands are carried out overnight, and repeat each night until changed.</p>`;
   if (!state.servants.length) {
-    return `<div class="panel"><h2>Your Servants</h2>${cap}<p class="muted">No spirit currently serves you. The chamber awaits.</p></div>`;
+    return `<div class="panel"><h2>Your Servants</h2>${cap}<p class="muted">No spirit currently serves you. The chamber awaits.</p></div>
+      ${state.ithzar.joined ? `<div class="cards">${ithzarFavorCard()}</div>` : ''}`;
   }
   const c = currentCommission();
   return `<div class="panel"><h2>Your Servants</h2>${cap}</div>
   <div class="cards">
+    ${ithzarFavorCard()}
     ${state.servants.map(sv => {
       const d = demonById(sv.demonId);
-      const opts = Object.entries(ERRANDS).map(([k, e]) =>
-        `<option value="${k}" ${sv.errand === k ? 'selected' : ''}>${e.name} (${Math.round(errandChance(sv, e.diff(d.tier)) * 100)}%)</option>`);
-      if (c && c.type === 'errand') {
-        opts.push(`<option value="commission" ${sv.errand === 'commission' ? 'selected' : ''}>City Hall: ${c.title} (${Math.round(errandChance(sv, c.diff) * 100)}%)</option>`);
-      }
+      const opts = [errandOptions(sv, d.tier, sv.errand)];
       const desc = sv.errand && sv.errand !== 'commission' ? ERRANDS[sv.errand].desc : sv.errand === 'commission' ? c.text : '';
       return `<article class="panel card servant ${sv.binding}">
         <header><h3>${d.name}</h3><span class="tag">${TIER_NAMES[d.tier]} · ${sv.binding === 'firm' ? 'firmly bound' : 'uneasily bound'}</span></header>
@@ -1895,6 +2175,7 @@ document.addEventListener('click', e => {
     case 'act': doAction(el.dataset.value); break;
     case 'choose': chooseOption(Number(el.dataset.value)); break;
     case 'dismiss': dismiss(Number(el.dataset.value)); break;
+    case 'ask': askIthzar(el.dataset.value); break;
     case 'prepare':
       state.sel.name = el.dataset.value;
       resetIncantation();
@@ -1919,6 +2200,11 @@ document.addEventListener('keydown', e => {
 });
 
 document.addEventListener('change', e => {
+  if (e.target.dataset.favor) {
+    if (!favorBlocker()) state.ithzar.favor = e.target.value || null;
+    render();
+    return;
+  }
   const uid = e.target.dataset.errand;
   if (!uid) return;
   const sv = state.servants.find(s => s.uid === Number(uid));

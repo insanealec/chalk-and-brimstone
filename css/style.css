@@ -406,6 +406,11 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 #log .note { color: var(--dim); font-style: italic; font-size: 0.9em; }
 .event-text { font-style: italic; border-left: 2px solid var(--ember); padding-left: 0.6rem; margin: 0.4rem 0; }
 .card.ithzar { max-width: 640px; border-top: 2px solid #c98a4a; }
+.claims { margin-bottom: 0.6rem; }
+.claims ul { margin: 0; padding-left: 1.1rem; font-size: 0.92rem; }
+.claims li small { color: var(--dim); font-style: italic; margin-left: 0.3em; }
+.claims li.refuted { text-decoration: line-through; text-decoration-color: var(--blood); }
+.claims li.refuted small { color: var(--blood); text-decoration: none; }
 
 .choice .via { color: var(--lore); font-style: italic; font-size: 0.8em; }
 .choice.revealed { border-color: #5a4a8a; background: #221d2c; }

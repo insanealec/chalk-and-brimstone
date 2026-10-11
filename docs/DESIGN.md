@@ -160,7 +160,7 @@ The familiar is the stepping stone to step 4: the earned companion is a familiar
 ### Step 3: district places and current events ✅
 Built as described under **City** above. The magic-immune workers took the form of Dora Kaspar's packinghouse hands, "some of whom can see straight through a glamour." Their immunity is flavor for now and could become a mechanic later.
 
-### Step 4: Ithzar, the earned companion (Part A built)
+### Step 4: Ithzar, the earned companion (Parts A and B built)
 
 You never summon Ithzar. You earn it over most of the game, through a story arc threaded across the city and its events. The arc ends with a lab puzzle in your own chamber, and the relationship it builds is called in near the end of the game.
 
@@ -205,14 +205,15 @@ Ithzar takes a **second familiar slot**, alongside whatever familiar you've boun
 Each favor waits a few days and then expires, which costs 1 trust. Playing every favor the friendly way reaches trust 5, the threshold for chapter 3.
 - **A tip before the crackdown.** At dawn, if trust is 3 or more and police suspicion reaches 4 (the crackdown starts at 6), Ithzar warns you once. The warning resets when suspicion falls back below 4.
 
-**Chapter 3, the counter-binding.** Cornelia's binding is a puzzle target with its own notebook sheet: the circle class she used, her three runes and her incense. You gather clues from:
+**Chapter 3, the counter-binding** (built). It starts once all three favors are settled and trust is 5 or more. Ithzar asks for help and teaches you the Clause ***of Release***. Cornelia's binding is a puzzle target with its own notebook sheet: a circle that holds djinn, three runes (Stone, Moon and Flame) and her incense (wormwood). The sheet deduces by elimination like a spirit's. You gather clues from:
 
-- a new servant errand, *spy on Cornelia Ashby*
-- her notes in the Lake Shore Circle library
-- your scrying glass, if it holds a spirit strong enough to look into her workshop
-- Ithzar itself, which can't say anything but can wince at the wrong guesses
+- a servant errand, *spy on Cornelia Ashby* (difficulty 2), available only during chapter 3; each success reveals a rune or her incense
+- her notes in the Lake Shore Circle's committee room (every other day; 70% a clue, 30% the doorman throws you out, costing 1 health and raising suspicion)
+- your scrying glass, if it holds a foliot or stronger: one clue each dawn
+- naming runes at Ithzar on your doorstep (once a day): it can't say anything, but it relaxes at a rune she didn't use
+- failed rites, which show which runes caught
 
-Then you perform the rite in the chamber. The spirit is "Ithzar (bound to Cornelia Ashby)", with a new clause, ***of Release***, learned in this chapter, plus her runes, her incense and a circle strong enough for a djinni. **You never learn Ithzar's true name:** it insists on speaking its own name inside your circle. If the rite fails, it rebounds on you (injury) and Cornelia notices (trust and suspicion effects). If it succeeds, Ithzar is free, and vanishes.
+Then you perform the rite in the chamber: choose "Ithzar (release from Cornelia)" as the spirit and set out her circle, runes and incense. There are no syllables to fill in: **you never learn Ithzar's true name**, because it insists on speaking its own name inside your circle. A failed rite rebounds for 2 damage, which your protections can reduce, and raises police suspicion by 1, since Cornelia feels it. A successful rite frees Ithzar, and it vanishes.
 
 **Chapter 4, the terms.** You accept all three or refuse:
 
@@ -220,7 +221,7 @@ Then you perform the rite in the chamber. The spirit is "Ithzar (bound to Cornel
 2. **It keeps one secret.** A story hook for later; no mechanic.
 3. **"One day I'll ask you to let me go. When I do, you will."** Open-ended on purpose; it's called in late in the game.
 
-Refusing sends it away. It makes the offer once more about a week later.
+The offer comes three days after the release and waits five days. Refusing, or letting it lapse, sends Ithzar away. It makes the offer once more a week later; refuse that too and it's gone for good. Once accepted, Ithzar is **away about one day in seven**: that day it gives no abilities, no remarks and no favors.
 
 **The call.** After the afrit commission, with the marid in view, Ithzar asks to leave before you wake the thing under the lake; it was there the last time someone tried. You let it go. As a parting gift it gives you one of the marid's missing syllables and a last footnote. You face the marid without it: no extra abilities, no heckling through the hardest summoning in the game. The ending's epilogue acknowledges it.
 
@@ -232,19 +233,19 @@ Refusing sends it away. It makes the offer once more about a week later.
    - your servants and your other familiar
 
    Roughly 60–80 lines, keyed to triggers. This is what makes the game feel like the books.
-2. **"Ask Ithzar."** Once a day you can ask it about any spirit you know, and it adds a notebook fact. At low trust it sometimes lies: facts from Ithzar are marked "Ithzar says…" in the notebook until the chamber confirms them.
-3. **A favor a week.** At high trust it will run one errand a week, despite familiars never running errands. It's framed as a personal favor and costs a little trust.
+2. **"Ask Ithzar"** (built). Once a day, from a spirit's notebook in the chamber, you can ask Ithzar about it. Its answers aren't added as facts. They're listed under "Ithzar says" until the chamber settles them: confirmed claims disappear, and lies are struck through and marked. It lies 40% of the time below trust 5, 10% at 5–7, and never at 8 or more.
+3. **A favor a week** (built). At trust 6 or more you can pick an errand for Ithzar in the Servants tab. It runs that night as a firmly bound djinni, costs 1 trust, and can't be asked again for seven days.
 4. **Banter with your other familiar.** When both familiars are with you in the city, a city action has about a 1-in-4 chance (at most once per district per day) of setting off a short exchange between them. It appears in the result and in the chronicle. Lines are keyed to your other familiar: specific lines for each spirit, falling back to lines for its class. Some lines also react to the district or to a running event. Ithzar condescends to imps, needles foliots, competes with djinn, and goes quiet around anything bigger. For example:
    - *Ithzar:* "Your imp is eating the wallpaper." *Nibbet:* "It started it."
    - *Querrin:* "Message for the djinni." *Ithzar:* "If it's from you, I've already read it."
 5. **The endgame.** It knows Shem-Ashara, and its parting gift at the call is one of the marid's syllables.
 
-**Trust** is a hidden standing like the others. The Workshop describes it in words ("It tolerates you", "It's starting to like you, against its better judgment").
+**Trust** is a hidden standing like the others. The Workshop describes it in words ("Ithzar tolerates you", "likes you, against its better judgment"). Spending an evening talking with Ithzar on your doorstep raises it by 1, every three days at most, so a stalled arc can recover.
 
 #### Build plan
 
 - **Part A ✅:** Ithzar's data, the second familiar slot (abilities at the stronger familiar, Ithzar's voice for warnings once joined), remarks on summonings, districts and headlines, banter, morning notes, chapters 1 and 2, the crackdown tip, and Ithzar's card in the Workshop showing trust in words. Cornelia is now named in the LaSalle Street rival encounter, and meeting her there can start chapter 1 early.
-- **Part B:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, chapters 3 and 4, "Ask Ithzar" and the weekly favor.
+- **Part B ✅:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, the doorstep conversation and wincing, chapters 3 and 4 with the second offer, Ithzar's days away, "Ask Ithzar" with lies, and the weekly favor.
 - **Part C:** the call and the ending's epilogue.
 
 #### Deferred: dark paths
@@ -253,6 +254,38 @@ Not in this step, but the arc is shaped to allow them later:
 
 - **Forced binding.** In chapter 3, keep Ithzar's name and bind it by force instead of freeing it. It works, but it hates you, its commentary turns poisonous, and it sabotages you once at the worst moment.
 - **Refusing the call.** Break your promise and keep Ithzar for the marid. It stays, bitterly, as the forced-familiar version.
+
+### Step 5: overreaching (planned)
+
+A way to bind a spirit **one class above what your circle can hold**, for a player who has done the lab work and is willing to gamble. The circle stays the reliable path; overreaching is the desperate one.
+
+**The gate is knowledge.** You can only overreach if the binding is otherwise **perfect**:
+- the full true name
+- every rune it needs, and no wrong ones
+- the incense it likes
+
+Knowing a spirit completely is the skill this game tests, so this is the "skill check". The chamber only offers the attempt when the setup qualifies. Overreaching is never allowed for the marid, and never more than one class above your circle.
+
+**Then a roll, with the odds shown before you commit.**
+
+| Factor | Effect on the odds |
+|---|---|
+| Base | 40% |
+| Your pentacle could contain the spirit | +15% |
+| A familiar braces the circle | +5% imp, +10% foliot, +15% djinni (Ithzar), +20% afrit |
+| Most it can reach | 90% |
+
+**Familiars on standby.** Before speaking, you choose which of your familiars brace the circle; your own familiar and Ithzar can both brace. Bracing always costs them something:
+- **On success,** a bracing familiar is spent for the rest of the day: no familiar abilities until tomorrow.
+- **On failure,** each bracing familiar takes the backlash and is out for as many days as the spirit's class. Ithzar also loses 1 trust ("you dragged me into that").
+
+**Success is a strained binding.** It's always uneasy, with half the usual patience, and each night there's a chance it breaks loose early and attacks. You have a spirit ahead of schedule, but it's a ticking bomb. Overreaching is service only: vessel and familiar bindings must be firm, so they can't be overreached.
+
+**Failure is spectacular.** The spirit breaks free at full fury: the damage of an outmatched pentacle, whatever your pentacle actually is, plus +2 police suspicion. A loose spirit on Clark Street makes the papers.
+
+**City Hall counts it.** An overreached binding completes a "bind a spirit of class X" commission. You took the risk.
+
+To decide in play: whether the failure damage is too harsh at the djinni tier (7 damage before protections), and whether bracing should ever risk losing a familiar outright.
 
 ---
 
@@ -265,7 +298,8 @@ Not in this step, but the arc is shaped to allow them later:
 - **Repeat visits.** What should happen after a spirit is bound once? Should rebinding get easier, and do spirits remember how you treated them?
 - **More events.** Only five events exist, and all but the crackdown happen once. Candidates: the Sanitary Canal (the plan to reverse the river) tied to the marid, the Fair's closing in October, rival magicians targeting your workshop, and a second round of labor trouble.
 - **Event pacing.** The strike and the election overlap in mid-April, which may be too much at once for a new player.
-- **Ithzar's absences.** Is "occasionally away for a day" a fun cost of its first term, or just annoying? The fallback is to make the term pure flavor.
+- **Ithzar's absences.** Built as one day in seven. Is that a fun cost of its first term, or just annoying? The fallback is to make the term pure flavor.
+- **Chapter 3 gating.** The rite needs a circle that holds djinn (the Silver-Inlaid Circle, Alderman rank) and the Moon and Flame runes. Trust 5 may come before Alderman, in which case chapter 3 waits on rank. Watch whether that feels like a wall.
 - **Cornelia after the release.** Does she become a recurring rival who comes after your workshop once she knows you freed her djinni?
 
 ## Content conventions
