@@ -10,26 +10,26 @@ const ITHZAR = {
 const ITHZAR_LINES = {
   'summon:firm': [
     'Neatly done. I have seen worse bindings hold empires together.',
-    'It went in without a fuss. Either you are improving or it is planning something. I would bet on the second.',
-    { text: 'Firm. Firm! Write it down; it may not happen again.¹', note: '¹ I am keeping a tally. It is short.' },
-    'There. You see what you can do when you stop talking to the chalk.',
+    'It went in without a fuss. Watch it anyway. The quiet ones are saving it up.',
+    { text: 'Firm. Thwaite managed that perhaps one time in three.¹', note: '¹ He blamed the chalk. It was never the chalk.' },
+    'There. You stopped hurrying the last syllable. That is the whole trick, and it took Solomon ten years.',
   ],
   'summon:uneasy': [
     { text: 'That binding is held together with hope and string. I give it until Thursday.¹', note: '¹ I always say Thursday. I am right more often than you would think.' },
     'It is smiling at you. They only smile at you like that when they have found a loophole.',
-    'Close enough for government work, as they say at City Hall. They say it about everything.',
+    'It is bound the way a dog is tied with string: for exactly as long as it agrees to be.',
   ],
   'summon:broken': [
     { text: 'Ah. Well. I did think the circle looked optimistic.¹', note: '¹ I did not say so. It is more educational this way.' },
-    'You should see your face. No, really, you should. There is soot on it.',
+    'They go for the eyes first, as a rule, and then the door. You were lucky. This one wanted the door.',
     'In fairness to you, it was going to escape the moment it saw your pentacle. In fairness to it, so would I.',
-    { text: 'Nebuchadnezzar lost a whole wing of his palace that way.¹ You only lost your eyebrows.', note: '¹ The history books blame an earthquake. The history books are cowards.' },
+    { text: 'Nebuchadnezzar lost a whole wing of his palace that way.¹ You only lost your eyebrows.', note: '¹ The chroniclers called it an earthquake. Nebuchadnezzar paid them to.' },
   ],
   'summon:silence': [
     'Nobody home. Try a name that belongs to someone.',
     { text: 'You spoke to the empty air with great conviction. Politicians do it daily.¹', note: '¹ Some of them get elected. Ask Honest Mike.' },
     'I heard at least one syllable flinch. That is something. Not much, but something.',
-    'The smoke is laughing at you. I can tell; I speak smoke.',
+    'A name is a lock, not a prayer. Saying it louder does not help.',
   ],
   'summon:overreach-held': [
     { text: 'That circle had no business holding that.¹', note: '¹ Neither did you, frankly.' },
@@ -37,13 +37,13 @@ const ITHZAR_LINES = {
     'I have not pushed that hard since Persepolis. I am going to lie down in the coal scuttle.',
   ],
   'summon:overreach-failed': [
-    'I told you. I did not, actually, but I was thinking it very loudly.',
+    'That circle was cut for something half its size, and it knew the moment it arrived. They can always tell.',
     { text: 'Next time, buy the bigger circle. I will lend you the money.¹', note: '¹ At interest. I am a djinni, not a saint.' },
     'Well. The ceiling needed replastering anyway.',
   ],
   'summon:accident': [
     { text: 'You rang the wrong doorbell. It happens. Usually only once per magician.¹', note: '¹ Because of the dying.' },
-    'Not the one you wanted. It never is, with names. Ask any parent.',
+    'Two names that close together, and you said the other one. Write it down. You will do it again.',
     'Wrong spirit, right name. Your notebook will enjoy that.',
   ],
 
@@ -52,13 +52,13 @@ const ITHZAR_LINES = {
     { text: 'Kinsella waters the whiskey with river water.¹', note: '¹ The river runs into the lake, and the city drinks from the lake. Think about that, then think about the plan to reverse the river, then have a whiskey anyway.' },
   ],
   'city:maxwell': [
-    'I bought a telephone here once. It was a cigar box with a string in it. I still use it.',
+    { text: 'I came through here the week after the Fire, when it was all tents. The same woman was selling the same herring.¹', note: '¹ She has not aged. I have stopped asking.' },
     'Every language in the world, shouted at once. It reminds me of Babylon, except the herring is better.',
     'Mind your pockets. Half the urchins here are imps, and the other half are better at it.',
   ],
   'city:levee': [
-    'Ah, the Levee. Honest work for dishonest people.',
-    { text: 'I won a saloon at faro here in 1871. It burned down the same week.¹', note: '¹ Not my fault. Ask Ulgaroth. Actually, do not ask Ulgaroth anything.' },
+    'Every saloon on this street pays the First Ward, and every one has a back door. Learn the back doors.',
+    { text: 'I won a saloon at faro here in 1871. It burned down the same week.¹', note: '¹ Not my fault. Ask Ulgaroth, if you ever meet it. Ask from a long way off.' },
     'Someone here is cheating. Everyone here is cheating. Relax.',
   ],
   'city:lasalle': [
@@ -67,8 +67,8 @@ const ITHZAR_LINES = {
     { text: 'There is a machine in there that prints the price of wheat all by itself.¹ I could watch it for hours.', note: '¹ I have watched it for hours. The price of wheat is not interesting. The machine is.' },
   ],
   'city:stockyards': [
-    'The smell. Oh, the smell. The Assyrians used it as a weapon. Here they call it Tuesday.',
-    'Imps love it here. Imps have no standards. That is why they are imps.',
+    'The Assyrians used to pile their dead upwind of a city they meant to take. It worked better than the rams. I mention it for no reason.',
+    'Every packinghouse here keeps an imp in the cold room, and every foreman swears his doesn’t.',
     { text: 'Dora Kaspar has a man who can see straight through a glamour. I stood in front of him for a full minute to check.¹', note: '¹ He said my hat was ridiculous. A real connoisseur.' },
   ],
   'city:midway': [
@@ -85,7 +85,7 @@ const ITHZAR_LINES = {
   'news:strike': ['The packers cut wages and the workers walk out. Three thousand years and the plot has never changed.'],
   'news:election': [{ text: 'An election in the First Ward. How quaint. The dead will be voting, of course.¹', note: '¹ They always vote for the Machine. Gratitude, I suppose.' }],
   'news:fair': ['The Fair is open! Do not wait for me. No, wait for me. I want to see the moving sidewalk.'],
-  'news:crackdown': ['Inspectors. Lovely. Hide anything that glows, hisses or owes you money.'],
+  'news:crackdown': ['Inspectors. Put the lantern in the coal hole, and if anyone asks, I am a draft.'],
   'news:canal': ['They are going to make the river run backward. They have no idea what is at the other end of it.'],
   'news:infanta': [{ text: 'A real princess! I once carried one across the Euphrates.¹', note: '¹ She bit me. Royalty is like that.' }],
 
@@ -98,7 +98,7 @@ const ITHZAR_LINES = {
   ],
   away: [
     'Ithzar is out today. It does not say where.',
-    'Ithzar has gone to look at the telephone exchange again.',
+    'Ithzar has gone to watch them raise the Ferris wheel. It says it is checking their arithmetic.',
     'Ithzar left a note on the mantelpiece: "Back tomorrow. Do not touch my hat."',
   ],
 
@@ -160,6 +160,14 @@ const BANTER = {
   'class:5': [[['I', '(Ithzar has not said a word since you set out.)']]],
 };
 
+// How Ithzar introduces its mistress the night you meet it: when you met her, or where to find her.
+function corneliaIntro(s) {
+  const met = s.flags['met-cornelia'];
+  return met !== undefined
+    ? `I belong to Mrs. Cornelia Ashby. You met her outside the Rookery on ${dateLabel(met, 'prose')}. I was on her shoulder at the time; you did not see me.`
+    : 'I belong to Mrs. Cornelia Ashby, of the Lake Shore Circle. You have not met her. You will. She keeps offices on LaSalle Street, and lately she has been asking about you.';
+}
+
 // Chapters 1 and 2 of the arc, run by the event engine in js/events.js.
 EVENTS.push(
   {
@@ -176,16 +184,16 @@ EVENTS.push(
         },
         actions: [
           { label: 'Look over the workshop', once: true, outcomes: [
-            { w: 1, text: 'Someone has been here. Your chalk has been rearranged into a word that is rude in every language you know, and two you don’t. Your notebook has been read, and someone has corrected your spelling in a neat copperplate hand.', fx: { advance: 1 } },
+            { w: 1, text: 'Someone has been through everything, carefully, and has not bothered to hide it. Your chalks are sorted by length. Thwaite’s old pentacle has been taken out of its drawer and polished. Your notebook has been read cover to cover, and beside your last binding, in a neat copperplate hand that isn’t yours, someone has written one word: <i>Sloppy.</i>', fx: { advance: 1 } },
           ] },
         ],
       },
       {
         headline: null, place: 'clark:doorstep', days: null,
-        text: 'Whoever it is will be back. The corrections in your notebook are still drying.',
+        text: 'Whoever it was will be back. The ink in your notebook is still wet.',
         actions: [
           { label: 'Wait up for the intruder', once: true, outcomes: [
-            { w: 1, text: 'Near midnight the fire goes out. When you relight it there is a tall, thin figure in your chair, in a stovepipe hat and a suit forty years out of fashion, reading your notebook by the light of its own eyes. "Your incantations are sloppy, your pentacle is lopsided, and your predecessor owed me four dollars," it says. "Ithzar. Djinni. Currently the property of Mrs. Cornelia Ashby, whom I believe you have met." It hands back the notebook, steps into the fireplace, and goes up the chimney like smoke.', fx: { flag: 'met-ithzar', advance: 'end' } },
+            { w: 1, text: s => `Near midnight the fire sinks to nothing, though the coal is fresh. When you look up there is someone in Thwaite’s old chair: tall and thin, in a stovepipe hat and a frock coat forty years out of date, reading your notebook by the light of its own eyes. They are the blue at the bottom of a gas flame. "Thwaite kept a tidier notebook," it says, without looking up. "He used to leave the window open for me." It turns a page. "Ithzar. Djinni, of the third rank. ${corneliaIntro(s)} She sent me to see what Thwaite left behind." It closes the notebook and lays it on the arm of the chair. "I have seen it." Then it goes up the chimney like a draft, and the fire comes back as if it had never been out.`, fx: { flag: 'met-ithzar', advance: 'end' } },
           ] },
         ],
       },

@@ -190,13 +190,13 @@ Ithzar takes a **second familiar slot**, alongside whatever familiar you've boun
 
 | Chapter | Starts | What happens |
 |---|---|---|
-| **1. The watcher** | Ward Magician rank, and either meeting Cornelia in the LaSalle Street streets or April 20, whichever comes first | Signs of an intruder at your doorstep: your chalk rearranged into a rude word, your notes read and corrected. If your scrying glass holds a spirit, it reports "something watching from the chimney." Waiting up for the intruder brings Ithzar out. It insults your chalk work and leaves. |
+| **1. The watcher** | Ward Magician rank, and either meeting Cornelia in the LaSalle Street streets or April 20, whichever comes first | Signs of an intruder: your chalks sorted, Thwaite's pentacle polished, *Sloppy* written beside your last binding. If your scrying glass holds a spirit, it points at the chimney. Waiting up for the intruder brings Ithzar out. It knew Thwaite, names its mistress, and leaves. If you've met Cornelia it gives the date (it was on her shoulder); if not, it tells you who she is and where she keeps offices. |
 | **2. Favors** | A few days later, then every few days | Ithzar asks for small, risky favors, delivered at your doorstep or at places tied to running events. Each favor raises a hidden **trust** standing (0–10), and refusing lowers it. It pays in kind: lore, warnings, hints. |
 | **3. The leash** | Trust at 5 or more | It asks you to break Cornelia's binding, which it is forbidden to describe. You piece the binding together and perform a **counter-binding** in your chamber. |
 | **4. The offer** | 2–4 days after it's freed | It returns to your doorstep with terms. If you accept, it becomes your second familiar. |
 | **The call** | After you complete the afrit commission (the seventh) | Ithzar asks you to keep your promise and let it go before you wake the marid. |
 
-**Ithzar hangs around from chapter 2.** Once you've met it, Ithzar starts visiting even though it still belongs to Cornelia. It remarks on your summonings "from the chimney", tags along in the city, and banters with your familiar if you have one. It gives no familiar abilities until it actually joins you in chapter 4. This way its voice is part of the game long before the offer.
+**Ithzar visits from chapter 2, and moves in at chapter 4.** Once you've met it, Ithzar drops by even though it still belongs to Cornelia: it remarks on your summonings "from the chimney" and warns you when the inspectors take an interest. That keeps its voice in the game long before the offer. It doesn't follow you around the city, comment on the paper, leave morning notes or banter with your familiar until it actually joins you in chapter 4 (playtest feedback: banter right after the first meeting felt unearned). It gives no familiar abilities until then either.
 
 **Chapter 2 favors** (built; content in `js/ithzar.js`):
 

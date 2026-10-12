@@ -9,6 +9,8 @@ const ithzarHere = () => state.ithzar.joined && state.ithzar.awayDay !== state.d
 
 // Ithzar is around to talk from the day you meet it. Once you free it, it vanishes until it comes back
 // with its terms; refuse twice and it's gone for good. Once it has joined you, it's around unless it's out.
+// Until it joins, it's Cornelia's and only visits: it watches your summonings from the chimney and warns
+// you about the inspectors, but it doesn't follow you around the city, read the paper or banter.
 const ithzarPresent = () => (state.ithzar.joined ? ithzarHere()
   : state.flags['met-ithzar'] !== undefined && state.flags['ithzar-freed'] === undefined && state.flags['ithzar-gone'] === undefined);
 
@@ -55,7 +57,7 @@ function summonAside(m) {
 // After a city action Ithzar may remark on the district, or trade words with your familiar.
 // At most once per district per day.
 function cityAside(dist) {
-  if (!ithzarPresent() || state.ithzar.asideDay[dist.id] === state.day) return null;
+  if (!state.ithzar.joined || !ithzarPresent() || state.ithzar.asideDay[dist.id] === state.day) return null;
   const fam = ownFamiliar();
   let aside = null;
   if (fam && random() < 0.25) aside = banter(fam);
@@ -82,7 +84,7 @@ function ithzarDawn() {
   if (state.standing.trust >= 3 && state.standing.suspicion >= 4 && !crackdown && !state.ithzar.warned) {
     state.ithzar.warned = true;
     log(`<b>${ITHZAR.name}:</b> "Cornelia dined with the Mayor’s inspectors last night, and your name came up. I would tidy the workshop, if I were you."`, 'aside');
-  } else if (random() < 0.3) {
+  } else if (state.ithzar.joined && random() < 0.3) {
     log(pickFresh('dawn', ITHZAR_LINES.dawn), 'aside');
   }
 }

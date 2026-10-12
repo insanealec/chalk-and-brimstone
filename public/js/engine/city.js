@@ -13,6 +13,7 @@ function dateLabel(day, style = 'short') {
   const date = new Date(START_DATE[0], START_DATE[1], START_DATE[2] + day - 1);
   return date.toLocaleDateString('en-US', style === 'long'
     ? { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+    : style === 'prose' ? { weekday: 'long', month: 'long', day: 'numeric' }
     : style === 'stamp' ? { month: 'short', day: 'numeric' }
     : { weekday: 'short', month: 'short', day: 'numeric' });
 }
@@ -40,7 +41,7 @@ function setStage(ev, next) {
   const stage = ev.stages[next];
   if (stage.headline) {
     log(`<span class="paper">${NEWSPAPER}:</span> ${stage.headline}`, 'news');
-    const remark = ithzarPresent() && random() < 0.6 && ithzarLine(`news:${ev.id}`);
+    const remark = state.ithzar.joined && ithzarPresent() && random() < 0.6 && ithzarLine(`news:${ev.id}`);
     if (remark) logAside(remark);
   } else {
     const [d, p] = stage.place.split(':');
@@ -242,15 +243,16 @@ function resolveChoice(ch, title, dist, placeId) {
   if (ch.cost) state.dollars -= ch.cost;
   let roll = random() * ch.outcomes.reduce((a, o) => a + o.w, 0);
   const out = ch.outcomes.find(o => (roll -= o.w) < 0) || ch.outcomes[ch.outcomes.length - 1];
+  const text = typeof out.text === 'function' ? out.text(state) : out.text;
   // log the outcome first so any lore it reveals appears after it in the chronicle
-  const entry = log(`<b>${title}.</b> ${out.text}`);
+  const entry = log(`<b>${title}.</b> ${text}`);
   const { notes, frags } = applyEffects(out.fx, `lost in ${dist.name}`);
   if (ch.cost) notes.unshift(`−$${ch.cost}`);
   if (notes.length) entry.html += ` <span class="fx">(${notes.join(', ')})</span>`;
   const bad = notes.some(isBadNote);
   const good = notes.some(n => !isBadNote(n));
   entry.kind = good && !bad ? 'good' : bad && !good ? 'bad' : '';
-  state.lastResult = { district: dist.id, place: placeId, title, choice: ch.label, text: out.text, notes, frags: frags.map(f => f.id) };
+  state.lastResult = { district: dist.id, place: placeId, title, choice: ch.label, text, notes, frags: frags.map(f => f.id) };
   const aside = !state.over && cityAside(dist);
   if (aside) {
     state.lastResult.aside = aside;
