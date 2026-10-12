@@ -677,7 +677,7 @@ function dossier(d) {
 
   return {
     name, nameDeduced, absent,
-    nearby: [...present].filter(s => !name.includes(s)),
+    nearby: [...present].filter(s => !name.includes(s)), notAt,
     nameComplete: name.every(Boolean),
     runeYes: [...runeYes], runeNo: [...runeNo], runeDeduced, runeCount,
     likes, hates, likesDeduced, hatesDeduced, neutral,
@@ -781,6 +781,26 @@ function resolveSummon() {
   log(`You light the ${incName} and speak a name meant for ${bold(target)}: ${spoken.map(x => sylHTML(x)).join('·')}, <i>${clauseLabel(s.clause)}</i>.`);
 
   const d = DEMONS.find(x => x.trueName.join() === spoken.join());
+
+  // the marid hears its name even half-spoken, and comes up to complain about the spelling
+  const exact = feedback.filter(f => f === 'exact').length;
+  if (!d && target.tier === 5 && exact >= target.trueName.length - 2 && !boundPhrase(target.id)) {
+    m.lines.push(nameFeedback(spoken, feedback, target));
+    if (!state.met.includes(target.id)) state.met.push(target.id);
+    const safe = pent.tier >= target.tier;
+    const dmg = safe ? Math.ceil(target.tier / 2) : target.tier * 2 + 1;
+    const taken = hurt(dmg, `drowned in your own workshop by ${target.name}, who did not care for your spelling`);
+    m.outcome = 'broken';
+    m.lines.push(`That is not quite its name. It is close enough. ${target.name} hears itself half-called from the bottom of the lake, and comes up to tell you what it thinks of your spelling.`);
+    m.lines.push(safe
+      ? `Your ${pent.name} holds, just. (${hurtNote(taken, dmg)}) Then the room is dry again, and it is gone.`
+      : `Nothing you are standing in was ever going to stop it. (${hurtNote(taken, dmg)})`);
+    m.greet = '"Again," says a voice like deep water, "and I will not leave."¹';
+    m.footnote = '¹ It is not a threat. You know what it is by now.';
+    log(`${bold(target)} answered a name that was nearly its own. (${hurtNote(taken, dmg)})`, 'bad');
+    return m;
+  }
+
   if (!d || boundPhrase(d.id)) {
     m.outcome = 'silence';
     m.lines.push(nameFeedback(spoken, feedback, target));
@@ -1120,7 +1140,7 @@ function expire(sv) {
 
 function endDay() {
   if (state.over || busy) return;
-  log(`Night falls on day ${state.day}.`, 'info');
+  log('Night falls.', 'info');
   runIthzarFavor();
   for (const sv of [...state.servants]) {
     if (sv.errand) runErrand(sv);
@@ -1138,6 +1158,12 @@ function endDay() {
     state.day++;
     state.actions = maxActions();
     log(`${dateLabel(state.day, 'long')} dawns.`, 'info');
+    for (const sv of state.servants.filter(x => x.patience <= 1)) {
+      const d = demonById(sv.demonId);
+      log(sv.binding === 'firm'
+        ? `${bold(d)}’s service ends tonight.`
+        : `${bold(d)}’s bonds will snap tonight unless you dismiss it.`, sv.binding === 'firm' ? '' : 'bad');
+    }
     processEvents();
     ithzarDawn();  // before suspicion fades, so its warning sees today's danger
     coolSuspicion();
@@ -1151,6 +1177,16 @@ function endDay() {
 // ---------- commissions
 
 const currentCommission = () => COMMISSIONS[state.commission] || null;
+// City Hall sends a file on a suitable spirit when a binding commission comes up (see COMMISSIONS).
+function sendFile() {
+  const c = currentCommission();
+  if (!c || !c.file || state.lore.includes(c.file)) return;
+  const f = FRAGMENTS.find(x => x.id === c.file);
+  state.lore.push(f.id);
+  state.newLore++;
+  log(`City Hall sends over a file for <b>${c.title}</b>. <span class="src">${f.src}:</span> “${fmtLore(f.text)}”`, 'lore');
+}
+
 // a signet ring with a spirit in it makes City Hall more generous
 const commissionPay = c => Math.round(c.pay * (1 + 0.25 * vesselTier('ring')));
 
@@ -1165,6 +1201,7 @@ function completeCommission() {
   state.dollars += pay;
   state.commission++;
   state.servants.forEach(s => { if (s.errand === 'commission') s.errand = null; });
+  sendFile();
   log(`<b>Commission complete: ${c.title}.</b> ${c.done} (+${c.rep} reputation, +$${pay})`, 'good');
   gainRep(c.rep);
   if (c.gift && !state.vessels[c.gift]) {
@@ -1186,10 +1223,12 @@ const eventById = id => EVENTS.find(e => e.id === id);
 
 // ---- the calendar and the news
 
+// style: 'long' (Monday, April 3, 1893), 'short' (Mon, Apr 3) or 'stamp' (Apr 3, for the chronicle)
 function dateLabel(day, style = 'short') {
   const date = new Date(START_DATE[0], START_DATE[1], START_DATE[2] + day - 1);
   return date.toLocaleDateString('en-US', style === 'long'
     ? { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+    : style === 'stamp' ? { month: 'short', day: 'numeric' }
     : { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
@@ -1520,6 +1559,19 @@ function applyEffects(fx, cause) {
     if (!state.met.includes(id)) state.met.push(id);
     notes.push(`${demonById(id).name}’s notebook: ${facts.map(factText).join('; ')}`);
   }
+  if (fx.ithzarGift) {
+    // a syllable of the marid's name you don't have yet, if there is one
+    const marid = DEMONS.find(x => x.tier === 5);
+    const k = dossier(marid);
+    const i = k.name.findIndex(x => !x);
+    if (!state.met.includes(marid.id)) state.met.push(marid.id);
+    if (i >= 0) {
+      recordFact(marid.id, `syl:${i}:${marid.trueName[i]}`);
+      notes.push(`Ithzar’s parting gift: ${sylHTML(marid.trueName[i])} is syllable ${i + 1} of ${marid.name}’s name`);
+    } else {
+      notes.push('Ithzar’s parting gift: nothing you did not already know, which seems to disappoint it');
+    }
+  }
   if (fx.releaseIthzar) {
     state.ithzar.joined = false;
     state.flags['ithzar-released'] = state.day;
@@ -1606,7 +1658,8 @@ function renderStats() {
 function renderTabs() {
   const badges = {
     journal: state.newLore ? `<span class="badge">${state.newLore}</span>` : '',
-    servants: state.servants.length ? `<span class="badge quiet">${state.servants.length}</span>` : '',
+    servants: state.servants.some(sv => sv.binding !== 'firm' && sv.patience <= 1) ? '<span class="badge alert" title="A servant’s bonds will snap tonight">!</span>'
+      : state.servants.length ? `<span class="badge quiet">${state.servants.length}</span>` : '',
     city: state.encounter || activeEvents().some(a => a.stage.place.startsWith('clark:')) ? '<span class="badge alert">!</span>' : '',
   };
   document.querySelectorAll('#tabs [data-tab]').forEach(b => {
@@ -1623,7 +1676,7 @@ function renderView() {
 
 function renderLog() {
   $('#log').innerHTML = `<h2>Chronicle</h2>` + state.log.map(e =>
-    `<p class="entry ${e.kind}"><span class="day">D${e.day}</span>${e.html}</p>`).join('');
+    `<p class="entry ${e.kind}"><span class="day">${dateLabel(e.day, 'stamp')}</span>${e.html}</p>`).join('');
 }
 
 // ---- chamber
@@ -1717,9 +1770,10 @@ function incantationHTML(d) {
   const s = state.sel;
   const k = dossier(d);
   const slots = s.syllables.map((syl, i) => {
-    const cls = !syl ? 'empty' : k.name[i] === syl ? 'exact' : '';
+    const wrong = syl && (k.absent.has(syl) || (k.name[i] && k.name[i] !== syl) || (k.notAt[syl] && k.notAt[syl].has(i)));
+    const cls = !syl ? 'empty' : k.name[i] === syl ? 'exact' : wrong ? 'wrong' : '';
     return `<button class="slot ${cls}" data-action="slot" data-value="${i}" ${busy ? 'disabled' : ''}
-      title="${syl ? 'Click to clear' : 'Choose a syllable below'}">${syl || '?'}</button>`;
+      title="${wrong ? 'Your notebook says this is wrong here. Click to clear' : syl ? 'Click to clear' : 'Choose a syllable below'}">${syl || '?'}</button>`;
   }).join('<span class="dot">·</span>');
   const keyState = syl => (k.name.includes(syl) ? 'exact' : k.nearby.includes(syl) ? 'near' : k.absent.has(syl) ? 'none' : '');
   const keyTitle = { exact: 'Confirmed in the name', near: 'In the name, position unknown', none: 'Not in this name', '': 'Untested' };
@@ -1980,7 +2034,9 @@ function dossierHTML(d) {
     ? sylHTML(syl, 'exact') + (k.nameDeduced[i] ? DEDUCED : '')
     : '<span class="syl unknown">?</span>')).join('<span class="dot">·</span>');
   const nameExtra = [];
-  if (!k.nameComplete && k.nearby.length) nameExtra.push(`also in it: ${k.nearby.map(x => sylHTML(x, 'near')).join(' ')}`);
+  const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+  const notWhere = x => (k.notAt[x] ? ` <small>(not ${[...k.notAt[x]].sort().map(i => ORDINALS[i]).join(', ')})</small>` : '');
+  if (!k.nameComplete && k.nearby.length) nameExtra.push(`also in it: ${k.nearby.map(x => sylHTML(x, 'near') + notWhere(x)).join(', ')}`);
   if (!k.nameComplete && k.absent.size) nameExtra.push(`not in it: ${[...k.absent].map(x => sylHTML(x, 'none')).join(' ')}`);
 
   const runeLabel = r => `${RUNES[r].name}${k.runeDeduced.has(r) ? DEDUCED : ''}`;

@@ -44,6 +44,18 @@ const DISTRICTS = [
           ] },
         ],
       },
+      {
+        // always open and never costs anything, so a player with no money, servants or incense can recover
+        id: 'kinsellas', name: 'Kinsella’s Saloon',
+        desc: 'Downstairs. Kinsella lets you tell fortunes at the end of the bar, as long as the fortunes are good and the customers keep drinking.',
+        actions: [
+          { label: 'Tell fortunes at the end of the bar', outcomes: [
+            { w: 6, text: 'You read three palms and a teacup. Everyone is going to be rich and loved. Everyone tips.', fx: { dollars: [3, 6] } },
+            { w: 3, text: 'A slow night. A teamster pays you in pennies to tell him his horse loves him.', fx: { dollars: [1, 3] } },
+            { w: 1, text: 'You tell a man his wife is faithful. His wife, it turns out, is standing behind him. Nobody tips.', fx: {} },
+          ] },
+        ],
+      },
     ],
     street: [],
   },

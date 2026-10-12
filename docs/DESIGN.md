@@ -71,7 +71,9 @@ It also **deduces by elimination**, marking deduced entries with ✶:
 
 The palette in the chamber is colored by what the notebook knows, like Wordle's keyboard: confirmed, present, ruled out, untested. Slots are prefilled with confirmed syllables.
 
-Lore is designed so that reading everything about a spirit leaves **zero to two syllables** to find by experiment. Querrin's last syllable is deduced; Phebbet needs one test to settle the order of two known syllables; the marid has one unknown position.
+Lore is designed so that reading everything about a spirit leaves **zero to two syllables** to find by experiment. Querrin's last syllable is deduced; Phebbet needs one test to settle the order of two known syllables.
+
+**The marid is the exception.** Its lore gives only four of its six syllables, and warns: "It hears its name even half-spoken… DO NOT GUESS." A name for the marid with at least four syllables in the right place, but not all six, summons it angry and unbound. With an obsidian pentacle that costs 3 health; without one it costs 11, which is fatal. The two missing syllables come from Ithzar's parting gift, the Great Canal survey, asking Ithzar, or a scrying glass holding an afrit. The alternative is guessing behind an obsidian pentacle.
 
 ### Binding rules
 
@@ -91,7 +93,7 @@ Bound spirits are **timed**: they serve for 3–6 nights depending on class, plu
 
 ### City Hall and ranks
 
-There's a chain of eight commissions, alternating "bind a spirit of class X" with "send a servant on errand X". Reputation raises your rank: Apprentice → Ward Magician → Alderman → Commissioner → Boss. Rank gates market goods, districts and how many spirits you can hold. The last commission is binding the marid.
+There's a chain of eight commissions, alternating "bind a spirit of class X" with "send a servant on errand X". When a binding commission comes up, City Hall sends a *file*: one lore fragment on a suitable spirit of that class (Querrin for the foliot, Azrimel for the djinni, Ulgaroth's runes for the afrit, and the marid's warning). Reputation raises your rank: Apprentice → Ward Magician → Alderman → Commissioner → Boss. Rank gates market goods, districts and how many spirits you can hold. The last commission is binding the marid.
 
 ### City (built in step 3)
 
@@ -112,6 +114,8 @@ There's a chain of eight commissions, alternating "bind a spirit of class X" wit
 | The World's Fair | May 1 | The Midway opens. For opening week, the Electricity Building has extra work for servants and gossip from visiting magicians. |
 | A Knock at the Door | 4 days after you free the bottled foliot | Phebbet comes back to pay its debt by telling you its whole true name. |
 | The Crackdown | Whenever suspicion reaches 6 (repeatable) | Inspectors are coming. Pay their "fine", have the ward boss make it go away (costs Machine favor), or let them raid you. |
+| The Great Canal | Once the Stolen Seal is recovered | Surveyors sounding the lake bed for the river-reversal canal. For ten days, their soundings at the Water Crib ($10) reveal one of the marid's missing syllables. |
+| The Infanta's Visit | May 10 | A Spanish princess tours the Midway. For six days, a djinni-class servant can put on a spectacle on the Great Wheel ($60, reputation, Machine favor), or you can watch the procession for gossip. (Historically she came in June.) |
 
 **Hidden standings.** Three numbers the player never sees directly: **the Machine**, **the workers** and **police suspicion**. Actions shift them, and some choices need a minimum standing. City Hall describes them in words ("To the Machine, you are a useful friend"), and outcomes report the direction ("the police take an interest"). Suspicion fades by itself over time.
 
@@ -223,8 +227,8 @@ Then you perform the rite in the chamber: choose "Ithzar (release from Cornelia)
 
 The offer comes three days after the release and waits five days. Refusing, or letting it lapse, sends Ithzar away. It makes the offer once more a week later; refuse that too and it's gone for good. Once accepted, Ithzar is **away about one day in seven**: that day it gives no abilities, no remarks and no favors.
 
-**The call** (built). At dawn after the afrit commission, Ithzar waits on your stairs with its hat on and asks to leave before you wake the thing under the lake; it was there the last time someone tried. The request stands for three days:
-- **Let it go:** a proper goodbye. As a parting gift it writes the marid's third syllable, UL (the one no lore gives you), into the notebook, which also puts Shem-Ashara in your journal. It leaves with a last footnote.
+**The call** (built). After the afrit commission, once Ithzar has been your familiar for at least a week, and when the marid is genuinely next (you own the obsidian circle, or two weeks have passed since it joined), Ithzar waits on your stairs with its hat on and asks to leave before you wake the thing under the lake; it was there the last time someone tried. The request stands for three days:
+- **Let it go:** a proper goodbye. As a parting gift it writes whichever of the marid's syllables you're still missing into the notebook, which also puts Shem-Ashara in your journal. It leaves with a last footnote.
 - **Ask it to stay:** it says no, gently, and gives you another day.
 - **Avoid it for three days:** it lets itself go, without the gift.
 
@@ -307,15 +311,15 @@ From playing the opening by hand and running a scripted player through 16 full g
 **Pacing.** Once the script played sensibly, every run won, on May 15–18 (days 43–46). First commission: day 1, within the first hour. Foliot commission: anywhere from day 4 to day 44 (money-bound). Djinni: days 24–37. Afrit: days 40–46. Marid: 2–6 days after the afrit.
 
 **Problems found:**
-1. **The economy can deadlock.** With no servant, no money and no incense, there is no way back: summoning needs incense, incense needs money, and money needs a servant. 2 of 16 runs got stuck this way. *Fix:* a free, low-paying action at home (for example telling fortunes in Kinsella's saloon) and/or a free basic incense.
-2. **The early money wall is wide and swingy.** The foliot step needs a $30 circle, $33 of runes and sandalwood, starting from $30 and an imp earning about $7 a night.
-3. **Ithzar's companionship is too short.** It joins and is called away within 1–5 days, because its help makes the afrit commission come quickly. *Fix:* make the call wait until the marid is genuinely next, for example after you own the obsidian circle, and at least 10 days after joining.
-4. **The finale has no tension.** Lore gives five of the marid's six syllables and Ithzar's gift gives the sixth, so the name is complete before you start, and no run needed the obsidian pentacle. *Fix:* the marid answers to near misses (a name with most syllables right summons it, angry and unbound), so the last puzzle is dangerous; or give it a requirement no other spirit has.
-5. **Servant expiry can kill without warning.** The "bonds will snap tonight" warning only appears on the Servants tab. 1 run died on April 10 this way. *Fix:* a badge on the Servants tab, and a warning in the chronicle at dusk.
-6. **The calendar's content ends early.** Wins land in mid-May, so the World's Fair has barely opened and nothing is scheduled after it.
+1. ✅ **The economy can deadlock.** With no servant, no money and no incense, there is no way back: summoning needs incense, incense needs money, and money needs a servant. 2 of 16 runs got stuck this way. *Fixed:* Kinsella's Saloon on Clark Street, where telling fortunes earns a few dollars an hour (about $2.70 on average). It's always open and costs nothing.
+2. ✅ **The early money wall is wide and swingy.** The foliot step needs a $30 circle, $33 of runes and sandalwood, starting from $30 and an imp earning about $7 a night. *Fixed:* City Hall's file for the foliot points you at Querrin, whose runes you start with, and the Salt-and-Iron Ring costs $25. The foliot now usually lands by day 5–6, and day 24 at worst in 8 games.
+3. ✅ **Ithzar's companionship is too short.** It joins and is called away within 1–5 days, because its help makes the afrit commission come quickly. *Fixed:* the call waits at least 7 days after joining, and until you own the obsidian circle or 14 days have passed. Ithzar now stays 9–12 days.
+4. ✅ **The finale has no tension.** Lore gives five of the marid's six syllables and Ithzar's gift gives the sixth, so the name is complete before you start, and no run needed the obsidian pentacle. *Fixed:* the marid answers near misses (see *The notebook*). Lore gives four syllables, not five, so its name has to be assembled from the gift, the canal survey and Ithzar's answers, or guessed behind an obsidian pentacle.
+5. ✅ **Servant expiry can kill without warning.** The "bonds will snap tonight" warning only appears on the Servants tab. 1 run died on April 10 this way. *Fixed:* the chronicle warns at dawn about any servant whose service ends that night (in red if its bonds will snap), and the Servants tab shows a red "!" when bonds will snap.
+6. ✅ **The calendar's content ends early.** Wins land in mid-May, so the World's Fair has barely opened and nothing is scheduled after it. *Fixed:* the Great Canal and the Infanta's visit fill May, and wins now land around May 20–23 (6 of 8 scripted games, with the other 2 stalling on the script's own mistakes).
 
 **Friction in the interface:**
-- The notebook records where a syllable is *not*, but never shows it. "Belongs in the name, but not there" is recorded, yet the sheet only says "also in it: ITH", so players have to remember which positions they tried.
+- ✅ The notebook recorded where a syllable is *not*, but never showed it: "belongs in the name, but not there" was stored, yet the sheet only said "also in it: ITH". *Fixed:* the sheet now says "also in it: SAR (not 1st, 2nd)", and a slot holding a syllable the notebook knows is wrong there is struck through in red.
 - The chamber prefills known syllables, but not the runes or incense the notebook already knows. A "use what the notebook knows" button would remove busywork.
 - Seven tabs crowd narrow screens.
 
@@ -325,8 +329,8 @@ From playing the opening by hand and running a scripted player through 16 full g
 - The scripted player found real bugs, so it should live in the repo as a dev tool, with a seedable random number generator so balance changes can be compared run to run.
 - Saves have no version number. Every format change bumps the key and wipes saves. Add a `version` field and small migrations.
 - `js/ithzar.js` adds to other files' data (district actions, `CLAUSES`, `ERRANDS`). It works, but a reader of `districts.js` can't see those actions.
-- The chronicle stamps entries "D12" and says "Night falls on day 12", while everything else uses calendar dates.
-- The `--muted` color in `css/style.css` is unused.
+- ✅ The chronicle stamps entries "D12" and says "Night falls on day 12", while everything else uses calendar dates. *Fixed:* entries are stamped with the date ("Apr 14").
+- ✅ The `--muted` color in `css/style.css` is unused. *Removed.*
 
 ---
 

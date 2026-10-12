@@ -42,7 +42,7 @@ const INCENSE = {
 // The circle the spirit appears in. Its tier is the most powerful class it can contain.
 const CIRCLES = [
   { id: 'chalk',    tier: 1, price: 0,   rank: 0, name: 'Chalk Circle',             desc: 'Drawn freehand. Adequate for imps, if you keep your hand steady.' },
-  { id: 'salt',     tier: 2, price: 30,  rank: 1, name: 'Salt-and-Iron Ring',       desc: 'A ring of iron filings sealed with salt. Foliots find it tiresome.' },
+  { id: 'salt',     tier: 2, price: 25,  rank: 1, name: 'Salt-and-Iron Ring',       desc: 'A ring of iron filings sealed with salt. Foliots find it tiresome.' },
   { id: 'silver',   tier: 3, price: 90,  rank: 2, name: 'Silver-Inlaid Circle',     desc: 'Silver set into the floorboards. Djinn dislike silver intensely.' },
   { id: 'rowan',    tier: 4, price: 180, rank: 3, name: 'Silver-and-Rowan Ring',    desc: 'Twin silver bands with rowan between. Rated for afrits, allegedly.' },
   { id: 'obsidian', tier: 5, price: 320, rank: 4, name: 'Triple Obsidian Ring',     desc: 'Three rings of volcanic glass. Nothing short of a marid needs this.' },
@@ -274,11 +274,11 @@ const DEMONS = [
       { src: 'A clay tablet, much repaired', facts: ['syl:0:SAR', 'syl:1:MAR'],
         text: 'Shem-Ashara, a marid of the deep waters, older than Babylon. Its true name begins [SAR]·[MAR], as the sea begins.' },
       { src: 'A City Hall file, marked MOST SECRET', facts: ['rune:tide', 'rune:moon', 'rune:serpent', 'runes:3'],
-        text: 'The marid sleeps beneath the Tide, the Moon and the Serpent. All three must be drawn, and no other.' },
+        text: 'The marid sleeps beneath the Tide, the Moon and the Serpent. All three must be drawn, and no other. It hears its name even half-spoken, and it does not like being guessed at. DO NOT GUESS.' },
       { src: 'A whaler’s journal', facts: ['likes:ambergris', 'hates:galbanum'],
         text: 'Ambergris, the whale’s gift, is the only offering Shem-Ashara does not scorn. Galbanum it holds in particular contempt.' },
-      { src: 'The Water Crib engineer’s logbook', facts: ['syl:3:KHA', 'syl:4:ITH', 'syl:5:RU'],
-        text: 'On the nights the pumps ran backward the men heard the lake say [KHA], then [ITH], then [RU] — always in that order, always at the end of something longer.' },
+      { src: 'The Water Crib engineer’s logbook', facts: ['syl:3:KHA', 'syl:5:RU'],
+        text: 'On the nights the pumps ran backward the men heard the lake say [KHA], then something they could not make out, then [RU], always at the end of something longer.' },
     ],
   },
 ];
@@ -354,7 +354,8 @@ const TWISTS = [
 ];
 
 // The progression spine. 'bind' commissions complete on a successful binding of the given class or higher;
-// 'errand' commissions are assigned to a servant like any other errand.
+// 'errand' commissions are assigned to a servant like any other errand. A commission's `file` is a lore
+// fragment City Hall sends when the commission comes up, so the player knows where to start.
 const COMMISSIONS = [
   {
     title: 'A Demonstration of Competence', type: 'bind', tier: 1, rep: 3, pay: 15,
@@ -367,8 +368,8 @@ const COMMISSIONS = [
     done: 'The glass is returned. The pawnbroker has taken up a new career in being somewhere else. The clerk slides a second, cracked glass across the desk, with a card explaining the Clause of the Vessel. "Make yourself useful," it reads.',
   },
   {
-    title: 'Messengers for the Mayor', type: 'bind', tier: 2, rep: 3, pay: 30,
-    text: 'The Mayor’s office is short of messengers. Bind a foliot or better, and prove you can be trusted with something faster than an imp.',
+    title: 'Messengers for the Mayor', type: 'bind', tier: 2, rep: 3, pay: 30, file: 'querrin-1',
+    text: 'The Mayor’s office is short of messengers. Bind a foliot or better, and prove you can be trusted with something faster than an imp. A clerk has sent over a file on the Post Office’s foliot, which is cheap to bind and not much missed.',
     done: 'The Mayor’s office sends a letter of thanks, which arrives by imp, three days late.',
   },
   {
@@ -377,7 +378,7 @@ const COMMISSIONS = [
     done: 'The hats were a code, carried by the Superintendent’s familiar, a sleek grey foliot that never left his shoulder. The Superintendent is now the former Superintendent, and City Hall sends you a transcript of how his familiar was bound: the Clause of the Familiar.',
   },
   {
-    title: 'Fire and Air', type: 'bind', tier: 3, rep: 4, pay: 70,
+    title: 'Fire and Air', type: 'bind', tier: 3, rep: 4, pay: 70, file: 'azrimel-1',
     text: 'A magician who cannot command a djinni is a magician who answers their own front door. Bind a djinni, and the Machine will begin to take you seriously.',
     done: 'You are invited to a banquet at the Palmer House. Nobody speaks to you, but several people look at you nervously, which is better.',
   },
@@ -387,12 +388,12 @@ const COMMISSIONS = [
     done: 'The Seal is recovered from beneath a rival’s floorboards. The rival is recovered from the bottom of the Chicago River.',
   },
   {
-    title: 'A Show of Strength', type: 'bind', tier: 4, rep: 5, pay: 180,
+    title: 'A Show of Strength', type: 'bind', tier: 4, rep: 5, pay: 180, file: 'ulgaroth-1',
     text: 'The Mayor wishes to know whether you can bind an afrit; the World’s Fair needs someone to keep the lights on. The Mayor does not like to be kept waiting. Neither, as it happens, do afrits.',
     done: 'The Mayor shakes your hand, then discreetly checks it for scorch marks.',
   },
   {
-    title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true,
+    title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true, file: 'shemashara-1',
     text: 'Old records speak of a marid sleeping beneath Lake Michigan since before there was a city here to drown. The engineers want to reverse the river to keep it asleep. The Machine would rather it were bound — ideally by someone expendable. Congratulations: you are someone expendable.',
     done: 'The lake goes still. Across Chicago, every spirit in every circle turns its head toward your workshop.',
   },

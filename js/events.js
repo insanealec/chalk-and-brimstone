@@ -180,6 +180,53 @@ const EVENTS = [
   },
 ];
 
+// Later events, so May isn't empty. Both are loosely historical: the Sanitary and Ship Canal was dug in
+// the 1890s to reverse the river, and the Infanta Eulalia of Spain visited the Fair (in June, really).
+EVENTS.push(
+  {
+    id: 'canal', title: 'The Great Canal',
+    // once the Stolen Seal is recovered, which also means you can reach the Water Crib
+    starts: s => s.commission >= 6,
+    stages: [
+      {
+        headline: 'SANITARY DISTRICT SURVEYORS DRIVE THE FIRST STAKES FOR THE GREAT CANAL; RIVER TO RUN BACKWARD "BY 1900"',
+        place: 'crib:quarters', days: 10,
+        text: 'The Sanitary District’s surveyors have been sounding the lake bed from the crib. Their charts have a blank patch, very deep, that nobody will explain.',
+        actions: [
+          { label: 'Read the surveyors’ soundings', cost: 10, once: true, outcomes: [
+            { w: 1, text: 'The soundings are mostly numbers. In the margin beside the blank patch, a surveyor has written down a sound he heard come up the line, five times, in capitals: <span class="syl">ITH</span>.', fx: { notebook: ['shemashara', 'syl:4:ITH'] } },
+          ] },
+          { label: 'Ask the engineers about the blank patch', once: true, outcomes: [
+            { w: 1, text: 'The engineers change the subject to pumps, firmly and at length. One of them makes the sign against the evil eye when he thinks you are not looking.', fx: {} },
+          ] },
+        ],
+        expire: { next: 'end' },
+      },
+    ],
+  },
+
+  {
+    id: 'infanta', title: 'The Infanta’s Visit',
+    starts: s => s.day >= 38, // May 10
+    stages: [
+      {
+        headline: 'SPANISH PRINCESS TOURS THE MIDWAY; ASKS TO SEE A REAL DJINNI, IS SHOWN THE FERRIS WHEEL INSTEAD',
+        place: 'midway:wheel', days: 6,
+        text: 'The Infanta Eulalia of Spain is touring the Fair, and its managers are desperate to show her something remarkable.',
+        actions: [
+          { label: 'Put on a spectacle for the Infanta', req: { servantTier: 3 }, once: true, outcomes: [
+            { w: 1, text: 'Your servant turns the Great Wheel into a ring of blue fire for exactly one revolution. The Infanta applauds. The Fair’s managers pay you handsomely, and City Hall hears about it.', fx: { dollars: 60, rep: 1, standing: { machine: 1 } } },
+          ] },
+          { label: 'Watch the procession from the Wheel', cost: 1, outcomes: [
+            { w: 1, text: 'Half the magicians in Chicago are in the crowd, hoping to be noticed. You overhear a great deal.', fx: { lore: r => [r, r + 1] } },
+          ] },
+        ],
+        expire: { next: 'end' },
+      },
+    ],
+  },
+);
+
 // What the Clarion prints when nothing is happening.
 const FILLER_HEADLINES = [
   'ALDERMEN DENY ALL KNOWLEDGE OF ANYTHING',

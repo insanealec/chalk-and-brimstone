@@ -86,6 +86,8 @@ const ITHZAR_LINES = {
   'news:election': [{ text: 'An election in the First Ward. How quaint. The dead will be voting, of course.¹', note: '¹ They always vote for the Machine. Gratitude, I suppose.' }],
   'news:fair': ['The Fair is open! Do not wait for me. No, wait for me. I want to see the moving sidewalk.'],
   'news:crackdown': ['Inspectors. Lovely. Hide anything that glows, hisses or owes you money.'],
+  'news:canal': ['They are going to make the river run backward. They have no idea what is at the other end of it.'],
+  'news:infanta': [{ text: 'A real princess! I once carried one across the Euphrates.¹', note: '¹ She bit me. Royalty is like that.' }],
 
   // third-person morning notes in the chronicle
   dawn: [
@@ -363,15 +365,17 @@ EVENTS.push(
 
 EVENTS.push({
   id: 'ithzar-call', title: 'The Promise',
-  // the dawn after the afrit commission (the seventh) is complete
-  starts: s => s.ithzar.joined && s.commission >= 7,
+  // after the afrit commission (the seventh), once Ithzar has been with you a week, and when the marid is
+  // genuinely next: you own the obsidian circle, or two weeks have passed since it joined
+  starts: s => s.ithzar.joined && s.commission >= 7 && s.day >= s.flags['ithzar-joined'] + 7
+    && (s.circles.includes('obsidian') || s.day >= s.flags['ithzar-joined'] + 14),
   stages: [
     {
       headline: null, place: 'clark:doorstep', days: 3,
-      text: 'Ithzar is waiting on your stairs with its hat already on. "You have bound an afrit," it says. "Next they will ask you for the thing under the lake. I was there the last time someone tried to wake it, and I would very much rather not be there the next time. So: I am asking. You promised."',
+      text: 'Ithzar is waiting on your stairs with its hat already on. "You have bound an afrit," it says, "and they will be asking you for the thing under the lake any day now. I was there the last time someone tried to wake it, and I would very much rather not be there the next time. So: I am asking. You promised."',
       actions: [
         { label: 'Let it go', outcomes: [
-          { w: 1, text: 'You say the words of parting. Ithzar takes off its hat, which it has never done before. "One thing for the road," it says. "The marid’s name. The third syllable is <span class="syl">UL</span>. The rest you will have to find yourself; I am not a charity." It puts the hat back on. "Goodbye, magician. You were tolerable."¹ Then it goes up the chimney like smoke, and does not come back down.<span class="footnote">¹ In two thousand six hundred years, it had never said that to a magician before. It would deny it, if anyone asked. Nobody does.</span>', fx: { notebook: ['shemashara', 'syl:2:UL'], releaseIthzar: 'kept', advance: 'end' } },
+          { w: 1, text: 'You say the words of parting. Ithzar takes off its hat, which it has never done before. "One thing for the road," it says, and tells you a piece of the marid’s name you did not have. "The rest you will have to find yourself; I am not a charity." It puts the hat back on. "Goodbye, magician. You were tolerable."¹ Then it goes up the chimney like smoke, and does not come back down.<span class="footnote">¹ In two thousand six hundred years, it had never said that to a magician before. It would deny it, if anyone asked. Nobody does.</span>', fx: { ithzarGift: true, releaseIthzar: 'kept', advance: 'end' } },
         ] },
         { label: 'Ask it to stay', cooldown: 1, outcomes: [
           { w: 1, text: '"No," says Ithzar, quite gently. "You promised. Take a day, if you need one. I will be on the stairs."', fx: {} },

@@ -4,7 +4,6 @@
   --panel-2: #241e19;
   --line: #3a2f25;
   --text: #e9dfc9;
-  --muted: #a8998018;
   --dim: #a89980;
   --gold: #c9a24a;
   --gold-hi: #e8c76a;
@@ -517,3 +516,4 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 }
 
 .result span.footnote, #log span.footnote { display: block; margin-top: 0.4rem; }
+.slot.wrong { border-color: var(--blood); color: #e8a090; text-decoration: line-through; }
