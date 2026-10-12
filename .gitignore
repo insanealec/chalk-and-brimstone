@@ -4,3 +4,7 @@ Thumbs.db
 
 # personal Claude Code settings
 .claude/settings.local.json
+
+# wrangler
+.wrangler/
+node_modules/

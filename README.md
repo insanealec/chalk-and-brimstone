@@ -4,7 +4,7 @@ A browser game about summoning and binding spirits in 1893 Chicago, where a poli
 
 ## Running
 
-Open `index.html` in a browser. There's no build step. You can also serve the folder with `python -m http.server 8765`. Progress autosaves to `localStorage`.
+Open `public/index.html` in a browser. There's no build step. You can also serve the repo with `python -m http.server 8765` and open `http://localhost:8765/public/`. Progress autosaves to `localStorage`.
 
 ## How it plays
 
@@ -27,10 +27,12 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - **Playtesting:** serve the folder (`python -m http.server 8765`) and open `http://localhost:8765/tools/playtest.html`. It plays whole games with a scripted player and summarizes them: win rate, when each commission lands, how long Ithzar stays, injuries, and each game's log. Games are seeded, so a seed always replays the same game, and nothing there touches your saved game.
 - **Content checks:** the same page checks the game's data: lore facts match their spirits, names are unique and the right length, and commissions, events and districts only refer to things that exist. Run it after editing content.
 - **Randomness:** game code must roll dice with `random()` from `js/engine/core.js` (not `Math.random()`), so seeded playtests stay reproducible.
+- **Deploying:** the game is a static-assets Cloudflare Worker (`wrangler.jsonc`) that publishes only `public/`. `npx wrangler dev` runs it locally and `npx wrangler deploy` publishes it.
 
 ## Files
 
 - `docs/DESIGN.md`: the design document. Vision, current systems and the roadmap.
+- `public/`: the game itself, and the only folder that gets deployed. The paths below are inside it.
 
 - `js/data.js`: all content (spirits, lore, items, errands, commissions). Add new spirits here.
 - `js/districts.js`: city districts, their places and street encounters. The header comment documents the effect format.
@@ -42,3 +44,4 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - All of `js/` is plain scripts sharing one global scope, loaded in the order listed in `index.html` (and `tools/playtest.html`). A new script file must be added to both lists.
 - `css/style.css`: styling.
 - `tools/playtest.html`, `tools/playtest.js`: the playtest page, scripted player and content checks.
+- `wrangler.jsonc`: Cloudflare Workers config.

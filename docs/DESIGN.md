@@ -353,6 +353,7 @@ From playing the opening by hand and running a scripted player through 16 full g
 
 ## Content conventions
 
+- The game lives in `public/` (the only folder deployed); paths below are inside it.
 - All content is data:
   - `js/data.js`: spirits, lore, materials, errands, commissions
   - `js/districts.js`: districts, places and street encounters (the effect format is documented at the top)

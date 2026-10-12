@@ -48,7 +48,7 @@
     const SCRIPTS = ['js/data.js', 'js/districts.js', 'js/events.js', 'js/ithzar.js',
       'js/engine/core.js', 'js/engine/notebook.js', 'js/engine/spirits.js', 'js/engine/companion.js',
       'js/engine/chamber.js', 'js/engine/city.js', 'js/engine/day.js', 'js/ui/shell.js', 'js/ui/chamber.js', 'js/ui/city.js', 'js/main.js'];
-    for (const src of [...SCRIPTS.map(f => `../${f}`), 'playtest.js']) {
+    for (const src of [...SCRIPTS.map(f => `../public/${f}`), 'playtest.js']) {
       document.write(`<script src="${src}${FRESH}"><\/script>`);
     }
   </script>

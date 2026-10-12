@@ -1,0 +1,9 @@
+// Cloudflare Workers: the game is static files, served from public/.
+// Only public/ is published; docs and dev tools stay in the repo.
+{
+  "name": "chalk-and-brimstone",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public"
+  }
+}
