@@ -26,7 +26,7 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 
 - **Playtesting:** serve the folder (`python -m http.server 8765`) and open `http://localhost:8765/tools/playtest.html`. It plays whole games with a scripted player and summarizes them: win rate, when each commission lands, how long Ithzar stays, injuries, and each game's log. Games are seeded, so a seed always replays the same game, and nothing there touches your saved game.
 - **Content checks:** the same page checks the game's data: lore facts match their spirits, names are unique and the right length, and commissions, events and districts only refer to things that exist. Run it after editing content.
-- **Randomness:** game code must roll dice with `random()` (not `Math.random()`), so seeded playtests stay reproducible.
+- **Randomness:** game code must roll dice with `random()` from `js/engine/core.js` (not `Math.random()`), so seeded playtests stay reproducible.
 
 ## Files
 
@@ -36,6 +36,9 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - `js/districts.js`: city districts, their places and street encounters. The header comment documents the effect format.
 - `js/events.js`: the calendar, the newspaper and current events.
 - `js/ithzar.js`: Ithzar's lines, banter and story arc.
-- `js/game.js`: state, rules and rendering.
+- `js/engine/`: the rules. `core.js` (state, saving, dice), `notebook.js` (lore and deduction), `spirits.js` (servants, errands, vessels, familiars), `companion.js` (Ithzar), `chamber.js` (summoning), `city.js` (calendar, events, places, effects), `day.js` (nightfall, commissions, market).
+- `js/ui/`: drawing the game. `shell.js` (stats, tabs, chronicle and most tabs), `chamber.js`, `city.js`.
+- `js/main.js`: input handling and start-up.
+- All of `js/` is plain scripts sharing one global scope, loaded in the order listed in `index.html` (and `tools/playtest.html`). A new script file must be added to both lists.
 - `css/style.css`: styling.
 - `tools/playtest.html`, `tools/playtest.js`: the playtest page, scripted player and content checks.

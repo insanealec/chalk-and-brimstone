@@ -66,6 +66,8 @@ const CLAUSES = {
   service:  { name: 'of Service',      desc: 'A servant for errands, for as long as its patience lasts.' },
   vessel:   { name: 'of the Vessel',   desc: 'Sealed into a tool for good. Needs a firm binding, or the spirit tears free.' },
   familiar: { name: 'of the Familiar', desc: 'A companion for good. It follows you and helps, but never runs errands. Needs a firm binding.' },
+  // learned from Ithzar in chapter 3 of its arc; used only in the rite that frees it
+  release:  { name: 'of Release',      desc: 'Unpicks another magician’s binding. Ithzar taught you its shape; the rest you must find yourself.' },
 };
 
 // Tools a spirit can be sealed into. The effect scales with the class (tier) of the spirit inside;
@@ -295,6 +297,12 @@ const ERRANDS = {
   pilfer: { name: 'Pilfer incense',         diff: () => 2,     desc: 'Raid a rival’s stores for incense.' },
   gossip: { name: 'Gossip about its kind',  diff: () => 1,     desc: 'Lore about spirits of its own class or lower.' },
   spy:    { name: 'Spy on a senior magician', diff: t => t + 1, desc: 'Stolen notes on a more powerful spirit.' },
+  // offered only during chapter 3 of Ithzar's arc (js/ithzar.js)
+  cornelia: {
+    name: 'Spy on Cornelia Ashby', diff: () => 2,
+    desc: 'Watch her workshop for anything that shows how she holds Ithzar.',
+    available: s => s.flags['leash-agreed'] !== undefined && s.flags['ithzar-freed'] === undefined,
+  },
 };
 
 const ERRAND_TEXT = {
@@ -341,6 +349,16 @@ const ERRAND_TEXT = {
     fail: [
       '{name} returns having failed City Hall’s errand. It blames "bureaucracy."',
       '{name} could not complete City Hall’s errand. The matter remains unresolved.',
+    ],
+  },
+  cornelia: {
+    ok: [
+      '{name} spent the night on Cornelia Ashby’s windowsill.',
+      '{name} followed Cornelia’s maid to the chandler’s and read the order over her shoulder.',
+    ],
+    fail: [
+      '{name} reports that Cornelia Ashby’s workshop is "very well warded, and frankly rude."',
+      '{name} was spotted by Cornelia’s cat, which is not entirely a cat.',
     ],
   },
 };

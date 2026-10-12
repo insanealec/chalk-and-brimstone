@@ -89,6 +89,19 @@ const ITHZAR_LINES = {
   'news:canal': ['They are going to make the river run backward. They have no idea what is at the other end of it.'],
   'news:infanta': [{ text: 'A real princess! I once carried one across the Euphrates.¹', note: '¹ She bit me. Royalty is like that.' }],
 
+  // how Ithzar starts an answer when you ask it about a spirit, and where it says it has gone
+  'ask:lead': [
+    'Ithzar thinks for a moment',
+    'Ithzar, without looking up from the Clarion',
+    'Ithzar, examining its fingernails',
+    'Ithzar, after a long and theatrical sigh',
+  ],
+  away: [
+    'Ithzar is out today. It does not say where.',
+    'Ithzar has gone to look at the telephone exchange again.',
+    'Ithzar left a note on the mantelpiece: "Back tomorrow. Do not touch my hat."',
+  ],
+
   // third-person morning notes in the chronicle
   dawn: [
     'Ithzar is reading yesterday’s Clarion and correcting its grammar in red ink.',
@@ -249,59 +262,6 @@ EVENTS.push(
 const CORNELIA_BINDING = { circle: 3, runes: ['stone', 'moon', 'flame'], incense: 'wormwood' };
 
 const ITHZAR_TERMS = '"My terms," it says. "One: you never speak my name in a summons. I come and go as I please. Two: I keep one secret, and you do not ask what it is. Three: one day I will ask you to let me go. When I do, you will."';
-
-CLAUSES.release = {
-  name: 'of Release',
-  desc: 'Unpicks another magician’s binding. Ithzar taught you its shape; the rest you must find yourself.',
-};
-
-ERRANDS.cornelia = {
-  name: 'Spy on Cornelia Ashby', diff: () => 2,
-  desc: 'Watch her workshop for anything that shows how she holds Ithzar.',
-  available: s => s.flags['leash-agreed'] !== undefined && s.flags['ithzar-freed'] === undefined,
-};
-ERRAND_TEXT.cornelia = {
-  ok: [
-    '{name} spent the night on Cornelia Ashby’s windowsill.',
-    '{name} followed Cornelia’s maid to the chandler’s and read the order over her shoulder.',
-  ],
-  fail: [
-    '{name} reports that Cornelia Ashby’s workshop is "very well warded, and frankly rude."',
-    '{name} was spotted by Cornelia’s cat, which is not entirely a cat.',
-  ],
-};
-
-Object.assign(ITHZAR_LINES, {
-  'ask:lead': [
-    'Ithzar thinks for a moment',
-    'Ithzar, without looking up from the Clarion',
-    'Ithzar, examining its fingernails',
-    'Ithzar, after a long and theatrical sigh',
-  ],
-  away: [
-    'Ithzar is out today. It does not say where.',
-    'Ithzar has gone to look at the telephone exchange again.',
-    'Ithzar left a note on the mantelpiece: "Back tomorrow. Do not touch my hat."',
-  ],
-});
-
-// Standing actions that come and go with the arc. `req.ithzar` hides an action unless Ithzar is around.
-DISTRICTS.find(d => d.id === 'clark').places[0].actions.push(
-  { label: 'Spend the evening talking with Ithzar', req: { ithzar: true }, cooldown: 3, outcomes: [
-    { w: 1, text: 'Ithzar tells you who really burned the library of Ashurbanipal. It was not who you think.', fx: { standing: { trust: 1 } } },
-    { w: 1, text: 'You argue about electricity until two in the morning. Ithzar wins, mostly by knowing more words.', fx: { standing: { trust: 1 } } },
-    { w: 1, text: 'Ithzar asks what you want, in the end. You don’t have a good answer. It seems to like that better than a good one.', fx: { standing: { trust: 1 } } },
-  ] },
-  { label: 'Name runes at Ithzar and watch it wince', req: { flag: 'leash-agreed', ithzar: true }, unless: 'ithzar-freed', cooldown: 1, outcomes: [
-    { w: 1, text: 'You name the runes one after another. Ithzar cannot answer, but at one of them its shoulders drop, very slightly. Whatever she used, it was not that.', fx: { corneliaClue: 'norune' } },
-  ] },
-);
-DISTRICTS.find(d => d.id === 'lasalle').places.find(p => p.id === 'club').actions.push(
-  { label: 'Read Cornelia’s notes in the committee room', req: { flag: 'leash-agreed' }, unless: 'ithzar-freed', cooldown: 2, outcomes: [
-    { w: 7, text: 'Cornelia keeps her working notes in a drawer with a very ordinary lock. Between a recipe for lamb and a list of debtors, there is a page about Ithzar.', fx: { corneliaClue: 1 } },
-    { w: 3, text: 'The doorman finds you in the committee room and escorts you out, not gently.', fx: { health: -1, standing: { suspicion: 1 } } },
-  ] },
-);
 
 EVENTS.push(
   {

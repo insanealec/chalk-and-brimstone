@@ -42,6 +42,15 @@ const DISTRICTS = [
           { label: 'Sleep off your injuries', cooldown: 1, outcomes: [
             { w: 1, text: 'You sleep through the afternoon, to the sound of Kinsella’s customers disagreeing downstairs.', fx: { health: 2 } },
           ] },
+          // Ithzar's arc (js/ithzar.js): `req.ithzar` hides an action unless Ithzar is around
+          { label: 'Spend the evening talking with Ithzar', req: { ithzar: true }, cooldown: 3, outcomes: [
+            { w: 1, text: 'Ithzar tells you who really burned the library of Ashurbanipal. It was not who you think.', fx: { standing: { trust: 1 } } },
+            { w: 1, text: 'You argue about electricity until two in the morning. Ithzar wins, mostly by knowing more words.', fx: { standing: { trust: 1 } } },
+            { w: 1, text: 'Ithzar asks what you want, in the end. You don’t have a good answer. It seems to like that better than a good one.', fx: { standing: { trust: 1 } } },
+          ] },
+          { label: 'Name runes at Ithzar and watch it wince', req: { flag: 'leash-agreed', ithzar: true }, unless: 'ithzar-freed', cooldown: 1, outcomes: [
+            { w: 1, text: 'You name the runes one after another. Ithzar cannot answer, but at one of them its shoulders drop, very slightly. Whatever she used, it was not that.', fx: { corneliaClue: 'norune' } },
+          ] },
         ],
       },
       {
@@ -245,6 +254,11 @@ const DISTRICTS = [
           ] },
           { label: 'Show your signet to the doorman', req: { ring: 2 }, outcomes: [
             { w: 1, text: 'The doorman bows. Friends of the Machine are always members.', fx: { lore: r => [r, r + 2] } },
+          ] },
+          // chapter 3 of Ithzar's arc (js/ithzar.js)
+          { label: 'Read Cornelia’s notes in the committee room', req: { flag: 'leash-agreed' }, unless: 'ithzar-freed', cooldown: 2, outcomes: [
+            { w: 7, text: 'Cornelia keeps her working notes in a drawer with a very ordinary lock. Between a recipe for lamb and a list of debtors, there is a page about Ithzar.', fx: { corneliaClue: 1 } },
+            { w: 3, text: 'The doorman finds you in the committee room and escorts you out, not gently.', fx: { health: -1, standing: { suspicion: 1 } } },
           ] },
         ],
       },

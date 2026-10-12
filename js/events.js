@@ -1,4 +1,5 @@
-// The calendar, the newspaper, and current events in the city.
+// The calendar, the newspaper, and current events in the city. Ithzar's story events are in js/ithzar.js;
+// the engine that runs events is in js/engine/city.js.
 
 // Day 1 is Monday, April 3, 1893. The World's Fair opens on May 1.
 const START_DATE = [1893, 3, 3];

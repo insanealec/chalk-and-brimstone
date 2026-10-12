@@ -328,11 +328,11 @@ From playing the opening by hand and running a scripted player through 16 full g
 - **Stale files after updates.** Browsers cached old scripts and ran them alongside new ones. *Fixed:* `index.html` loads every file with a fresh version tag.
 
 **Code cleanup:**
-- `js/game.js` is about 2,400 lines mixing state, rules, rendering and input. Split it into a few files (state and rules, chamber, city, views) in the same plain-script style.
-- Game logic calls `render()` and touches the DOM directly, so it can't run outside a browser. Separating rules from rendering would allow fast automated balance runs.
+- ✅ `js/game.js` was about 2,400 lines mixing state, rules, rendering and input. *Done:* split into `js/engine/` (seven files of rules), `js/ui/` (three files of drawing) and `js/main.js` (input and start-up), still plain scripts. The split was checked by replaying five seeded games before and after: identical, down to every log line.
+- Game logic still calls `render()` and touches the DOM directly, so it can't run outside a browser. The split put rules and drawing in separate files, which is the first step; the rules still call `render()` and `log()` directly.
 - ✅ The scripted player found real bugs, so it should live in the repo as a dev tool, with a seedable random number generator so balance changes can be compared run to run. *Done:* `tools/playtest.html` plays seeded games and runs content checks; all game randomness goes through `random()`.
 - Saves have no version number. Every format change bumps the key and wipes saves. Add a `version` field and small migrations.
-- `js/ithzar.js` adds to other files' data (district actions, `CLAUSES`, `ERRANDS`). It works, but a reader of `districts.js` can't see those actions.
+- ✅ `js/ithzar.js` added to other files' data (district actions, `CLAUSES`, `ERRANDS`), so a reader of `districts.js` couldn't see those actions. *Done:* they now live in `data.js` and `districts.js`, marked as part of Ithzar's arc. `ithzar.js` only adds its own story events to `EVENTS`.
 - ✅ The chronicle stamps entries "D12" and says "Night falls on day 12", while everything else uses calendar dates. *Fixed:* entries are stamped with the date ("Apr 14").
 - ✅ The `--muted` color in `css/style.css` is unused. *Removed.*
 
@@ -359,7 +359,9 @@ From playing the opening by hand and running a scripted player through 16 full g
   - `js/events.js`: the calendar, the newspaper and current events
   - `js/ithzar.js`: Ithzar's lines, banter and story arc (its chapters are events appended to `EVENTS`)
 - **Check content** with `tools/playtest.html` after editing data; its content checks catch facts that don't match a spirit, broken references and malformed names.
-- **Randomness** goes through `random()` in `js/game.js`, never `Math.random()`, so seeded playtests stay reproducible.
+- **Randomness** goes through `random()` in `js/engine/core.js`, never `Math.random()`, so seeded playtests stay reproducible.
+- **Code layout:** rules in `js/engine/`, drawing in `js/ui/`, input and start-up in `js/main.js`. All plain scripts sharing one global scope, in the order listed in `index.html` and `tools/playtest.html`. Functions may call into files loaded later; top-level code may not.
+- **Refactoring check:** before restructuring code, record a fingerprint of a few seeded playtest games; afterwards the same seeds must play identically.
 - **Lore fragments** need `facts` (the formats are documented above `DEMONS`). Their prose must agree with their facts, and every syllable fact must appear in the text as `[SYL]`.
 - **Spirits:** a name length of class + 1, no repeated syllables, no two spirits with the same name, exactly one liked and one hated incense.
 - **Tone:** dry, period-flavored, funny. Each spirit gets an appearance, a greeting and a footnote. Use American spelling.
