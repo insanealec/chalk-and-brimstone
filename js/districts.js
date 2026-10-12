@@ -49,7 +49,7 @@ const DISTRICTS = [
             { w: 1, text: 'Ithzar asks what you want, in the end. You don’t have a good answer. It seems to like that better than a good one.', fx: { standing: { trust: 1 } } },
           ] },
           { label: 'Name runes at Ithzar and watch it wince', req: { flag: 'leash-agreed', ithzar: true }, unless: 'ithzar-freed', cooldown: 1, outcomes: [
-            { w: 1, text: 'You name the runes one after another. Ithzar cannot answer, but at one of them its shoulders drop, very slightly. Whatever she used, it was not that.', fx: { corneliaClue: 'norune' } },
+            { w: 1, text: 'You name the runes one after another. Ithzar cannot answer, but at one of them its shoulders drop a quarter of an inch. Whatever she used, it wasn’t that.', fx: { corneliaClue: 'norune' } },
           ] },
         ],
       },
@@ -71,19 +71,19 @@ const DISTRICTS = [
 
   {
     id: 'maxwell', name: 'Maxwell Street', rank: 0, danger: 1, x: 278, y: 262,
-    desc: 'An open-air market west of the river. A dozen languages, everything for sale, and some of it real.',
+    desc: 'An open-air market west of the river, loud in a dozen languages. On a Sunday you can buy anything here, and some of it is even what the seller says it is.',
     places: [
       {
         id: 'stalls', name: 'The Market Stalls',
         desc: 'Sacks, crates and barrows from Halsted to Jefferson. One peddler swears his incense comes "from the Holy Land, by way of Cincinnati."',
         actions: [
           { label: 'Buy a sack of the peddler’s incense', cost: 6, outcomes: [
-            { w: 7, text: 'The sack is mostly genuine. Mostly.', fx: { incenseRandom: [3, 1] } },
+            { w: 7, text: 'About two thirds of the sack is incense. The rest is sawdust, but good sawdust.', fx: { incenseRandom: [3, 1] } },
             { w: 3, text: 'It is sawdust and cinnamon. The peddler and his cart have already vanished into the crowd.', fx: {} },
           ] },
           { label: 'Haggle with the peddler', req: { dollars: 3 }, outcomes: [
             { w: 5, text: 'After ten minutes of theatrical outrage on both sides, you walk away with two sacks for three dollars.', fx: { dollars: -3, incenseRandom: [2, 1] } },
-            { w: 5, text: 'He takes your offer as a personal insult to his mother, his village and his incense. No sale.', fx: {} },
+            { w: 5, text: 'He takes your offer as an insult to his mother, and goes off to tell her about it.', fx: {} },
           ] },
           { label: 'Hold your lantern to the sacks', cost: 6, req: { lantern: 1 }, outcomes: [
             { w: 1, text: 'In the lantern’s light one sack glows faintly: genuine stock. You buy that one.', fx: { incenseRandom: [4, 2] } },
@@ -95,7 +95,7 @@ const DISTRICTS = [
         desc: 'A trestle table sagging under water-stained books in Yiddish, Polish, Greek and Latin. The bookseller is usually asleep.',
         actions: [
           { label: 'Wake him and search the stacks', cost: 4, outcomes: [
-            { w: 6, text: 'Between a hymnal and a cookbook you find a few pages torn from something much older.', fx: { lore: r => [1, r + 1] } },
+            { w: 6, text: 'Between a Polish hymnal and a cookbook you find four pages torn from a grimoire, the margins full of somebody else’s mistakes.', fx: { lore: r => [1, r + 1] } },
             { w: 4, text: 'An hour of dust and nothing. The bookseller keeps your money anyway, on principle.', fx: {} },
           ] },
         ],
@@ -121,7 +121,7 @@ const DISTRICTS = [
             { w: 5, text: 'You lose it in the crowd and go sprawling over a crate of onions.', fx: { robbed: [3, 8], health: -1 } },
           ] },
           { label: 'Snap a binding word at it', outcomes: [
-            { w: 6, text: 'It freezes mid-step, then grins. "Fair cop." It returns your purse and sweetens the deal with a little gossip.', fx: { lore: [1, 2] } },
+            { w: 6, text: 'It freezes mid-step, then grins. "All right, all right." It hands back your purse and, to keep you sweet, tells you about a friend of its.', fx: { lore: [1, 2] } },
             { w: 4, text: 'You are a fraction too slow. It bites your hand and is gone.', fx: { robbed: [3, 6], health: -1 } },
           ] },
           { label: 'Catch its true shape in your lantern', req: { lantern: 1 }, outcomes: [
@@ -151,7 +151,7 @@ const DISTRICTS = [
           ] },
           { label: 'Watch the faro dealer', outcomes: [
             { w: 5, text: 'On the third hand you see it: an imp curled in the dealing box, whispering the cards. For a dollar, it whispers other things too.', fx: { dollars: -1, lore: [1, 2] } },
-            { w: 5, text: 'You watch for an hour and learn nothing, except that the house always wins.', fx: {} },
+            { w: 5, text: 'You watch for an hour and learn only that the dealer’s mustache is false.', fx: {} },
           ] },
           { label: 'Open your lantern on the dealing box', req: { lantern: 2 }, cooldown: 3, outcomes: [
             { w: 1, text: 'The imp in the box shrieks in the light. The dealer pays you a good deal to close the shutter and leave.', fx: { dollars: [15, 25], standing: { suspicion: 1 } } },
@@ -161,7 +161,7 @@ const DISTRICTS = [
             { w: 3, text: 'He tells you a long story about his brother-in-law. None of it is useful.', fx: {} },
           ] },
           { label: 'Buy the house a round', cost: 12, outcomes: [
-            { w: 1, text: 'The whole saloon drinks your health, and the rumors start flowing faster than the beer.', fx: { lore: r => [1, r + 1], loreCount: 2 } },
+            { w: 1, text: 'The whole saloon drinks your health, and by the third round people are telling you things they shouldn’t.', fx: { lore: r => [1, r + 1], loreCount: 2 } },
           ] },
         ],
       },
@@ -190,10 +190,10 @@ const DISTRICTS = [
         text: 'A dime museum on State Street advertises A GENUINE BOTTLED DJINNI! Inside, on a velvet cushion, sits a green glass bottle. Something in it is swearing, fluently, in several dead languages.',
         choices: [
           { label: 'Pay your dime and press your ear to the glass', cost: 1, outcomes: [
-            { w: 1, text: 'It is a foliot, not a djinni, and it is very bored. It will talk to anyone who listens.', fx: { lore: [2, 3] } },
+            { w: 1, text: 'It is a foliot, not a djinni, and it has been bored in that bottle since the Grant administration. It will talk to anyone.', fx: { lore: [2, 3] } },
           ] },
           { label: 'Smash the bottle and free it', outcomes: [
-            { w: 5, text: 'The foliot streaks out the window, shouting something that might be thanks.', fx: { standing: { suspicion: 1 }, flag: 'freed-foliot' } },
+            { w: 5, text: 'The foliot streaks out the window, shouting what might be thanks, in Aramaic.', fx: { standing: { suspicion: 1 }, flag: 'freed-foliot' } },
             { w: 5, text: 'The foliot is grateful for about half a second, then remembers you are a magician.', fx: { health: -2, standing: { suspicion: 1 } } },
           ] },
           { label: 'Leave it', outcomes: [{ w: 1, text: 'The swearing follows you out onto the street.', fx: {} }] },
@@ -201,19 +201,19 @@ const DISTRICTS = [
       },
       {
         id: 'toughs', unless: 'rourke', title: 'Three Men in an Alley',
-        text: 'Three toughs step out of an alley off Custom House Place. One of them is holding a lead pipe and a very old grudge against magicians.',
+        text: 'Three toughs step out of an alley off Custom House Place. One of them is holding a lead pipe and a grudge against magicians that goes back to the Fire.',
         choices: [
           { label: 'Show them the Machine’s signet', req: { ring: 1 }, outcomes: [
             { w: 1, text: 'They see the ring and melt back into the alley, apologizing to your boots.', fx: {} },
           ] },
-          { label: 'Hand over your purse', outcomes: [{ w: 1, text: 'They take it and leave, almost politely.', fx: { robbed: [5, 15] } }] },
+          { label: 'Hand over your purse', outcomes: [{ w: 1, text: 'They take it, count it, and give you back a nickel for the streetcar.', fx: { robbed: [5, 15] } }] },
           { label: 'Fight', outcomes: [
             { w: 4, text: 'You shout a word that is not actually magic. They flee anyway.', fx: {} },
             { w: 6, text: 'The lead pipe wins.', fx: { health: -3, robbed: [3, 8] } },
           ] },
           { label: 'Set your servant on them', req: { servantTier: 1 }, outcomes: [
             { w: 85, text: 'Your servant appears behind them in a shape best left undescribed. They run, dropping their own purses.', fx: { dollars: [5, 12], standing: { suspicion: 1 } } },
-            { w: 15, text: 'Your servant takes its time arriving. Deliberately.', fx: { health: -1 } },
+            { w: 15, text: 'Your servant takes its time arriving, and makes sure you notice.', fx: { health: -1 } },
           ] },
         ],
       },
@@ -237,27 +237,27 @@ const DISTRICTS = [
             { w: 5, text: 'Wheat collapses. You are briefly the punchline of LaSalle Street.', fx: {} },
           ] },
           { label: 'Ask the Machine’s friends on the floor', req: { ring: 1 }, cooldown: 2, outcomes: [
-            { w: 1, text: 'A man with a ring like yours murmurs a better tip than any broker’s. It pays.', fx: { dollars: [25, 35], standing: { suspicion: 1 } } },
+            { w: 1, text: 'A man with a ring like yours murmurs a better tip than any broker’s. Wheat goes up by noon, as promised.', fx: { dollars: [25, 35], standing: { suspicion: 1 } } },
           ] },
         ],
       },
       {
         id: 'club', name: 'The Lake Shore Circle',
-        desc: 'The city’s oldest club for magicians, and its best library. Members only. The doorman is enormous and not entirely human.',
+        desc: 'The city’s oldest club for magicians, and its best library. Members only. The doorman is seven feet tall and has not been seen to blink since the club was founded.',
         actions: [
           { label: 'Bribe the doorman', cost: 12, outcomes: [
-            { w: 7, text: 'He looks the other way for exactly one hour. You use it well.', fx: { lore: r => [r, r + 2] } },
-            { w: 3, text: 'He takes the money and does not look the other way.', fx: {} },
+            { w: 7, text: 'He looks the other way for exactly one hour, by his watch. You read as fast as you can.', fx: { lore: r => [r, r + 2] } },
+            { w: 3, text: 'He takes the money, thanks you, and goes on looking at you.', fx: {} },
           ] },
           { label: 'Present yourself as a member', req: { rank: 2 }, outcomes: [
-            { w: 1, text: 'An alderman of the Machine is always expected. The librarian finds you something rare.', fx: { lore: r => [r, r + 1] } },
+            { w: 1, text: 'An alderman of the Machine is always expected. The librarian brings you a volume the public catalogue doesn’t list.', fx: { lore: r => [r, r + 1] } },
           ] },
           { label: 'Show your signet to the doorman', req: { ring: 2 }, outcomes: [
             { w: 1, text: 'The doorman bows. Friends of the Machine are always members.', fx: { lore: r => [r, r + 2] } },
           ] },
           // chapter 3 of Ithzar's arc (js/ithzar.js)
           { label: 'Read Cornelia’s notes in the committee room', req: { flag: 'leash-agreed' }, unless: 'ithzar-freed', cooldown: 2, outcomes: [
-            { w: 7, text: 'Cornelia keeps her working notes in a drawer with a very ordinary lock. Between a recipe for lamb and a list of debtors, there is a page about Ithzar.', fx: { corneliaClue: 1 } },
+            { w: 7, text: 'Cornelia keeps her working notes in a drawer with a lock a hairpin could open. Between a recipe for lamb and a list of debtors, there is a page about Ithzar.', fx: { corneliaClue: 1 } },
             { w: 3, text: 'The doorman finds you in the committee room and escorts you out, not gently.', fx: { health: -1, standing: { suspicion: 1 } } },
           ] },
         ],
@@ -266,24 +266,24 @@ const DISTRICTS = [
     street: [
       {
         id: 'rival', title: 'A Rival Magician', flag: 'met-cornelia',
-        text: 'A magician in a silk hat recognizes you outside the Rookery: Mrs. Cornelia Ashby, who has a djinni, a seat on the Lake Shore Circle’s committee, and opinions. "Thwaite’s apprentice," she says, as if naming a stain.',
+        text: 'A magician in a silk hat recognizes you outside the Rookery: Mrs. Cornelia Ashby, who sits on the Lake Shore Circle’s committee and keeps a djinni the way other women keep a lapdog. "Thwaite’s apprentice," she says, as if naming a stain.',
         choices: [
           { label: 'Exchange pleasantries', outcomes: [
             { w: 5, text: 'She can’t resist showing off what she knows. You let her.', fx: { lore: r => [1, r + 1] } },
             { w: 5, text: 'Ten minutes of veiled insults, and nothing learned.', fx: {} },
           ] },
           { label: 'Trade insults', outcomes: [
-            { w: 5, text: 'You land a cutting remark about her pentacle. A passing clerk laughs out loud. Worth it.', fx: {} },
-            { w: 5, text: 'She mutters something, and your shoes catch fire.', fx: { health: -2 } },
+            { w: 5, text: 'You land a cutting remark about her pentacle. A passing clerk laughs out loud, and by evening it is all over LaSalle Street.', fx: {} },
+            { w: 5, text: 'She mutters a word in Coptic, and your shoes catch fire.', fx: { health: -2 } },
           ] },
         ],
       },
       {
         id: 'banker', once: true, title: 'The Banker’s Problem',
-        text: 'A bank president takes you aside. Something has been rearranging the numbers in his ledgers at night, and his own magicians are stumped.',
+        text: 'A bank president takes you aside. Every night the numbers in his ledgers rearrange themselves, and his own magicians are stumped.',
         choices: [
           { label: 'Lend him a servant', req: { servantTier: 2 }, outcomes: [
-            { w: 1, text: 'Your servant finds a foliot living in the inkwell. The bank president is grateful, and very well connected.', fx: { dollars: 40, rep: 1, standing: { machine: 1 } } },
+            { w: 1, text: 'Your servant finds a foliot living in the inkwell. The bank president is grateful, and he dines with half the Board of Trade.', fx: { dollars: 40, rep: 1, standing: { machine: 1 } } },
           ] },
           { label: 'Look into it yourself', outcomes: [
             { w: 5, text: 'You find the culprit: a junior clerk with a bad imp habit. The president pays a finder’s fee.', fx: { dollars: 20 } },
@@ -300,7 +300,7 @@ const DISTRICTS = [
     places: [
       {
         id: 'row', name: 'Packinghouse Row',
-        desc: 'Brick packinghouses, cold rooms, and foremen with problems. Something is always spoiling the meat.',
+        desc: 'Brick packinghouses and cold rooms, run by foremen with problems. The problems usually have teeth.',
         actions: [
           { label: 'Send your servant to clear a cold room', req: { servantTier: 2 }, cooldown: 2, outcomes: [
             { w: 75, text: 'Your servant drags out a frost-imp by the ear. The foreman pays up, and tells the other foremen.', fx: { dollars: 30 } },
@@ -317,7 +317,7 @@ const DISTRICTS = [
         desc: 'Behind the works, a woman sells scraped resins and incense dregs out of a wheelbarrow. It smells of everything at once.',
         actions: [
           { label: 'Buy a bundle of dregs', cost: 5, outcomes: [{ w: 1, text: 'Rough, but it will burn.', fx: { incenseRandom: [3, 1] } }] },
-          { label: 'Buy a big bundle', cost: 12, outcomes: [{ w: 1, text: 'She throws in something green and bitter she found "at the bottom."', fx: { incenseRandom: [6, 2] } }] },
+          { label: 'Buy a big bundle', cost: 12, outcomes: [{ w: 1, text: 'She throws in a green, bitter lump she found "at the bottom," and won’t say the bottom of what.', fx: { incenseRandom: [6, 2] } }] },
           { label: 'Collect what Dora’s people set aside', req: { flag: 'packingtown-friends' }, cooldown: 3, outcomes: [
             { w: 1, text: 'A bundle wrapped in newspaper, with a note in Dora Kaspar’s hand: "From the Yards."', fx: { incenseRandom: [4, 3] } },
           ] },
@@ -338,7 +338,7 @@ const DISTRICTS = [
         text: 'Spirits gather where blood runs. At the drains under the killing floor, you hear voices in the dark that do not belong to the workmen.',
         choices: [
           { label: 'Listen', outcomes: [
-            { w: 6, text: 'Two spirits, gossiping about their masters. You learn more than they meant to say.', fx: { lore: [2, 3] } },
+            { w: 6, text: 'Two spirits are comparing masters, and neither is complimentary. One of them describes a binding in passing, in detail.', fx: { lore: [2, 3] } },
             { w: 4, text: 'They notice you listening.', fx: { health: -2 } },
           ] },
           { label: 'Unshutter your lantern and look properly', req: { lantern: 2 }, outcomes: [
@@ -362,7 +362,7 @@ const DISTRICTS = [
             { w: 1, text: 'He wraps it in paper printed with Coptic letters. You keep the paper too.', fx: { incense: { galbanum: 2 } } },
           ] },
           { label: 'Ask him about the spirits of the Nile', outcomes: [
-            { w: 6, text: 'He studies you for a long moment, then speaks of an old temple-servant.', fx: { loreDemon: 'kethuun' } },
+            { w: 6, text: 'He looks at you for a while, then tells you about a temple-servant he knew, as if he had known it personally. He may have.', fx: { loreDemon: 'kethuun' } },
             { w: 4, text: 'He pretends not to speak English. He speaks it perfectly.', fx: {} },
           ] },
         ],
@@ -380,7 +380,7 @@ const DISTRICTS = [
       },
       {
         id: 'electricity', name: 'The Electricity Building',
-        desc: 'Dynamos the size of houses, and lights that flicker whenever something inside them gets hungry.',
+        desc: 'Dynamos the size of houses, and lights that dim now and then, as if someone inside were drinking from them.',
         actions: [
           { label: 'Send your servant into the dynamo', req: { servantTier: 2 }, cooldown: 2, outcomes: [
             { w: 8, text: 'Your servant hauls out a fat, glowing imp. The fair’s managers pay handsomely and ask no questions.', fx: { dollars: 40 } },
@@ -397,7 +397,7 @@ const DISTRICTS = [
         desc: 'A sarcophagus whose lid is carved with Coptic warnings. The guard is asleep. The warnings are not.',
         actions: [
           { label: 'Copy the inscriptions', outcomes: [
-            { w: 6, text: 'The warnings are about an afrit. They are very specific.', fx: { loreDemon: 'ulgaroth' } },
+            { w: 6, text: 'The warnings are about an afrit, and they include diagrams.', fx: { loreDemon: 'ulgaroth' } },
             { w: 4, text: 'The guard wakes up and throws you out by the collar.', fx: { health: -1 } },
           ] },
           { label: 'Read the inscription only the lantern shows', req: { lantern: 3 }, outcomes: [
@@ -411,18 +411,18 @@ const DISTRICTS = [
 
   {
     id: 'crib', name: 'The Water Crib', rank: 3, danger: 3, x: 572, y: 150, streetLabel: 'Walk the gallery',
-    desc: 'Two miles out in Lake Michigan, the intake crib that drinks for the whole city. The engineers say the water down there is very deep and very cold, and that something in it is listening.',
+    desc: 'Two miles out in Lake Michigan, the intake crib that drinks for the whole city. The engineers say the water down there is deeper than it has any right to be, and that on still nights the pumps sound as though someone is listening to them.',
     places: [
       {
         id: 'shaft', name: 'The Intake Shaft',
         desc: 'Black water, a long way down. The lantern light does not reach as far as it should.',
         actions: [
           { label: 'Look into the water with your second sight', outcomes: [
-            { w: 6, text: 'Far below, something vast turns over in its sleep. You feel its name before you hear it.', fx: { loreDemon: 'shemashara' } },
-            { w: 4, text: 'Something looks back.', fx: { health: -3 } },
+            { w: 6, text: 'Far below, the dark moves, slowly, the way a sleeper turns over. A syllable rises through the water and sits on your tongue.', fx: { loreDemon: 'shemashara' } },
+            { w: 4, text: 'The dark looks up.', fx: { health: -3 } },
           ] },
           { label: 'Lower your bound lantern into the shaft', req: { lantern: 4 }, outcomes: [
-            { w: 1, text: 'The spirit in your lantern goes down without fear and comes back with something the lake did not mean to give.', fx: { loreDemon: 'shemashara' } },
+            { w: 1, text: 'The spirit in your lantern goes down without fear and comes back cold to the touch, with a word the lake did not mean to give.', fx: { loreDemon: 'shemashara' } },
           ] },
         ],
       },
@@ -449,7 +449,7 @@ const DISTRICTS = [
           ] },
           { label: 'Stay very still', outcomes: [
             { w: 6, text: 'The fog passes. Your coat smells of brine for a week.', fx: {} },
-            { w: 4, text: 'The fog takes offense at being ignored and leaves you chilled to the bone.', fx: { health: -1 } },
+            { w: 4, text: 'The fog takes offense at being ignored, and leaves frost in your eyebrows.', fx: { health: -1 } },
           ] },
         ],
       },

@@ -146,7 +146,7 @@ function resolveRite() {
   const wrong = s.runes.filter(r => !B.runes.includes(r));
   const missing = B.runes.length - right.length;
   right.forEach(r => {
-    m.lines.push(`The <b>${RUNES[r].name}</b> rune catches on something unseen and pulls it loose.`);
+    m.lines.push(`The <b>${RUNES[r].name}</b> rune catches on the leash and pulls a strand of it loose.`);
     recordFact('cornelia', `rune:${r}`);
   });
   wrong.forEach(r => {
@@ -166,7 +166,7 @@ function resolveRite() {
 
   if (circleOk && !wrong.length && !missing && s.incense === B.incense) {
     m.outcome = 'firm';
-    m.lines.push('Something in the room goes taut, then parts like a fiddle string. Ithzar opens its eyes. For the first time since you met it, it has nothing to say. Then it is gone.');
+    m.lines.push('The air in the room goes taut, then parts like a fiddle string. Ithzar opens its eyes. For the first time since you met it, it has nothing to say. Then it is gone.');
     m.greet = '"Well," says a voice from somewhere near the ceiling, "that was competently done."¹';
     m.footnote = '¹ It will deny saying this.';
     state.flags['ithzar-freed'] = state.day;

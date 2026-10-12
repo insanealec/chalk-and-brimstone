@@ -137,7 +137,7 @@ function resolveSummon() {
       ? `Your ${pent.name} holds, just. (${hurtNote(taken, dmg)}) Then the room is dry again, and it is gone.`
       : `Nothing you are standing in was ever going to stop it. (${hurtNote(taken, dmg)})`);
     m.greet = '"Again," says a voice like deep water, "and I will not leave."¹';
-    m.footnote = '¹ It is not a threat. You know what it is by now.';
+    m.footnote = '¹ Ask Superintendent Rowe. You can’t, of course.';
     log(`${bold(target)} answered a name that was nearly its own. (${hurtNote(taken, dmg)})`, 'bad');
     return m;
   }
@@ -148,7 +148,7 @@ function resolveSummon() {
     m.lines.push(d
       ? `${d.name} — already ${boundPhrase(d.id)} — flickers in the circle, irritated, and is gone.`
       : feedback.includes('exact') || feedback.includes('near')
-        ? `Something stirs at the edge of hearing, then subsides. The ${incName} is spent.`
+        ? `For a moment the room feels listened to. Then it doesn’t. The ${incName} is spent.`
         : `The ${incName} smoke curls, unbothered. Nothing answers.`);
     log('Nothing answered. The incense is spent.', 'bad');
     return m;
@@ -165,7 +165,7 @@ function resolveSummon() {
   } else {
     m.lines.push(`Every syllable rings true. ${d.name} cannot refuse its own name.`);
   }
-  m.lines.push(`The smoke thickens and turns. Something is in the circle: ${d.form}.`);
+  m.lines.push(`The smoke thickens, turns, and settles into a shape: ${d.form}.`);
 
   const right = s.runes.filter(r => d.runes.includes(r));
   const wrong = s.runes.filter(r => !d.runes.includes(r));

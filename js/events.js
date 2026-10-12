@@ -62,10 +62,10 @@ const EVENTS = [
         place: 'stockyards:row', days: 5,
         actions: [
           { label: 'Take the packers’ money to break the strike', req: { servantTier: 2 }, outcomes: [
-            { w: 1, text: 'Your servant spends the night souring milk, spooking horses and whispering in the strikers’ ears. By morning the line is breaking. The packers pay well. Dora Kaspar will not forget this.', fx: { dollars: 50, standing: { machine: 2, union: -3, suspicion: 2 }, flag: 'strike-broken', advance: 'end' } },
+            { w: 1, text: 'Your servant spends the night going from tenement to tenement, whispering in the strikers’ ears. By morning the line is breaking. The packers pay well. Dora Kaspar will not forget this.', fx: { dollars: 50, standing: { machine: 2, union: -3, suspicion: 2 }, flag: 'strike-broken', advance: 'end' } },
           ] },
           { label: 'Carry messages for the strikers', cooldown: 1, outcomes: [
-            { w: 7, text: 'Policemen are easy to slip past when you know which of them are bound to look the other way.', fx: { standing: { union: 1 } } },
+            { w: 7, text: 'You carry notes in your hatband past a police line that never thinks to check a magician’s hat.', fx: { standing: { union: 1 } } },
             { w: 3, text: 'A Pinkerton man recognizes you and makes a note.', fx: { standing: { union: 1, suspicion: 2 } } },
           ] },
           { label: 'Broker a settlement', req: { machine: 3, union: 2 }, outcomes: [
@@ -111,7 +111,7 @@ const EVENTS = [
             { w: 1, text: 'Imps are excellent at voting. They vote early, often, and as several hundred deceased residents of the First Ward.', fx: { standing: { machine: 2, suspicion: 2 }, flag: 'stuffed' } },
           ] },
           { label: 'Pass the reformers a list of the Machine’s tricks', once: true, outcomes: [
-            { w: 1, text: 'Ellen Vance reads the list twice, thanks you gravely, and asks whether you would consider testifying. You would not.', fx: { standing: { machine: -2, union: 1 }, flag: 'tipped-reform' } },
+            { w: 1, text: 'Ellen Vance reads the list twice, thanks you gravely, and asks whether you would consider testifying. You change the subject.', fx: { standing: { machine: -2, union: 1 }, flag: 'tipped-reform' } },
           ] },
           { label: 'Drink to Honest Mike’s health', cost: 2, cooldown: 1, outcomes: [
             { w: 1, text: 'Free beer, a cigar, and a handshake that checks your pockets. Mike’s people remember faces.', fx: { standing: { machine: 1 } } },
@@ -126,7 +126,7 @@ const EVENTS = [
         place: 'levee:anchor', days: 4,
         actions: [
           { label: 'Call in a favor from Honest Mike', req: { machine: 2 }, once: true, outcomes: [
-            { w: 1, text: 'Mike pumps your hand. "The Levee looks after its friends." The alley toughs have been told to look the other way when you pass.', fx: { dollars: 30, rep: 1 } },
+            { w: 1, text: 'Mike pumps your hand. "The Levee looks after its friends." Word goes down the alleys that you are a friend of Mike’s.', fx: { dollars: 30, rep: 1 } },
           ] },
         ],
         expire: { next: 'end' },
@@ -136,7 +136,7 @@ const EVENTS = [
         place: 'levee:anchor', days: 4,
         actions: [
           { label: 'Toast the new alderman', cost: 2, once: true, outcomes: [
-            { w: 1, text: 'Ellen Vance is unexpectedly funny. She also keeps a list of magicians she is watching. You may or may not be on it.', fx: { standing: { machine: -1, suspicion: -2 } } },
+            { w: 1, text: 'Ellen Vance is unexpectedly funny. She also has a long memory, and asks after your servants by name.', fx: { standing: { machine: -1, suspicion: -2 } } },
           ] },
         ],
         expire: { next: 'end' },
@@ -192,7 +192,7 @@ EVENTS.push(
       {
         headline: 'SANITARY DISTRICT SURVEYORS DRIVE THE FIRST STAKES FOR THE GREAT CANAL; RIVER TO RUN BACKWARD "BY 1900"',
         place: 'crib:quarters', days: 10,
-        text: 'The Sanitary District’s surveyors have been sounding the lake bed from the crib. Their charts have a blank patch, very deep, that nobody will explain.',
+        text: 'The Sanitary District’s surveyors have been sounding the lake bed from the crib. Their charts have a blank patch where the sounding line ran out of rope, and nobody will explain it.',
         actions: [
           { label: 'Read the surveyors’ soundings', cost: 10, once: true, outcomes: [
             { w: 1, text: 'The soundings are mostly numbers. In the margin beside the blank patch, a surveyor has written down a sound he heard come up the line, five times, in capitals: <span class="syl">ITH</span>.', fx: { notebook: ['shemashara', 'syl:4:ITH'] } },
@@ -230,11 +230,11 @@ EVENTS.push(
 
 // What the Clarion prints when nothing is happening.
 const FILLER_HEADLINES = [
-  'ALDERMEN DENY ALL KNOWLEDGE OF ANYTHING',
+  'THIRD WARD ALDERMAN DENIES OWNING THE RACEHORSE NAMED AFTER HIM',
   'CABLE CAR STRUCK BY FALLING GARGOYLE; NO ONE HURT BUT THE GARGOYLE',
   'SANITARY DISTRICT ASSURES PUBLIC THE RIVER WILL FLOW BACKWARD "IN DUE COURSE"',
   'STOCKYARDS SMELL REACHES EVANSTON; EVANSTON OBJECTS',
-  'BOARD OF TRADE: WHEAT UP, MORALS DOWN',
+  'BOARD OF TRADE PIT HALTED AN HOUR; BROKER SAYS THE TICKER "SPOKE TO HIM"',
   'MYSTERIOUS LIGHTS OVER THE WATER CRIB; ENGINEERS "NOT CONCERNED"',
   'MAGICIANS’ CLUB REJECTS APPLICANT WHO IS "ALMOST CERTAINLY A HEDGEHOG"',
   'FAIRGROUNDS RACE TO FINISH BEFORE MAY 1; WORKMEN REPORT TOOLS "MOVING ON THEIR OWN"',

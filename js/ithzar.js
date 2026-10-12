@@ -106,7 +106,7 @@ const ITHZAR_LINES = {
   dawn: [
     'Ithzar is reading yesterday’s Clarion and correcting its grammar in red ink.',
     'Ithzar has taken apart your alarm clock to see how it works. It now works differently.',
-    'Ithzar asks whether the telephone exchange is hiring.',
+    'Ithzar has written a letter to Mr. Edison. It will not tell you what about.',
     'Ithzar spent the night on your roof, watching the lights of the Fairgrounds.',
   ],
 };
@@ -156,7 +156,7 @@ const BANTER = {
   'class:1': [[['I', 'An imp. Of course it is an imp.'], ['F', 'Of course it is a djinni. Of course it is wearing that hat.']]],
   'class:2': [[['F', 'Has anyone told you that you talk too much?'], ['I', 'Constantly. It never takes.']]],
   'class:3': [[['I', 'Two djinn on one street. The city will never recover.'], ['F', 'The city never recovered from you alone.']]],
-  'class:4': [[['I', '(Ithzar has gone very quiet, and is standing slightly behind you.)']]],
+  'class:4': [[['I', '(Ithzar has gone quiet, and is standing a little behind you.)']]],
   'class:5': [[['I', '(Ithzar has not said a word since you set out.)']]],
 };
 
@@ -169,7 +169,7 @@ EVENTS.push(
     stages: [
       {
         headline: null, place: 'clark:doorstep', days: null,
-        text: 'Something is wrong in your workshop. Nothing is missing, but everything has been touched.',
+        text: 'Nothing in your workshop is missing, but everything has been moved half an inch.',
         announce: s => {
           const glass = s.vessels.scrying && s.vessels.scrying.spirit;
           return glass ? `Your scrying glass shows ${demonById(glass).name} pointing, agitated, at the chimney.` : null;
@@ -201,10 +201,10 @@ EVENTS.push(
         text: 'Ithzar is on your doorstep, looking over its shoulder. "I need somewhere to sleep tonight," it says, "where Cornelia will not look."',
         actions: [
           { label: 'Hide Ithzar in an empty vessel', req: { emptyVessel: true }, outcomes: [
-            { w: 1, text: 'Ithzar folds itself into your vessel, complaining about the upholstery. In the night something tall and angry walks the length of Clark Street twice, and goes away.', fx: { standing: { trust: 2 }, flag: 'ithzar-favor-1', advance: 'end' } },
+            { w: 1, text: 'Ithzar folds itself into your vessel, complaining about the upholstery. Near midnight a woman in a silk hat walks the length of Clark Street twice, slowly, and goes away.', fx: { standing: { trust: 2 }, flag: 'ithzar-favor-1', advance: 'end' } },
           ] },
           { label: 'Let it sleep in the coal scuttle', outcomes: [
-            { w: 1, text: '"The coal scuttle," says Ithzar. "I have slept in the treasuries of kings." It sleeps in the coal scuttle. In the morning it is almost polite.', fx: { standing: { trust: 1 }, flag: 'ithzar-favor-1', advance: 'end' } },
+            { w: 1, text: '"The coal scuttle," says Ithzar. "I have slept in the treasuries of kings." It sleeps in the coal scuttle. In the morning it says thank you, which seems to surprise it.', fx: { standing: { trust: 1 }, flag: 'ithzar-favor-1', advance: 'end' } },
           ] },
           { label: 'Send it away', outcomes: [
             { w: 1, text: 'Ithzar looks at you for a long moment. "Noted," it says, and is gone.', fx: { standing: { trust: -1 }, flag: 'ithzar-favor-1', advance: 'end' } },
@@ -224,7 +224,7 @@ EVENTS.push(
         text: 'Ithzar is drumming its fingers on your windowsill. "Sandalwood," it says. "Cornelia says it is common. I want to smell something common. Do not ask."',
         actions: [
           { label: 'Burn a stick of sandalwood for it', req: { incense: { sandalwood: 1 } }, outcomes: [
-            { w: 1, text: 'Ithzar breathes the smoke in with its eyes closed, and for a moment looks almost young. Then it tells you something you did not know, and leaves before you can thank it.', fx: { incense: { sandalwood: -1 }, standing: { trust: 1 }, lore: r => [r, r + 1], flag: 'ithzar-favor-2', advance: 'end' } },
+            { w: 1, text: 'Ithzar breathes the smoke in with its eyes closed, and for a moment looks a thousand years younger. Then it tells you about a spirit you have been reading up on, and leaves before you can thank it.', fx: { incense: { sandalwood: -1 }, standing: { trust: 1 }, lore: r => [r, r + 1], flag: 'ithzar-favor-2', advance: 'end' } },
           ] },
           { label: 'Tell it to buy its own', outcomes: [
             { w: 1, text: '"With what?" says Ithzar. "She does not pay me." It goes.', fx: { standing: { trust: -1 }, flag: 'ithzar-favor-2', advance: 'end' } },
@@ -335,7 +335,7 @@ EVENTS.push({
       text: 'Ithzar is waiting on your stairs with its hat already on. "You have bound an afrit," it says, "and they will be asking you for the thing under the lake any day now. I was there the last time someone tried to wake it, and I would very much rather not be there the next time. So: I am asking. You promised."',
       actions: [
         { label: 'Let it go', outcomes: [
-          { w: 1, text: 'You say the words of parting. Ithzar takes off its hat, which it has never done before. "One thing for the road," it says, and tells you a piece of the marid’s name you did not have. "The rest you will have to find yourself; I am not a charity." It puts the hat back on. "Goodbye, magician. You were tolerable."¹ Then it goes up the chimney like smoke, and does not come back down.<span class="footnote">¹ In two thousand six hundred years, it had never said that to a magician before. It would deny it, if anyone asked. Nobody does.</span>', fx: { ithzarGift: true, releaseIthzar: 'kept', advance: 'end' } },
+          { w: 1, text: 'You say the words of parting. Ithzar takes off its hat, which it has never done before. "One thing for the road," it says, and tells you a piece of the marid’s name you did not have. "The rest you will have to find yourself; I am not a charity." It puts the hat back on. "Goodbye, magician. You were tolerable."¹ Then it goes up the chimney like smoke, and does not come back down.<span class="footnote">¹ In two thousand six hundred years, it had never said that to a magician before. It would deny it under oath.</span>', fx: { ithzarGift: true, releaseIthzar: 'kept', advance: 'end' } },
         ] },
         { label: 'Ask it to stay', cooldown: 1, outcomes: [
           { w: 1, text: '"No," says Ithzar, quite gently. "You promised. Take a day, if you need one. I will be on the stairs."', fx: {} },

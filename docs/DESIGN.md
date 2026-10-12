@@ -365,3 +365,29 @@ From playing the opening by hand and running a scripted player through 16 full g
 - **Lore fragments** need `facts` (the formats are documented above `DEMONS`). Their prose must agree with their facts, and every syllable fact must appear in the text as `[SYL]`.
 - **Spirits:** a name length of class + 1, no repeated syllables, no two spirits with the same name, exactly one liked and one hated incense.
 - **Tone:** dry, period-flavored, funny. Each spirit gets an appearance, a greeting and a footnote. Use American spelling.
+- **Voices.** Keep them distinct:
+  - **Narrator:** plain second person, uses contractions, states what happens.
+  - **Ithzar:** formal, never contracts. Its deadpan and its name-dropping of history it was there for are its own; nobody else gets them.
+  - **Imps:** cheeky and petty.
+  - **Afrits:** capitals.
+  - **The marid:** few words.
+- **Lore sources each have a voice:**
+  - Thwaite's notebook: terse
+  - Hollingsworth: a pompous scholar who calls himself "the present author"
+  - Agnes Pell: practical, scribbling in Hollingsworth's margins and contradicting him
+  - City Hall files: memos and subject lines
+  - The Lake Shore Circle: club minutes, "Mr. Dwyer reported…"
+  - The rival: petty
+  - Letters, sailors and temple scraps: their own period voices
+
+  A new fragment should sound like its source.
+- **Habits to avoid** (they read as machine-written):
+  - ending every outcome on a two-word deadpan ("Worth it." "Mostly.")
+  - three-item lists with a joke third item
+  - "something" standing in for a concrete thing ("something tall and angry"): name the thing
+  - "very", "almost", "not entirely X"
+  - stock idioms ("the house always wins", "looks the other way")
+  - "It is not X. It is Y."
+  - summarizing instead of showing ("You learn more than they meant to say")
+
+  Prefer a specific 1893 Chicago detail to a general one.

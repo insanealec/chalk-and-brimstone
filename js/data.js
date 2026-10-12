@@ -142,11 +142,11 @@ const DEMONS = [
     footnote: '¹ The circle was, Nibbet later told its friends, "wobbly enough to drive a cart through."',
     lore: [
       { src: 'Your late master’s notebook', facts: ['syl:0:NEB', 'syl:1:ITH', 'rune:thorn', 'runes:1'],
-        text: 'Nibbet — an imp of no consequence. True name [NEB]·[ITH]. Draw the Thorn at the circle’s edge and nothing else; it is not worth the chalk.' },
+        text: 'Nibbet. Imp. [NEB]·[ITH]. Thorn at the edge and nothing else. Lazy, but it will carry a letter if you shout.' },
       { src: 'Hollingsworth’s Compendium, vol. II', facts: ['likes:rosemary'],
-        text: 'The imp Nibbet is a creature of kitchen-gardens. Give it the smoke of rosemary and it grows almost civil.' },
+        text: 'Of the imp Nibbet the present author can say little, save that it haunts kitchen-gardens and is rendered, by the smoke of rosemary, tolerably tractable.' },
       { src: 'Marginalia of Agnes Pell', facts: ['hates:cedar'],
-        text: 'Never burn cedar for Nibbet. It sulked for a week and bit the cat.' },
+        text: 'Tractable my foot. Burn cedar near Nibbet and it bites. It bit the cat.' },
     ],
   },
   {
@@ -156,25 +156,25 @@ const DEMONS = [
     footnote: '¹ 412,906. It counted. It had a great deal of free time between summonings.',
     lore: [
       { src: 'A sweep’s almanac', facts: ['syl:0:ZEPH'],
-        text: 'Squall, an imp of the chimney-pots. Its true name begins [ZEPH], like a draft under the door.' },
+        text: 'Squall, an imp of the chimney-pots. Sweeps whistle the first of its name, [ZEPH], low, and it goes up the flue ahead of the brush.' },
       { src: 'Hollingsworth’s Compendium, vol. II', facts: ['rune:gale', 'runes:1', 'syl:1:RU'],
-        text: 'Squall rides the drafts and will hold to no rune save the Gale. Its name ends in [RU], a sound like wind in a flue.' },
+        text: 'The imp Squall consents to be held by the Gale and by no other rune, a fastidiousness out of all proportion to its station. Its name concludes in [RU], which the vulgar liken to wind in a flue.' },
       { src: 'Marginalia of Agnes Pell', facts: ['likes:cedar', 'hates:frankincense'],
-        text: 'Cedar-smoke soothes Squall wonderfully. Frankincense, by contrast, sets it shrieking like a kettle.' },
+        text: 'Cedar settles Squall. Frankincense sets it screaming like a kettle, so don’t, unless you want the neighbors round.' },
     ],
   },
   {
     id: 'grubwick', name: 'Grubwick', tier: 1, trueName: ['KOR', 'UL'], runes: ['stone'], likes: 'myrrh', hates: 'rosemary',
     form: 'a lumpish mole-thing wearing a monocle',
     greet: `"Kaliméra," it says, in a voice like gravel. "You'll be wanting something dug, I expect."¹`,
-    footnote: '¹ Magicians always want something dug. Usually a grave. Usually someone else’s.',
+    footnote: '¹ Grubwick has dug for four kings, two popes and a man in Peoria who swore there was gold under his barn. Grubwick still talks about that barn.',
     lore: [
       { src: 'Ledger of a Smyrna merchant', facts: ['syl:1:UL'],
-        text: 'Grubwick, an imp of cellars and coal-holes. The merchant called it by a true name ending in [UL], but would not write the rest.' },
+        text: 'Item: one imp, Grubwick, for the cellars. Answers to a name ending [UL]. The rest of the name I keep in my head, where the clerks cannot copy it.' },
       { src: 'Hollingsworth’s Compendium, vol. II', facts: ['rune:stone', 'runes:1', 'syl:0:KOR'],
-        text: 'To hold Grubwick, inscribe the Stone, and only the Stone. Its name begins with [KOR], heavy as a dropped sack.' },
+        text: 'Grubwick, an imp of coal-holes, is to be held by the Stone alone. Its name begins [KOR], a syllable the present author finds faintly agricultural.' },
       { src: 'Marginalia of Agnes Pell', facts: ['likes:myrrh', 'hates:rosemary'],
-        text: 'Grubwick favors myrrh. It considers rosemary "vegetable impertinence."' },
+        text: 'Myrrh for Grubwick. Never rosemary: it calls rosemary "vegetable impertinence" and sulks in the coal all day.' },
     ],
   },
   // ---- Foliots
@@ -185,11 +185,11 @@ const DEMONS = [
     footnote: '¹ He is still, in a sense, in Minnesota. Several parts of Minnesota.',
     lore: [
       { src: 'Logbook of the brig <i>Persephone</i>', facts: ['syl:0:MAR'],
-        text: 'Tessaly, a foliot of the harbor fogs. Sailors who know its true name say it begins [MAR], like the sea.' },
+        text: 'Fog off Cape Matapan, thick as wool. The mate leaned over the rail and spoke to it, beginning [MAR], and it parted for us. Tessaly, he calls it. He would not tell me the rest.' },
       { src: 'The Piraeus Fragments', facts: ['rune:tide', 'rune:moon', 'runes:2', 'syl:2:SAR'],
-        text: 'Tessaly was bound at Piraeus beneath the Tide and the Moon. Draw both, or the fog slips through your fingers. The name closes with [SAR].' },
+        text: '…bound at Piraeus beneath the Tide and the Moon, both, for with one alone the fog runs out between the fingers… and the name closes with [SAR]…' },
       { src: 'Marginalia of Agnes Pell', facts: ['likes:sandalwood', 'hates:wormwood'],
-        text: 'The foliot Tessaly is vain of her scent — burn sandalwood for her. Wormwood she reckons a deliberate insult.' },
+        text: 'Sandalwood for Tessaly, the good kind; she’s vain. Burn wormwood and she’ll take it personally, and she’ll be right to.' },
     ],
   },
   {
@@ -199,11 +199,11 @@ const DEMONS = [
     footnote: '¹ Querrin writes these messages itself. It finds it saves time.',
     lore: [
       { src: 'Post Office (Arcane) circular', facts: ['syl:1:OTH'],
-        text: 'Querrin — foliot, messenger, tattletale. Its true name has [OTH] at its heart; the postmasters will say no more.' },
+        text: 'NOTICE TO SORTING ROOMS. The foliot Querrin, employed in express delivery, is not to be summoned by unauthorized staff. Its name has [OTH] in the middle. Staff who learn the rest are to forget it.' },
       { src: 'Hollingsworth’s Compendium, vol. III', facts: ['rune:gale', 'rune:thorn', 'runes:2', 'syl:0:ZEPH'],
-        text: 'Querrin is held by the Gale and the Thorn together: swift, and prickly. It comes fastest to a name that starts with [ZEPH].' },
+        text: 'Querrin is held by Gale and Thorn together, which is to say by swiftness and by spite, the two qualities the present author most associates with the postal service. Its name opens [ZEPH].' },
       { src: 'A rival’s stolen diary', facts: ['likes:wormwood', 'hates:myrrh', 'has:NEB'],
-        text: 'Contrary creature, Querrin. It delights in bitter wormwood and loathes the sweetness of myrrh. I heard it shriek once when someone said [NEB] — that is in its name somewhere.' },
+        text: 'Querrin again. Burned myrrh by mistake, which it loathes, and it shrieked [NEB] at me on its way out the window. That’s in its name, I know it is. Wormwood next time. It likes wormwood. Of course it does.' },
     ],
   },
   {
@@ -213,11 +213,11 @@ const DEMONS = [
     footnote: '¹ Phebbet’s views on posture date back to the Assyrians, who stood very straight, mostly out of fear.',
     lore: [
       { src: 'A Damascene smith’s prayer-roll', facts: ['syl:0:ASH'],
-        text: 'Phebbet, a foliot of the forge, came west from Damascus. The smiths began its true name with [ASH], for the cinders.' },
+        text: 'Spirit of the forge, Phebbet, who keeps the bellows breathing: we begin your name with [ASH], the first thing the fire leaves. Be kind to our hands.' },
       { src: 'Hollingsworth’s Compendium, vol. III', facts: ['rune:flame', 'rune:stone', 'runes:2', 'has:KOR', 'has:BEL'],
-        text: 'Phebbet is a hearth-thing; bind it with Flame and Stone. [KOR] and [BEL] are both in its name, though I forget in which order.' },
+        text: 'Phebbet, a spirit of the hearth, requires Flame and Stone. Its name contains both [KOR] and [BEL]; the order escapes the present author, who does not consider it important.' },
       { src: 'A rival’s stolen diary', facts: ['likes:frankincense', 'hates:rosemary'],
-        text: 'Phebbet takes frankincense as its due. Rosemary it spits back at you, burning.' },
+        text: 'Phebbet takes frankincense as if it were owed. Tried rosemary to save a dollar. It spat it back at me, alight. My good coat.' },
     ],
   },
   // ---- Djinn
@@ -228,25 +228,25 @@ const DEMONS = [
     footnote: '¹ The full title runs to nineteen clauses. It has been workshopping a twentieth.',
     lore: [
       { src: 'The Babylonian Index', facts: ['syl:0:ASH', 'syl:3:KHA'],
-        text: 'Azrimel, a djinni of middling rank and immoderate opinions. Its true name opens with [ASH] and closes with [KHA].' },
+        text: 'Azrimel, djinni, of the fourth rank, contentious. The name: [ASH] at its head and [KHA] at its tail. Between them, two more, not recorded.' },
       { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:flame', 'rune:serpent', 'runes:2', 'has:SAR'],
-        text: 'Azrimel’s binding: the Flame and the Serpent. It has slipped lesser bonds and boasted of it after. There is a hiss of [SAR] somewhere in its name.' },
+        text: 'Mr. Dwyer reported that Azrimel slipped a lesser binding in his presence and boasted of it for an hour. It was held, finally, by Flame and Serpent. Mr. Dwyer heard [SAR] in its name, though not where. Mr. Dwyer has since resigned his membership.' },
       { src: 'Marginalia of Agnes Pell', facts: ['likes:myrrh', 'hates:sandalwood'],
-        text: 'Azrimel says myrrh reminds it of the tombs of kings, and is mollified. Sandalwood it calls "cheap perfume for cheap magicians."' },
+        text: 'Myrrh for Azrimel. It says myrrh smells like the tombs of kings, and goes quiet. Never sandalwood: "cheap perfume for cheap magicians," it said, looking at my hat.' },
     ],
   },
   {
     id: 'kethuun', name: 'Kethuun', tier: 3, trueName: ['KHA', 'MAR', 'RU', 'BEL'], runes: ['tide', 'crown'], likes: 'galbanum', hates: 'frankincense',
     form: 'a jackal-headed figure in river-green linen',
     greet: `"You may address me as Your Radiance," says Kethuun. You do not.¹`,
-    footnote: '¹ Kethuun keeps a list. You are on it now.',
+    footnote: '¹ Kethuun has been addressed as Your Radiance once since the fall of Thebes, by a drunk in Alexandria. It still speaks of him fondly.',
     lore: [
       { src: 'A papyrus from Thebes', facts: ['syl:0:KHA', 'syl:3:BEL'],
-        text: 'Kethuun, a djinni of the Nile. The scribes wrote its true name beginning with [KHA] and ending with [BEL].' },
+        text: '…the temple’s servant Kethuun, whose name the scribes set down beginning [KHA] and ending [BEL]; the middle they kept in the god’s house, where it is safe…' },
       { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:tide', 'rune:crown', 'runes:2', 'syl:1:MAR'],
-        text: 'Kethuun is held by the Tide and the Crown. It served in a temple once and expects to be treated as royalty. Its second syllable is [MAR], the river’s.' },
+        text: 'Mrs. Ashby reported that Kethuun is held by Tide and Crown, and will accept nothing less regal. Its second syllable, she added, is [MAR], the river’s. She declined to say how she knew.' },
       { src: 'An Egyptologist’s letters', facts: ['likes:galbanum', 'hates:frankincense'],
-        text: 'Galbanum, bitter and green, pleases Kethuun. Frankincense it associates with priests who wronged it.' },
+        text: 'Dear Harriet, it’s galbanum Kethuun wants, the green bitter one. Never frankincense. It remembers the priests who burned it, and it remembers them badly.' },
     ],
   },
   // ---- Afrit
@@ -257,11 +257,11 @@ const DEMONS = [
     footnote: '¹ Afrits do not do lower case.',
     lore: [
       { src: 'A City Hall file, marked SECRET', facts: ['syl:0:UL'],
-        text: 'ULGAROTH. Afrit. True name begins [UL]. Do not summon unless you are very sure of yourself.' },
+        text: 'SUBJECT: ULGAROTH (afrit). NAME BEGINS: [UL]. RECOMMENDATION: Do not. If you must, read file 1871/F first, and then do not.' },
       { src: 'Proceedings of the Lake Shore Circle', facts: ['rune:flame', 'rune:stone', 'rune:crown', 'runes:3'],
-        text: 'Three runes hold Ulgaroth: Flame, Stone and Crown. Two will not suffice. The magicians who tried two are not available for comment.' },
+        text: 'The Circle records that Ulgaroth is held by three runes: Flame, Stone and Crown. Members who attempted it with two are not available for comment.' },
       { src: 'An Egyptologist’s letters', facts: ['likes:galbanum', 'hates:cedar'],
-        text: 'Ulgaroth tolerates galbanum. Cedar-smoke enrages it. Somebody burned cedar for it in October of 1871, and the whole city learned that lesson. The cow got the blame.' },
+        text: 'Ulgaroth will tolerate galbanum, Harriet. It will not tolerate cedar, as a gentleman on DeKoven Street discovered in October of ’71, along with most of the city. The cow got the blame.' },
       { src: 'A scorched page from the 1871 ruins', facts: ['syl:1:ASH', 'syl:4:BEL', 'has:OTH'],
         text: '…its name, [ASH] second, as the fire is second to the word… ending in [BEL]… and [OTH] somewhere I cannot… (the rest is ash).' },
     ],
@@ -271,16 +271,16 @@ const DEMONS = [
     id: 'shemashara', name: 'Shem-Ashara', tier: 5, trueName: ['SAR', 'MAR', 'UL', 'KHA', 'ITH', 'RU'], runes: ['tide', 'moon', 'serpent'], likes: 'ambergris', hates: 'galbanum',
     form: 'a vast, slow tide of shadow that fills the room without seeming to enter it',
     greet: `When it speaks, it is the sound of water at the bottom of a well. "I remember when your city was a marsh. I will remember when it is a marsh again."¹`,
-    footnote: '¹ It is not a threat. It is a forecast.',
+    footnote: '¹ The last magician to wake it wrote that sentence down. It is the final entry in his diary, which turned up years later in Milwaukee.',
     lore: [
       { src: 'A clay tablet, much repaired', facts: ['syl:0:SAR', 'syl:1:MAR'],
-        text: 'Shem-Ashara, a marid of the deep waters, older than Babylon. Its true name begins [SAR]·[MAR], as the sea begins.' },
+        text: '…Shem-Ashara, who was in the water before the cities were. Its name begins [SAR]·[MAR], as the sea begins. Do not finish it…' },
       { src: 'A City Hall file, marked MOST SECRET', facts: ['rune:tide', 'rune:moon', 'rune:serpent', 'runes:3'],
-        text: 'The marid sleeps beneath the Tide, the Moon and the Serpent. All three must be drawn, and no other. It hears its name even half-spoken, and it does not like being guessed at. DO NOT GUESS.' },
+        text: 'SUBJECT: The Deep One. RUNES: Tide, Moon, Serpent; all three, no others. WARNING: It hears its name even half-spoken, and does not care to be guessed at. DO NOT GUESS. (See Supt. Rowe, 1857. Closed casket.)' },
       { src: 'A whaler’s journal', facts: ['likes:ambergris', 'hates:galbanum'],
-        text: 'Ambergris, the whale’s gift, is the only offering Shem-Ashara does not scorn. Galbanum it holds in particular contempt.' },
+        text: 'We burned the last of the ambergris on deck to calm it, and the water went flat as glass. Mr. Pike tried galbanum the night before. We did not see Mr. Pike again.' },
       { src: 'The Water Crib engineer’s logbook', facts: ['syl:3:KHA', 'syl:5:RU'],
-        text: 'On the nights the pumps ran backward the men heard the lake say [KHA], then something they could not make out, then [RU], always at the end of something longer.' },
+        text: 'On the nights the pumps ran backward, the men heard the lake say [KHA], then a word none of them could make out, then [RU]. Always at the end, like a man finishing a sentence.' },
     ],
   },
 ];
@@ -289,7 +289,7 @@ const DEMONS = [
 const BROKEN_QUIPS = [
   { greet: `"Thanks for the lift," says {name}, and leaves through the ceiling.¹`, footnote: '¹ It did not use the door. The ceiling has not been the same since.' },
   { greet: `{name} laughs, which is worse than anything it could have said.¹`, footnote: '¹ Spirits laugh at magicians the way cats look at birds.' },
-  { greet: `"Oh, <i>wonderful</i>," says {name}, stepping out of the circle. "A loophole."¹`, footnote: '¹ There is always a loophole. Finding it is half the fun.' },
+  { greet: `"Oh, <i>wonderful</i>," says {name}, stepping out of the circle. "A loophole."¹`, footnote: '¹ Spirits trade loopholes the way schoolboys trade swear words, and with the same glee.' },
 ];
 
 const ERRANDS = {
@@ -314,26 +314,26 @@ const ERRAND_TEXT = {
     ],
     fail: [
       '{name} returns empty-handed, claiming the streets were "unusually well guarded by pigeons."',
-      '{name} found a purse, but "it was the wrong color." You suspect it simply could not be bothered.',
+      '{name} found a purse, but "it was the wrong color." It is lying, and it wants you to know it.',
     ],
   },
   pilfer: {
     ok: [
       '{name} returns reeking of a rival’s workshop, arms full: {items}.',
-      '{name} slips back before dawn with {items}, and a smug expression.',
+      '{name} slips back before dawn with {items}, and the rival’s doormat, for reasons it won’t give.',
     ],
     fail: [
       '{name} was chased off by a rival’s guardian sphere and returns sulking.',
-      '{name} reports that the rival’s storeroom was "full of wards and a very angry goose."',
+      '{name} reports that the rival’s storeroom was "full of wards and a goose with opinions."',
     ],
   },
   gossip: {
     ok: [
-      'After some flattery, {name} tells you a story about one of its kind.',
-      '{name} cannot resist a little gossip about an old acquaintance.',
+      'Flattered into talking, {name} tells you an unkind story about an old acquaintance.',
+      '{name} has a grudge against another spirit and is delighted to share it.',
     ],
     none: ['{name} claims to know nothing you don’t. For once it may be telling the truth.'],
-    fail: ['{name} refuses to "snitch." It finds the very idea vulgar. Today.'],
+    fail: ['{name} won’t "snitch." It says this like someone who has snitched before and been caught.'],
   },
   spy: {
     ok: [
@@ -357,7 +357,7 @@ const ERRAND_TEXT = {
       '{name} followed Cornelia’s maid to the chandler’s and read the order over her shoulder.',
     ],
     fail: [
-      '{name} reports that Cornelia Ashby’s workshop is "very well warded, and frankly rude."',
+      '{name} reports that Cornelia Ashby’s workshop is "warded to the rafters, and rude about it."',
       '{name} was spotted by Cornelia’s cat, which is not entirely a cat.',
     ],
   },
@@ -412,7 +412,7 @@ const COMMISSIONS = [
   },
   {
     title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true, file: 'shemashara-1',
-    text: 'Old records speak of a marid sleeping beneath Lake Michigan since before there was a city here to drown. The engineers want to reverse the river to keep it asleep. The Machine would rather it were bound — ideally by someone expendable. Congratulations: you are someone expendable.',
+    text: 'Old records speak of a marid sleeping beneath Lake Michigan since before there was a city here to drown. The engineers want to reverse the river to keep it asleep. The Machine would rather it were bound, ideally by someone it can afford to lose. City Hall has been through its list of such people, and your name was near the top.',
     done: 'The lake goes still. Across Chicago, every spirit in every circle turns its head toward your workshop.',
   },
 ];
