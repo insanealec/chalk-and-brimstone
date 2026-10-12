@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chalk &amp; Brimstone: Playtest</title>
+  <style>
+    :root { color-scheme: dark; --bg: #120f0d; --panel: #1d1814; --line: #3a2f25; --text: #e9dfc9; --dim: #a89980; --gold: #c9a24a; --good: #8fbf7a; --bad: #d0412f; }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); font: 15px/1.45 Georgia, serif; }
+    h1, h2 { font-weight: normal; color: var(--gold); margin: 0 0 0.5rem; }
+    section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; max-width: 1200px; }
+    label { margin-right: 1rem; color: var(--dim); }
+    input { width: 5em; background: #241e19; color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 0.2em 0.4em; }
+    button { background: #4a3617; color: var(--text); border: 1px solid #8a6a2c; border-radius: 4px; padding: 0.35em 1em; cursor: pointer; font: inherit; }
+    table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+    th, td { border-bottom: 1px solid var(--line); padding: 0.25em 0.5em; text-align: right; white-space: nowrap; }
+    th { color: var(--dim); font-weight: normal; }
+    td:first-child, th:first-child, td.text { text-align: left; }
+    .won { color: var(--good); } .dead { color: var(--bad); } .unfinished { color: var(--dim); }
+    .muted { color: var(--dim); }
+    details { margin: 0.3rem 0; } summary { cursor: pointer; color: var(--dim); }
+    pre { white-space: pre-wrap; font-size: 0.85rem; color: var(--dim); }
+    .scroll { overflow-x: auto; }
+    #game-host { display: none; }
+  </style>
+</head>
+<body>
+  <section>
+    <h1>Chalk &amp; Brimstone: Playtest</h1>
+    <p class="muted">Plays whole games with a scripted player (see <code>tools/playtest.js</code>) and summarizes them. Games are seeded, so the same seed always plays the same game. Nothing here touches your saved game.</p>
+    <label>Games <input id="games" type="number" value="20" min="1"></label>
+    <label>First seed <input id="seed" type="number" value="1"></label>
+    <label>Give up after day <input id="max-days" type="number" value="200" min="10"></label>
+    <button id="run">Play</button>
+    <span id="status" class="muted"></span>
+  </section>
+  <section><h2>Content checks</h2><div id="checks"></div></section>
+  <section><h2>Summary</h2><div id="summary" class="muted">Press Play.</div></section>
+  <section><h2>Games</h2><div id="games-table" class="scroll"></div><div id="logs"></div></section>
+
+  <!-- the game draws into these; hidden here -->
+  <div id="game-host"><div id="stats"></div><nav id="tabs"></nav><section id="view"></section><aside id="log"></aside><div id="overlay"></div></div>
+
+  <script>
+    window.CHALK_PLAYTEST = true;  // the game won't read or write the player's save
+    const FRESH = `?v=${Date.now()}`;
+    for (const src of ['../js/data.js', '../js/districts.js', '../js/events.js', '../js/ithzar.js', '../js/game.js', 'playtest.js']) {
+      document.write(`<script src="${src}${FRESH}"><\/script>`);
+    }
+  </script>
+  <script>
+    const $id = id => document.getElementById(id);
+    const median = xs => {
+      const v = xs.filter(x => x !== undefined).sort((a, b) => a - b);
+      return v.length ? v[Math.floor((v.length - 1) / 2)] : undefined;
+    };
+    const day = d => (d === undefined ? '–' : `${dateLabel(d, 'stamp')} <span class="muted">(${d})</span>`);
+
+    function showChecks() {
+      const problems = checkContent();
+      $id('checks').innerHTML = problems.length
+        ? `<p class="dead">${problems.length} problem${problems.length > 1 ? 's' : ''}:</p><ul>${problems.map(p => `<li>${p}</li>`).join('')}</ul>`
+        : '<p class="won">No problems found in spirits, lore, commissions, districts or events.</p>';
+    }
+
+    function showResults(games) {
+      const won = games.filter(g => g.result === 'won');
+      const stays = games.filter(g => g.ithzarReleased !== undefined && g.ithzarJoined !== undefined).map(g => g.ithzarReleased - g.ithzarJoined);
+      const rows = [
+        ['Won', `${won.length} of ${games.length}`],
+        ['Died', games.filter(g => g.result === 'dead').length],
+        ['Unfinished', games.filter(g => g.result === 'unfinished').length],
+        ['Median win', day(median(won.map(g => g.day)))],
+        ...COMMISSIONS.map((c, i) => [`Median day for commission ${i + 1}: ${c.title}`, day(median(games.map(g => g.commissions[i + 1])))]),
+        ['Median days Ithzar was your familiar', median(stays) ?? '–'],
+        ['Median broken bindings per game', median(games.map(g => g.broken))],
+        ['Median lowest health', median(games.map(g => g.minHealth))],
+      ];
+      $id('summary').innerHTML = `<table>${rows.map(([k, v]) => `<tr><td class="text">${k}</td><td>${v}</td></tr>`).join('')}</table>`;
+
+      const head = ['Seed', 'Result', 'Ended', ...COMMISSIONS.map((_, i) => `C${i + 1}`), 'Ithzar', 'Broken', 'Silent', 'Low HP', 'Fortunes', '$'];
+      $id('games-table').innerHTML = `<table><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>${games.map(g => `<tr>
+        <td>${g.seed}</td><td class="${g.result} text">${g.result}${g.deathCause ? `: ${g.deathCause}` : ''}</td><td>${dateLabel(g.day, 'stamp')}</td>
+        ${COMMISSIONS.map((_, i) => `<td>${g.commissions[i + 1] ?? '–'}</td>`).join('')}
+        <td>${g.ithzarJoined !== undefined ? `${g.ithzarJoined}–${g.ithzarReleased ?? ''}` : '–'}</td>
+        <td>${g.broken}</td><td>${g.silence}</td><td>${g.minHealth}</td><td>${g.fortunes}</td><td>${g.dollars}</td></tr>`).join('')}</table>`;
+      $id('logs').innerHTML = games.map(g => `<details><summary>Seed ${g.seed}: what happened</summary><pre>${g.log.join('\n')}</pre></details>`).join('');
+    }
+
+    $id('run').addEventListener('click', () => {
+      const count = Number($id('games').value);
+      const first = Number($id('seed').value);
+      const maxDays = Number($id('max-days').value);
+      const games = [];
+      $id('status').textContent = 'Playing…';
+      // one game at a time, yielding between games so the page stays responsive (even in a background tab)
+      const next = i => {
+        if (i >= count) {
+          $id('status').textContent = `Played ${count} game${count > 1 ? 's' : ''}.`;
+          return showResults(games);
+        }
+        games.push(playGame(first + i, maxDays));
+        $id('status').textContent = `Playing… ${i + 1} of ${count}`;
+        setTimeout(() => next(i + 1), 0);
+      };
+      next(0);
+    });
+
+    showChecks();
+  </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 'use strict';
 
 const SAVE_KEY = 'chalk-and-brimstone-v3';
+// tools/playtest.html sets this before loading the game, so automated games never touch the player's save
+const PLAYTEST = window.CHALK_PLAYTEST === true;
 const MAX_HEALTH = 10;
 const ACTIONS_PER_DAY = 3;
 const MAX_RUNES = 3;
@@ -16,8 +18,20 @@ let busy = false;         // true while the summoning animation plays
 // ---------- utilities
 
 const $ = sel => document.querySelector(sel);
-const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+// Every roll of the dice goes through random(), so the playtest tool can seed it and replay a game exactly.
+let random = Math.random;
+function seedRandom(seed) {
+  let a = seed >>> 0;  // mulberry32
+  random = () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = (a, b) => a + Math.floor(random() * (b - a + 1));
+const pick = arr => arr[Math.floor(random() * arr.length)];
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const fill = (tpl, vars) => tpl.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : ''));
 const demonById = id => DEMONS.find(d => d.id === id);
@@ -61,10 +75,12 @@ function newState() {
 }
 
 function save() {
+  if (PLAYTEST) return;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
 }
 
 function load() {
+  if (PLAYTEST) return null;
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
@@ -166,7 +182,7 @@ function banter(familiar) {
 
 function summonAside(m) {
   const braced = m.overreach && m.overreach.bracers.includes('ithzar');
-  if (!(ithzarPresent() || braced) || Math.random() > (state.ithzar.joined ? 0.7 : 0.5)) return null;
+  if (!(ithzarPresent() || braced) || random() > (state.ithzar.joined ? 0.7 : 0.5)) return null;
   const key = m.overreach ? `summon:overreach-${m.overreach.held ? 'held' : 'failed'}` : m.accident ? 'summon:accident' : `summon:${m.outcome}`;
   return ithzarLine(key,
     state.ithzar.joined ? ITHZAR.name : `${ITHZAR.name}, from the chimney`);
@@ -178,8 +194,8 @@ function cityAside(dist) {
   if (!ithzarPresent() || state.ithzar.asideDay[dist.id] === state.day) return null;
   const fam = ownFamiliar();
   let aside = null;
-  if (fam && Math.random() < 0.25) aside = banter(fam);
-  else if (Math.random() < 0.3) aside = ithzarLine(`city:${dist.id}`);
+  if (fam && random() < 0.25) aside = banter(fam);
+  else if (random() < 0.3) aside = ithzarLine(`city:${dist.id}`);
   if (aside) state.ithzar.asideDay[dist.id] = state.day;
   return aside;
 }
@@ -195,7 +211,7 @@ function logAside(a) {
 // Each morning: Ithzar may be out for the day; otherwise a warning if the police are getting close,
 // or a note on its doings.
 function ithzarDawn() {
-  if (state.ithzar.joined && Math.random() < 1 / 7) {
+  if (state.ithzar.joined && random() < 1 / 7) {
     state.ithzar.awayDay = state.day;
     log(pickFresh('away', ITHZAR_LINES.away), 'aside');
     return;
@@ -206,7 +222,7 @@ function ithzarDawn() {
   if (state.standing.trust >= 3 && state.standing.suspicion >= 4 && !crackdown && !state.ithzar.warned) {
     state.ithzar.warned = true;
     log(`<b>${ITHZAR.name}:</b> "Cornelia dined with the Mayor’s inspectors last night, and your name came up. I would tidy the workshop, if I were you."`, 'aside');
-  } else if (Math.random() < 0.3) {
+  } else if (random() < 0.3) {
     log(pickFresh('dawn', ITHZAR_LINES.dawn), 'aside');
   }
 }
@@ -355,7 +371,7 @@ function askIthzar(id) {
   state.ithzar.askDay = state.day;
   const lieChance = state.standing.trust >= 8 ? 0 : state.standing.trust >= 5 ? 0.1 : 0.4;
   const truth = pick(unknownFacts(d));
-  const claim = Math.random() < lieChance ? falseFact(d, truth) : truth;
+  const claim = random() < lieChance ? falseFact(d, truth) : truth;
   const claims = state.ithzar.claims[d.id] || (state.ithzar.claims[d.id] = []);
   if (!claims.includes(claim)) claims.push(claim);
   const said = factText(claim);
@@ -536,7 +552,7 @@ function scry() {
     log(`The scrying glass shows ${bold(glass)} examining its fingernails. There is nothing within its reach you do not already know.`);
     return;
   }
-  const facts = unknownFacts(d).sort(() => Math.random() - 0.5).slice(0, t);
+  const facts = unknownFacts(d).sort(() => random() - 0.5).slice(0, t);
   facts.forEach(f => recordFact(d.id, f));
   log(`In the scrying glass, ${bold(glass)} shows you ${bold(d)}: ${facts.map(factText).join('; ')}.`, 'lore');
 }
@@ -859,7 +875,7 @@ function resolveSummon() {
   const circleBonus = clamp(circle.tier - d.tier, 0, 2);
   const reach = circle.tier < d.tier && s.overreach && d === target ? overreachCheck(d) : null;
   if (reach && reach.ok && !wrong.length && !missing.length && d.likes === s.incense) {
-    const held = Math.random() * 100 < reach.odds;
+    const held = random() * 100 < reach.odds;
     m.overreach = { bracers: reach.bracers.map(b => b.key), odds: reach.odds, held };
     const names = reach.bracers.map(b => b.name);
     const who = names.length
@@ -910,7 +926,7 @@ function resolveSummon() {
   if (s.clause === 'service') {
     settleBracing(m, d);
     if (m.overreach) m.lines.push(`It is held by a circle too small for it, and it knows. It will be testing that circle every night.`);
-    if (m.outcome === 'uneasy' && !m.overreach && pent.tier < d.tier && Math.random() < 0.35) {
+    if (m.outcome === 'uneasy' && !m.overreach && pent.tier < d.tier && random() < 0.35) {
       const taken = hurt(d.tier, `scorched by ${d.name}, testing a pentacle too weak to hold it`);
       m.lines.push(`Before submitting, ${d.name} tests the edge of your pentacle \u2014 and finds it wanting. (${hurtNote(taken, d.tier)})`);
     }
@@ -1049,10 +1065,10 @@ function runErrand(sv, d = demonById(sv.demonId)) {
   }
   const e = ERRANDS[sv.errand];
   if (e && e.available && !e.available(state)) { sv.errand = null; return; }
-  const succeeded = Math.random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier);
+  const succeeded = random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier);
 
   if (!succeeded) {
-    if (sv.binding === 'uneasy' && Math.random() < 0.5) return twist(d);
+    if (sv.binding === 'uneasy' && random() < 0.5) return twist(d);
     log(fill(pick(ERRAND_TEXT[sv.errand].fail), vars), 'bad');
     return;
   }
@@ -1149,7 +1165,7 @@ function endDay() {
   if (!state.over) {
     for (const sv of [...state.servants]) {
       sv.patience--;
-      if (sv.patience <= 0 || (sv.strained && Math.random() < 0.15)) expire(sv);
+      if (sv.patience <= 0 || (sv.strained && random() < 0.15)) expire(sv);
       if (state.over) break;
     }
   }
@@ -1168,7 +1184,7 @@ function endDay() {
     ithzarDawn();  // before suspicion fades, so its warning sees today's danger
     coolSuspicion();
     scry();
-    if (state.familiar && Math.random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
+    if (state.familiar && random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
   }
   manifestation = null;
   render();
@@ -1255,7 +1271,7 @@ function setStage(ev, next) {
   const stage = ev.stages[next];
   if (stage.headline) {
     log(`<span class="paper">${NEWSPAPER}:</span> ${stage.headline}`, 'news');
-    const remark = ithzarPresent() && Math.random() < 0.6 && ithzarLine(`news:${ev.id}`);
+    const remark = ithzarPresent() && random() < 0.6 && ithzarLine(`news:${ev.id}`);
     if (remark) logAside(remark);
   } else {
     const [d, p] = stage.place.split(':');
@@ -1461,7 +1477,7 @@ function chooseOption(i) {
 // Pays a choice's cost, draws its outcome, applies the effects and records the result for display.
 function resolveChoice(ch, title, dist, placeId) {
   if (ch.cost) state.dollars -= ch.cost;
-  let roll = Math.random() * ch.outcomes.reduce((a, o) => a + o.w, 0);
+  let roll = random() * ch.outcomes.reduce((a, o) => a + o.w, 0);
   const out = ch.outcomes.find(o => (roll -= o.w) < 0) || ch.outcomes[ch.outcomes.length - 1];
   // log the outcome first so any lore it reveals appears after it in the chronicle
   const entry = log(`<b>${title}.</b> ${out.text}`);

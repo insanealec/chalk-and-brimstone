@@ -7,7 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+Runic&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Files load with a timestamp, so a browser never runs a mix of cached old files and new ones after an update.
+    const FRESH = `?v=${Date.now()}`;
+    document.write(`<link rel="stylesheet" href="css/style.css${FRESH}">`);
+  </script>
 </head>
 <body>
   <header class="topbar">
@@ -35,10 +39,11 @@
 
   <div id="overlay" hidden></div>
 
-  <script src="js/data.js"></script>
-  <script src="js/districts.js"></script>
-  <script src="js/events.js"></script>
-  <script src="js/ithzar.js"></script>
-  <script src="js/game.js"></script>
+  <script>
+    // in this order: game.js expects everything before it
+    for (const src of ['js/data.js', 'js/districts.js', 'js/events.js', 'js/ithzar.js', 'js/game.js']) {
+      document.write(`<script src="${src}${FRESH}"><\/script>`);
+    }
+  </script>
 </body>
 </html>

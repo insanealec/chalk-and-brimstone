@@ -323,10 +323,14 @@ From playing the opening by hand and running a scripted player through 16 full g
 - The chamber prefills known syllables, but not the runes or incense the notebook already knows. A "use what the notebook knows" button would remove busywork.
 - Seven tabs crowd narrow screens.
 
+**Found by the playtest tool** (20 seeded games after the fixes: 18 won, none died, median win May 26):
+- **A month-long djinni gap.** Commissions 1–4 fall by about April 9, but the djinni commission's median is May 9. That step needs Alderman rank, the $90 Silver-Inlaid Circle, the $40 Serpent rune and a djinni's name. It's the next balance question.
+- **Stale files after updates.** Browsers cached old scripts and ran them alongside new ones. *Fixed:* `index.html` loads every file with a fresh version tag.
+
 **Code cleanup:**
 - `js/game.js` is about 2,400 lines mixing state, rules, rendering and input. Split it into a few files (state and rules, chamber, city, views) in the same plain-script style.
 - Game logic calls `render()` and touches the DOM directly, so it can't run outside a browser. Separating rules from rendering would allow fast automated balance runs.
-- The scripted player found real bugs, so it should live in the repo as a dev tool, with a seedable random number generator so balance changes can be compared run to run.
+- ✅ The scripted player found real bugs, so it should live in the repo as a dev tool, with a seedable random number generator so balance changes can be compared run to run. *Done:* `tools/playtest.html` plays seeded games and runs content checks; all game randomness goes through `random()`.
 - Saves have no version number. Every format change bumps the key and wipes saves. Add a `version` field and small migrations.
 - `js/ithzar.js` adds to other files' data (district actions, `CLAUSES`, `ERRANDS`). It works, but a reader of `districts.js` can't see those actions.
 - ✅ The chronicle stamps entries "D12" and says "Night falls on day 12", while everything else uses calendar dates. *Fixed:* entries are stamped with the date ("Apr 14").
@@ -354,6 +358,8 @@ From playing the opening by hand and running a scripted player through 16 full g
   - `js/districts.js`: districts, places and street encounters (the effect format is documented at the top)
   - `js/events.js`: the calendar, the newspaper and current events
   - `js/ithzar.js`: Ithzar's lines, banter and story arc (its chapters are events appended to `EVENTS`)
+- **Check content** with `tools/playtest.html` after editing data; its content checks catch facts that don't match a spirit, broken references and malformed names.
+- **Randomness** goes through `random()` in `js/game.js`, never `Math.random()`, so seeded playtests stay reproducible.
 - **Lore fragments** need `facts` (the formats are documented above `DEMONS`). Their prose must agree with their facts, and every syllable fact must appear in the text as `[SYL]`.
 - **Spirits:** a name length of class + 1, no repeated syllables, no two spirits with the same name, exactly one liked and one hated incense.
 - **Tone:** dry, period-flavored, funny. Each spirit gets an appearance, a greeting and a footnote. Use American spelling.

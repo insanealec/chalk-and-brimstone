@@ -22,6 +22,12 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - **Servants:** bound spirits run errands overnight (coin, stolen incense, gossip, spying) until their patience runs out. Uneasily bound spirits sometimes twist their orders against you.
 - **City Hall:** a chain of commissions that raises your rank. Rank unlocks stronger circles, rarer incense and new districts. Binding the marid wins the game.
 
+## Development
+
+- **Playtesting:** serve the folder (`python -m http.server 8765`) and open `http://localhost:8765/tools/playtest.html`. It plays whole games with a scripted player and summarizes them: win rate, when each commission lands, how long Ithzar stays, injuries, and each game's log. Games are seeded, so a seed always replays the same game, and nothing there touches your saved game.
+- **Content checks:** the same page checks the game's data: lore facts match their spirits, names are unique and the right length, and commissions, events and districts only refer to things that exist. Run it after editing content.
+- **Randomness:** game code must roll dice with `random()` (not `Math.random()`), so seeded playtests stay reproducible.
+
 ## Files
 
 - `docs/DESIGN.md`: the design document. Vision, current systems and the roadmap.
@@ -32,3 +38,4 @@ Open `index.html` in a browser. There's no build step. You can also serve the fo
 - `js/ithzar.js`: Ithzar's lines, banter and story arc.
 - `js/game.js`: state, rules and rendering.
 - `css/style.css`: styling.
+- `tools/playtest.html`, `tools/playtest.js`: the playtest page, scripted player and content checks.

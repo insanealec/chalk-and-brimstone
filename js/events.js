@@ -116,7 +116,7 @@ const EVENTS = [
             { w: 1, text: 'Free beer, a cigar, and a handshake that checks your pockets. Mike’s people remember faces.', fx: { standing: { machine: 1 } } },
           ] },
         ],
-        expire: s => ((s.flags.stuffed !== undefined || (s.flags['tipped-reform'] === undefined && Math.random() < 0.6))
+        expire: s => ((s.flags.stuffed !== undefined || (s.flags['tipped-reform'] === undefined && random() < 0.6))
           ? { next: 1, text: 'Rourke holds the First Ward.', fx: { flag: 'rourke' } }
           : { next: 2, text: 'Vance takes the First Ward.', fx: { flag: 'vance' } }),
       },
