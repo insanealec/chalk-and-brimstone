@@ -511,9 +511,12 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
 
 @media (max-width: 720px) {
   .topbar { position: static; }
-  .tabs { gap: 0.15rem; }
-  .tabs button { padding: 0.45em 0.6em; font-size: 0.75rem; letter-spacing: 0.02em; }
+  /* seven tabs don't fit on a phone: wrap them onto two rows of full buttons instead of scrolling sideways */
+  .tabs { flex-wrap: wrap; gap: 0.3rem; overflow-x: visible; padding: 0.6rem 16px; }
+  .tabs button { flex: 1 1 auto; border-radius: 6px; border-bottom: 1px solid var(--line); padding: 0.45em 0.6em; font-size: 0.75rem; letter-spacing: 0.02em; }
+  .tabs button.active { border-color: var(--gold); }
 }
 
 .result span.footnote, #log span.footnote { display: block; margin-top: 0.4rem; }
 .slot.wrong { border-color: var(--blood); color: #e8a090; text-decoration: line-through; }
+.controls .fill { align-self: flex-start; margin: -0.3rem 0 0.6rem; }

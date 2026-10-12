@@ -702,6 +702,30 @@ function dossier(d) {
 
 // ---------- summoning
 
+// Sets the chamber up from what the notebook knows about the selected spirit (or Cornelia's binding):
+// its confirmed syllables, the runes known to hold it, the incense it likes, and your strongest circle
+// and pentacle. Unknowns are left for you to fill in.
+function applyNotebook() {
+  const s = state.sel;
+  const strongest = (ids, byId) => ids.slice().sort((a, b) => byId(b).tier - byId(a).tier)[0];
+  s.circle = strongest(state.circles, circleById);
+  s.pentacle = strongest(state.pentacles, pentacleById);
+  if (s.name === RITE) {
+    const k = corneliaSheet();
+    s.syllables = [];  // Ithzar speaks its own name
+    s.runes = k.yes.filter(r => state.runes.includes(r));
+    if (k.incense && state.incense[k.incense] > 0) s.incense = k.incense;
+    return;
+  }
+  resetIncantation();
+  const d = s.name && demonById(s.name);
+  if (!d) return;
+  const k = dossier(d);
+  s.runes = k.runeYes.filter(r => state.runes.includes(r)).slice(0, MAX_RUNES);
+  if (k.likes && state.incense[k.likes] > 0) s.incense = k.likes;
+  else if (s.incense && s.incense === k.hates) s.incense = null;
+}
+
 // Rebuilds the incantation slots for the selected spirit, prefilled with every confirmed syllable.
 function resetIncantation() {
   const s = state.sel;
@@ -760,7 +784,7 @@ function beginSummon() {
     manifestation.aside = manifestation.rite ? null : summonAside(manifestation);
     if (manifestation.aside) logAside(manifestation.aside);
     busy = false;
-    resetIncantation();
+    applyNotebook();
     render();
   }, 1500);
 }
@@ -1718,6 +1742,8 @@ function viewChamber() {
     <div class="controls panel">
       ${ctl('Spirit to call', knownDemons().map(k => chip('name', k.id, `${k.name}<small>${TIER_NAMES[k.tier]}</small>`, s.name === k.id)).join('')
         + (leashActive() && state.clauses.includes('release') ? chip('name', RITE, 'Ithzar<small>release from Cornelia</small>', s.name === RITE) : ''))}
+      ${s.name ? `<button class="ghost tiny fill" data-action="notebook-fill" ${busy ? 'disabled' : ''}
+        title="Known syllables, runes and incense, with your strongest circle and pentacle">Set up from the notebook</button>` : ''}
       ${d ? incantationHTML(d) : s.name === RITE ? riteHTML() : ''}
       ${s.name === RITE ? '' : clauseHTML()}
       ${ctl('Summoning circle', CIRCLES.filter(c => state.circles.includes(c.id)).map(c =>
@@ -2358,7 +2384,7 @@ document.addEventListener('click', e => {
       case 'incense': s.incense = s.incense === v ? null : v; break;
       case 'overreach': s.overreach = !s.overreach; break;
       case 'brace': s.brace = s.brace.includes(v) ? s.brace.filter(b => b !== v) : [...s.brace, v]; break;
-      case 'name': s.name = v; resetIncantation(); break;
+      case 'name': s.name = v; applyNotebook(); break;
       default: s[el.dataset.pick] = v;
     }
     render();
@@ -2367,6 +2393,7 @@ document.addEventListener('click', e => {
 
   switch (el.dataset.action) {
     case 'summon': beginSummon(); break;
+    case 'notebook-fill': if (!busy) { applyNotebook(); render(); } break;
     case 'syl': if (!busy) { toggleSyllable(el.dataset.value); render(); } break;
     case 'slot': if (!busy) { state.sel.syllables[Number(el.dataset.value)] = null; render(); } break;
     case 'end-day': endDay(); break;
@@ -2386,7 +2413,7 @@ document.addEventListener('click', e => {
     case 'ask': askIthzar(el.dataset.value); break;
     case 'prepare':
       state.sel.name = el.dataset.value;
-      resetIncantation();
+      applyNotebook();
       currentTab = 'chamber';
       render();
       break;
