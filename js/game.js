@@ -938,7 +938,7 @@ function resolveSummon() {
       state.servants.push({
         uid: state.nextUid++, demonId: d.id, binding: m.outcome,
         patience: m.overreach ? Math.ceil(PATIENCE[d.tier] / 2) : PATIENCE[d.tier] + (m.outcome === 'firm' ? 2 : 0),
-        pentTier: pent.tier, errand: null, strained: !!m.overreach,
+        pentTier: pent.tier, errand: 'coin', strained: !!m.overreach,  // starts earning tonight unless told otherwise
       });
     }
   } else if (s.clause === 'familiar') {

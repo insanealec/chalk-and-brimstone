@@ -89,7 +89,7 @@ Once the right spirit appears:
 
 ### Servants and errands
 
-Bound spirits are **timed**: they serve for 3–6 nights depending on class, plus 2 if firmly bound. You can hold as many spirits as your rank tier. Errands run overnight and repeat each night until changed: gather coin, pilfer incense, gossip (lore of the spirit's class or lower), spy (lore one class higher), or a City Hall errand. Success chance depends on class versus difficulty, with a bonus for firm bindings. Uneasy servants sometimes twist a failed errand against you. When patience runs out, a firm servant leaves quietly; an uneasy one lashes out.
+Bound spirits are **timed**: imps serve 3 nights, foliots and djinn 5, afrits and marids 6, plus 2 if firmly bound. A newly bound servant starts on *Gather coin*, so it earns from its first night unless you send it elsewhere. You can hold as many spirits as your rank tier. Errands run overnight and repeat each night until changed: gather coin, pilfer incense, gossip (lore of the spirit's class or lower), spy (lore one class higher), or a City Hall errand. Success chance depends on class versus difficulty, with a bonus for firm bindings. Uneasy servants sometimes twist a failed errand against you. When patience runs out, a firm servant leaves quietly; an uneasy one lashes out.
 
 ### City Hall and ranks
 
@@ -324,7 +324,7 @@ From playing the opening by hand and running a scripted player through 16 full g
 - Seven tabs crowd narrow screens.
 
 **Found by the playtest tool** (20 seeded games after the fixes: 18 won, none died, median win May 26):
-- **A month-long djinni gap.** Commissions 1–4 fall by about April 9, but the djinni commission's median is May 9. That step needs Alderman rank, the $90 Silver-Inlaid Circle, the $40 Serpent rune and a djinni's name. It's the next balance question.
+- ✅ **A month-long djinni gap.** Commissions 1–4 fell by about April 9, but the djinni commission's median was May 9. Tracing every dollar showed the cause was income, not knowledge: servants left every few nights, a newly bound servant sat idle on its first night until given an errand, and the $90 Silver-Inlaid Circle was a big jump from about $12 a night. Many games only got there with the World's Fair's opening-week windfall. *Fixed:* new servants start on *Gather coin*; foliots and djinn serve 5 nights (from 4) and afrits 6 (from 5); the Silver-Inlaid Circle costs $70 (from $90); commission 4 pays $60 (from $45). Over seeds 1–20, with the scripted player improved to keep an earner and plan purchases better, the median gap fell from 15 days to 7, all 20 games won, and the median win moved from day 42 to day 37.
 - **Stale files after updates.** Browsers cached old scripts and ran them alongside new ones. *Fixed:* `index.html` loads every file with a fresh version tag.
 
 **Code cleanup:**

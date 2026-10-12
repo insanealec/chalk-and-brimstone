@@ -43,7 +43,7 @@ const INCENSE = {
 const CIRCLES = [
   { id: 'chalk',    tier: 1, price: 0,   rank: 0, name: 'Chalk Circle',             desc: 'Drawn freehand. Adequate for imps, if you keep your hand steady.' },
   { id: 'salt',     tier: 2, price: 25,  rank: 1, name: 'Salt-and-Iron Ring',       desc: 'A ring of iron filings sealed with salt. Foliots find it tiresome.' },
-  { id: 'silver',   tier: 3, price: 90,  rank: 2, name: 'Silver-Inlaid Circle',     desc: 'Silver set into the floorboards. Djinn dislike silver intensely.' },
+  { id: 'silver',   tier: 3, price: 70,  rank: 2, name: 'Silver-Inlaid Circle',     desc: 'Silver set into the floorboards. Djinn dislike silver intensely.' },
   { id: 'rowan',    tier: 4, price: 180, rank: 3, name: 'Silver-and-Rowan Ring',    desc: 'Twin silver bands with rowan between. Rated for afrits, allegedly.' },
   { id: 'obsidian', tier: 5, price: 320, rank: 4, name: 'Triple Obsidian Ring',     desc: 'Three rings of volcanic glass. Nothing short of a marid needs this.' },
 ];
@@ -58,7 +58,7 @@ const PENTACLES = [
 ];
 
 // days a spirit will serve before its bonds wear thin (firm bindings add 2)
-const PATIENCE = [0, 3, 4, 4, 5, 6];
+const PATIENCE = [0, 3, 5, 5, 6, 6];
 
 // The last part of every incantation: what kind of binding you are making.
 // Vessel and familiar bindings are for good, so they must be firm, or the spirit tears free.
@@ -373,7 +373,7 @@ const COMMISSIONS = [
     done: 'The Mayor’s office sends a letter of thanks, which arrives by imp, three days late.',
   },
   {
-    title: 'Whispers on LaSalle Street', type: 'errand', diff: 2, rep: 3, pay: 45, teaches: 'familiar',
+    title: 'Whispers on LaSalle Street', type: 'errand', diff: 2, rep: 3, pay: 60, teaches: 'familiar',
     text: 'Someone is selling the city’s secrets to the speculators at the Board of Trade. Send a servant to shadow the Superintendent of Public Works, who has lately been buying very expensive hats.',
     done: 'The hats were a code, carried by the Superintendent’s familiar, a sleek grey foliot that never left his shoulder. The Superintendent is now the former Superintendent, and City Hall sends you a transcript of how his familiar was bound: the Clause of the Familiar.',
   },

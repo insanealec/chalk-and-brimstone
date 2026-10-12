@@ -11,6 +11,8 @@
 //    and skips the betrayals.
 //  - It guesses names Mastermind-style from the notebook, tests unknown runes and incense, dismisses
 //    servants before their bonds snap, heeds "DO NOT GUESS" for the marid, and tells fortunes when broke.
+//  - For income it keeps at least one servant it can bind reliably, prefers spirits it knows completely,
+//    only stocks incense for spirits it plans to summon, and takes each event action at most once a day.
 // It is a measuring stick, not a perfect player: when a change makes it win faster or die less,
 // that is evidence, not proof.
 
@@ -35,6 +37,7 @@ function playGame(seed, maxDays = 200) {
         if (place.unless && state.flags[place.unless] !== undefined) continue;
         for (const { a, key, ev } of placeActions(dist, place)) {
           if ((eventsOnly && !ev) || !pattern.test(a.label) || (eventsOnly && FRIENDLY_SKIP.test(a.label)) || actionBlocker(a, key)) continue;
+          if (eventsOnly && state.used[key] === state.day) continue; // once a day is enough for any event action
           doAction(key);
           if (ev) note(`${ev.title}: ${a.label}`);
           return true;
@@ -114,9 +117,11 @@ function playGame(seed, maxDays = 200) {
     const c = currentCommission();
     const canBuy = (item, n = 1, reserve = 0) => item.rank <= rank && state.dollars >= item.price * n + reserve;
     if (state.health <= 5 && state.dollars >= 6) buy('poultice', 'x');
+    const planned = new Set([nextTarget(false), ...state.servants.map(sv => demonById(sv.demonId))].filter(Boolean).map(d => d.id));
     for (const d of knownDemons()) {
       if (d.tier > circleTier() && !(c && c.tier === d.tier)) continue;
       const k = dossier(d);
+      if (!planned.has(d.id) && !(c && c.tier === d.tier)) continue;
       k.runeYes.forEach(r => { if (!state.runes.includes(r) && canBuy(RUNES[r])) buy('rune', r); });
       if (k.likes && (state.incense[k.likes] || 0) < 2 && canBuy(INCENSE[k.likes], 2, 5)) buy('incense', k.likes, 2);
     }
@@ -159,17 +164,26 @@ function playGame(seed, maxDays = 200) {
 
   // ---- what to do with each hour
 
-  function nextTarget() {
+  // makeRoom: dismiss a servant if one must go to make room for the commission's spirit
+  function nextTarget(makeRoom = true) {
     const c = currentCommission();
     const available = knownDemons().filter(d => !boundPhrase(d.id) && d.tier <= circleTier());
+    // with no servant earning, first bind something reliable for income
+    if (!state.servants.length) {
+      const earner = available.filter(readyForPermanent).sort((a, b) => b.tier - a.tier)[0];
+      if (earner) return earner;
+    }
     if (c && c.type === 'bind') {
       const t = available.filter(d => d.tier >= c.tier).sort((a, b) => a.tier - b.tier)[0];
       if (t) {
-        if (state.servants.length >= maxServants()) dismiss(state.servants[0].uid);
+        if (makeRoom && state.servants.length >= maxServants()) dismiss(state.servants[0].uid);
         return t;
       }
     }
-    return state.servants.length < maxServants() ? available.sort((a, b) => b.tier - a.tier)[0] || null : null;
+    if (state.servants.length >= maxServants()) return null;
+    // for income, a spirit you can bind reliably beats a stronger one you're still guessing at
+    const score = d => (readyForPermanent(d) ? 100 : dossier(d).nameComplete ? 50 : 0) + d.tier;
+    return available.sort((a, b) => score(b) - score(a))[0] || null;
   }
 
   function permanentGoal() {
