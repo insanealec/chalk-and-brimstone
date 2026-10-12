@@ -300,6 +300,36 @@ To decide in play: whether the failure damage is too harsh at the djinni tier (7
 
 ---
 
+## Playtest findings (October 2026)
+
+From playing the opening by hand and running a scripted player through 16 full games. The script uses only what a player can see: the notebook, the shops and the visible actions.
+
+**Pacing.** Once the script played sensibly, every run won, on May 15–18 (days 43–46). First commission: day 1, within the first hour. Foliot commission: anywhere from day 4 to day 44 (money-bound). Djinni: days 24–37. Afrit: days 40–46. Marid: 2–6 days after the afrit.
+
+**Problems found:**
+1. **The economy can deadlock.** With no servant, no money and no incense, there is no way back: summoning needs incense, incense needs money, and money needs a servant. 2 of 16 runs got stuck this way. *Fix:* a free, low-paying action at home (for example telling fortunes in Kinsella's saloon) and/or a free basic incense.
+2. **The early money wall is wide and swingy.** The foliot step needs a $30 circle, $33 of runes and sandalwood, starting from $30 and an imp earning about $7 a night.
+3. **Ithzar's companionship is too short.** It joins and is called away within 1–5 days, because its help makes the afrit commission come quickly. *Fix:* make the call wait until the marid is genuinely next, for example after you own the obsidian circle, and at least 10 days after joining.
+4. **The finale has no tension.** Lore gives five of the marid's six syllables and Ithzar's gift gives the sixth, so the name is complete before you start, and no run needed the obsidian pentacle. *Fix:* the marid answers to near misses (a name with most syllables right summons it, angry and unbound), so the last puzzle is dangerous; or give it a requirement no other spirit has.
+5. **Servant expiry can kill without warning.** The "bonds will snap tonight" warning only appears on the Servants tab. 1 run died on April 10 this way. *Fix:* a badge on the Servants tab, and a warning in the chronicle at dusk.
+6. **The calendar's content ends early.** Wins land in mid-May, so the World's Fair has barely opened and nothing is scheduled after it.
+
+**Friction in the interface:**
+- The notebook records where a syllable is *not*, but never shows it. "Belongs in the name, but not there" is recorded, yet the sheet only says "also in it: ITH", so players have to remember which positions they tried.
+- The chamber prefills known syllables, but not the runes or incense the notebook already knows. A "use what the notebook knows" button would remove busywork.
+- Seven tabs crowd narrow screens.
+
+**Code cleanup:**
+- `js/game.js` is about 2,400 lines mixing state, rules, rendering and input. Split it into a few files (state and rules, chamber, city, views) in the same plain-script style.
+- Game logic calls `render()` and touches the DOM directly, so it can't run outside a browser. Separating rules from rendering would allow fast automated balance runs.
+- The scripted player found real bugs, so it should live in the repo as a dev tool, with a seedable random number generator so balance changes can be compared run to run.
+- Saves have no version number. Every format change bumps the key and wipes saves. Add a `version` field and small migrations.
+- `js/ithzar.js` adds to other files' data (district actions, `CLAUSES`, `ERRANDS`). It works, but a reader of `districts.js` can't see those actions.
+- The chronicle stamps entries "D12" and says "Night falls on day 12", while everything else uses calendar dates.
+- The `--muted` color in `css/style.css` is unused.
+
+---
+
 ## Open questions
 
 - **Balance.** Economy and pacing haven't been tested in real play. The wheat tips on LaSalle Street come out slightly in the player's favor on average, and removing languages took away money sinks of $335 in total (vessels and reinforcing them add new ones). The scrying glass and pocket watch may be too strong; they're the first things to tune.
