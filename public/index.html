@@ -55,9 +55,9 @@
 
   <script>
     // content first, then the engine, the interface, and main.js (which starts the game) last
-    const SCRIPTS = ['js/data.js', 'js/districts.js', 'js/events.js', 'js/ithzar.js',
+    const SCRIPTS = ['js/data.js', 'js/districts.js', 'js/events.js', 'js/ithzar.js', 'js/finale.js',
       'js/engine/core.js', 'js/engine/notebook.js', 'js/engine/spirits.js', 'js/engine/companion.js',
-      'js/engine/chamber.js', 'js/engine/city.js', 'js/engine/day.js', 'js/ui/shell.js', 'js/ui/chamber.js', 'js/ui/city.js', 'js/main.js'];
+      'js/engine/chamber.js', 'js/engine/city.js', 'js/engine/day.js', 'js/engine/finale.js', 'js/ui/shell.js', 'js/ui/chamber.js', 'js/ui/city.js', 'js/main.js'];
     for (const src of SCRIPTS) {
       document.write(`<script src="${src}${FRESH}"><\/script>`);
     }

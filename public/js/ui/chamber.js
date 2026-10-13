@@ -40,7 +40,9 @@ function viewChamber() {
       ${s.name ? `<button class="ghost tiny fill" data-action="notebook-fill" ${busy ? 'disabled' : ''}
         title="Known syllables, runes and incense, with your strongest circle and pentacle">Set up from the notebook</button>` : ''}
       ${d ? incantationHTML(d) : s.name === RITE ? riteHTML() : ''}
-      ${s.name === RITE ? '' : clauseHTML()}
+      ${s.name === RITE ? '' : isFinaleSummons()
+        ? '<div class="ctl"><h3>Binding clause</h3><p class="muted small">City Hall wants the deep one bound to its service. What you do with it is a question for the Crib.</p></div>'
+        : clauseHTML()}
       ${ctl('Summoning circle', CIRCLES.filter(c => state.circles.includes(c.id)).map(c =>
         chip('circle', c.id, `${c.name}<small>holds up to ${TIER_NAMES[c.tier]}</small>`, s.circle === c.id)).join(''))}
       ${ctl('Your pentacle', PENTACLES.filter(p => state.pentacles.includes(p.id)).map(p =>
@@ -51,13 +53,27 @@ function viewChamber() {
       ${ctl('Incense', Object.keys(INCENSE).filter(k => state.incense[k] !== undefined).map(k =>
         chip('incense', k, `${INCENSE[k].name}<small>×${state.incense[k]}</small>`, s.incense === k, state.incense[k] < 1)).join(''))}
       ${d ? overreachHTML(d) : ''}
-      <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>Speak the summons <small>(1 hour)</small></button>
+      <button class="primary big" data-action="summon" ${blocker || busy ? 'disabled' : ''}>${isFinaleSummons()
+        ? 'Row out to the Water Crib <small>(the rest of the day)</small>' : 'Speak the summons <small>(1 hour)</small>'}</button>
       <p class="hint">${busy ? 'The air grows thick…' : blocker || 'Speak carefully.'}</p>
       ${d && !busy ? familiarAdvice(d) : ''}
       ${d ? `<div class="notes"><h3>Notebook: ${d.name}</h3>${demonNotes(d, false)}${askButton(d)}</div>`
         : s.name === RITE ? `<div class="notes"><h3>Notebook: Cornelia\u2019s binding</h3>${corneliaSheetHTML()}</div>` : ''}
     </div>
   </div>`;
+}
+
+// The last summoning, at the Water Crib, shown a beat at a time in the overlay (js/engine/finale.js).
+function finaleHTML() {
+  const f = state.finale;
+  const more = f.shown < f.beats.length;
+  const end = more ? `<button class="primary big" data-action="finale-next">Go on</button>`
+    : f.holds ? `<div class="row-btns"><button class="primary" data-action="finale-bind">${FINALE.bind}</button>
+        <button class="primary" data-action="finale-free">${FINALE.free}</button></div>`
+    : `<button class="primary big" data-action="finale-close">${FINALE.rowBack}</button>`;
+  return `<div class="finale"><h1>${FINALE.title}</h1>
+    ${f.beats.slice(0, f.shown).map((b, i) => `<section class="beat${i === f.shown - 1 ? ' new' : ''}">${b}</section>`).join('')}
+    ${end}</div>`;
 }
 
 // The last part of the incantation: what kind of binding this is.

@@ -20,7 +20,7 @@ Open `public/index.html` in a browser. There's no build step. You can also serve
 - **Workshop:** every incantation ends in a binding clause. *Of Service* makes a timed servant; later you learn *of the Vessel*, which seals a spirit into a tool (scrying glass, lantern, sword-cane, pocket watch, signet ring) whose power grows with the spirit inside, and *of the Familiar*, which binds a companion that follows you and helps. Both need a firm binding.
 - **Ithzar:** a djinni bound to a rival magician starts taking an interest in you. It comments on your work (with footnotes), trades barbs with your familiar, and asks favors that build a hidden trust. Earn enough of it and you can work out how its master bound it, free it with a rite of Release, and, if you accept its terms, gain it as a second familiar that answers questions (not always truthfully) and runs the odd errand as a favor. One of its terms is that you let it go when it asks, and it will ask before the end.
 - **Servants:** bound spirits run errands overnight (coin, stolen incense, gossip, spying) until their patience runs out. Uneasily bound spirits sometimes twist their orders against you.
-- **City Hall:** a chain of commissions that raises your rank. Rank unlocks stronger circles, rarer incense and new districts. Binding the marid wins the game.
+- **City Hall:** a chain of commissions that raises your rank. Rank unlocks stronger circles, rarer incense and new districts. The last commission is the marid under the lake: you prepare it in the chamber, then row out to the Water Crib and call it up in a scene of its own. If your binding holds, you choose whether to hand it to City Hall or let it go back to sleep. Either ends the game.
 
 ## Development
 
@@ -38,7 +38,8 @@ Open `public/index.html` in a browser. There's no build step. You can also serve
 - `js/districts.js`: city districts, their places and street encounters. The header comment documents the effect format.
 - `js/events.js`: the calendar, the newspaper and current events.
 - `js/ithzar.js`: Ithzar's lines, banter and story arc.
-- `js/engine/`: the rules. `core.js` (state, saving, dice), `notebook.js` (lore and deduction), `spirits.js` (servants, errands, vessels, familiars), `companion.js` (Ithzar), `chamber.js` (summoning), `city.js` (calendar, events, places, effects), `day.js` (nightfall, commissions, market).
+- `js/finale.js`: the text of the last summoning, at the Water Crib, and the two endings.
+- `js/engine/`: the rules. `core.js` (state, saving, dice), `notebook.js` (lore and deduction), `spirits.js` (servants, errands, vessels, familiars), `companion.js` (Ithzar), `chamber.js` (summoning), `city.js` (calendar, events, places, effects), `day.js` (nightfall, commissions, market), `finale.js` (the last summoning).
 - `js/ui/`: drawing the game. `shell.js` (stats, tabs, chronicle and most tabs), `chamber.js`, `city.js`.
 - `js/main.js`: input handling and start-up.
 - All of `js/` is plain scripts sharing one global scope, loaded in the order listed in `index.html` (and `tools/playtest.html`). A new script file must be added to both lists.

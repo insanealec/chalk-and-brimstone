@@ -469,14 +469,15 @@ function renderOverlay() {
       <p>On ${dateLabel(state.day, 'long')}, you were ${state.deathCause}.</p>
       <p>City Hall sends a clerk to inventory your workshop. He finds a scorched pair of shoes and a journal, which he files under <i>Cautionary</i>.</p>
       <button class="primary big" data-action="restart">Begin anew</button>`;
-  } else if (state.over === 'won') {
-    html = `<h1>The Deep One Is Bound</h1>
-      <p>On ${dateLabel(state.day, 'long')}, Shem-Ashara rose from beneath Lake Michigan and knelt — after a fashion — within your obsidian rings.</p>
-      <p>You are, by any measure, the most powerful magician in Chicago. Which is, of course, precisely when the trouble starts.</p>
+  } else if (state.over === 'won' || state.over === 'freed') {
+    const ending = FINALE.endings[state.over];
+    html = `<h1>${ending.title}</h1>
+      ${ending.text.map(x => `<p>${fill(x, { date: dateLabel(state.day, 'long') })}</p>`).join('')}
       ${ithzarEpilogue() ? `<p><i>${ithzarEpilogue()}</i></p>` : ''}
       <button class="primary big" data-action="restart">Begin anew</button>
       <button class="ghost" data-action="close-overlay">Admire your handiwork</button>`;
   }
-  o.hidden = !html || state.dismissedOverlay === state.over;
+  if (state.finale) html = finaleHTML(); // the scene at the Crib comes before anything it leads to
+  o.hidden = !html || (!state.finale && !!state.over && state.dismissedOverlay === state.over);
   o.innerHTML = html ? `<div class="dialog">${html}</div>` : '';
 }

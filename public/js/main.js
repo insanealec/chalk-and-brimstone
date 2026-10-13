@@ -95,6 +95,15 @@ document.addEventListener('click', e => {
       render();
       break;
     case 'close-intro': state.seenIntro = true; render(); break;
+    case 'finale-next': {
+      finaleNext();
+      const beat = document.querySelector('.finale .beat.new');
+      if (beat) beat.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
+    case 'finale-close': finaleClose(); break;
+    case 'finale-bind': finaleChoose('bind'); break;
+    case 'finale-free': finaleChoose('free'); break;
     case 'close-overlay': state.dismissedOverlay = state.over; render(); break;
     case 'restart': restart(false); break;
     case 'new-game':

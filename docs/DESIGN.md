@@ -87,6 +87,16 @@ Once the right spirit appears:
   - Below 0: **breaks free**.
 - **Pentacle:** if your pentacle is at least the spirit's class, a broken binding costs ceil(class ÷ 2) health. Otherwise it costs class × 2 + 1. An uneasy binding with a weak pentacle has a 35% chance of hurting you for the spirit's class in health.
 
+### The last summoning (the Water Crib)
+
+From a real playthrough: the marid resolved like any other binding, so the game's climax was one more click in the chamber. Now:
+
+- You prepare the marid in the chamber as usual (name, runes, incense, circle, pentacle), but the button reads *Row out to the Water Crib*. It's only available once City Hall has asked for the marid, and the trip takes the rest of the day.
+- The summoning is resolved by the ordinary rules, including the near-miss rule, then played as a scene a beat at a time: the boat and who is in it (your familiar; Ithzar, or the empty seat it left; or, if it's still Cornelia's, City Hall's launch with her and her djinni aboard), the circle and runes chalked on the pump room floor, the name a syllable at a time, the marid rising and the incense, and the circle holding or going.
+- If the binding holds, the marid speaks and makes its offer, and you choose: **bind it for City Hall** (the Machine's ending) or **let it go back to sleep** (City Hall never forgives you, but the lake stays quiet). If Ithzar is still with you, the marid remembers it.
+- A wrong name, a near miss or a broken circle sends you rowing back, hurt, to try another night. Later trips open with a one-line crossing instead of the full boat scene.
+- Text is in `js/finale.js`, rules in `js/engine/finale.js`. The scripted player binds it for City Hall.
+
 ### Spirit memory
 
 From a real playthrough: the spirits you summon for work again and again said the same greeting every time. Now each spirit remembers how its last time with you ended:

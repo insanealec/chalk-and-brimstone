@@ -56,6 +56,7 @@ function summonBlocker() {
     return null;
   }
   const d = demonById(s.name);
+  if (isFinaleSummons() && finaleBlocker()) return finaleBlocker();
   if (s.syllables.some(x => !x)) return `Speak all ${d.trueName.length} syllables of its true name.`;
   if (!s.incense) return 'Choose an incense to burn.';
   if ((state.incense[s.incense] || 0) < 1) return `You have no ${INCENSE[s.incense].name.toLowerCase()} left.`;
@@ -76,6 +77,7 @@ function summonBlocker() {
 }
 
 function beginSummon() {
+  if (isFinaleSummons()) return beginFinale(); // the marid is called up at the Water Crib (js/engine/finale.js)
   if (busy || summonBlocker()) return;
   busy = true;
   manifestation = null;
@@ -132,6 +134,7 @@ function resolveSummon() {
     const dmg = safe ? Math.ceil(target.tier / 2) : target.tier * 2 + 1;
     const taken = hurt(dmg, `drowned in your own workshop by ${target.name}, who did not care for your spelling`);
     m.outcome = 'broken';
+    m.nearMiss = true;
     m.lines.push(`That is not quite its name. It is close enough. ${target.name} hears itself half-called from the bottom of the lake, and comes up to tell you what it thinks of your spelling.`);
     m.lines.push(safe
       ? `Your ${pent.name} holds, just. (${hurtNote(taken, dmg)}) Then the room is dry again, and it is gone.`
@@ -255,6 +258,11 @@ function resolveSummon() {
   }
 
   Object.assign(m, greeting(d, mood, mem.times));
+  if (d.id === FINALE_SPIRIT && s.name === FINALE_SPIRIT) {
+    m.finale = true; // held: what becomes of it is chosen at the end of the scene
+    log(`${bold(d)} is held in your ${circle.name}.`, 'good');
+    return m;
+  }
   remember(d.id, null); // in your service now
   if (s.clause === 'service') {
     settleBracing(m, d);

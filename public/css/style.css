@@ -617,3 +617,12 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
   .choice { padding: 0.75em 0.9em; }
   details summary { padding: 0.35em 0; }
 }
+
+/* ---------- the last summoning, at the Water Crib */
+
+.finale .beat { border-left: 2px solid #2e4a57; padding: 0.1rem 0 0.1rem 0.9rem; margin: 0 0 1rem; scroll-margin-top: 1rem; }
+.finale .beat.new { animation: rise-in 0.6s ease-out; }
+.finale .beat p { margin: 0 0 0.5em; }
+.finale .beat blockquote { margin: 0.4em 0 0.6em; padding: 0.6em 0.9em; background: #13202a; border-radius: 6px; font-size: 1.05rem; }
+.finale .row-btns button { flex: 1 1 14rem; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

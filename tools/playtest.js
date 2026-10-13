@@ -102,7 +102,20 @@ function playGame(seed, maxDays = 200) {
     if (!runes || !incense) return false;
     Object.assign(state.sel, { name: d.id, syllables: guessName(d), runes, incense, clause, circle: bestCircleId(), pentacle: bestPentacleId(), overreach: false, brace: [] });
     if (summonBlocker()) return false;
-    const m = resolveSummon();
+    let m;
+    if (isFinaleSummons()) {
+      // the marid is called up at the Water Crib: play the scene through, and bind it for City Hall if it holds
+      beginFinale();
+      m = manifestation;
+      if (state.finale && state.finale.holds) {
+        state.finale.shown = state.finale.beats.length;
+        finaleChoose('bind');
+      } else {
+        finaleClose();
+      }
+    } else {
+      m = resolveSummon();
+    }
     resetIncantation();
     S[m.outcome]++;
     if (m.outcome === 'firm' || m.outcome === 'uneasy') note(`bound ${m.demon.name} (${m.outcome}, ${clauseLabel(clause)})`);

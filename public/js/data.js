@@ -407,6 +407,12 @@ const DEMONS = [
     form: 'a vast, slow tide of shadow that fills the room without seeming to enter it',
     greet: `When it speaks, it is the sound of water at the bottom of a well. "I remember when your city was a marsh. I will remember when it is a marsh again."¹`,
     footnote: '¹ The last magician to wake it wrote that sentence down. It is the final entry in his diary, which turned up years later in Milwaukee.',
+    returns: {
+      served: ['When it speaks, it is the sound of water at the bottom of a well. "Again," it says.'],
+      kind: ['"You let me sleep once," says the voice at the bottom of the well. "I remember. It does not mean what you hope."'],
+      grudge: ['The water in the shaft is cold enough to crack the iron. "You held me badly," it says. "I let you live. Do not count on that twice."'],
+      escaped: ['The water stands up again. "You," it says. "I have been thinking about you, down in the dark."'],
+    },
     lore: [
       { src: 'A clay tablet, much repaired', facts: ['syl:0:SAR', 'syl:1:MAR'],
         text: '…Shem-Ashara, who was in the water before the cities were. Its name begins [SAR]·[MAR], as the sea begins. Do not finish it…' },
@@ -560,6 +566,6 @@ const COMMISSIONS = [
   {
     title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true, file: 'shemashara-1',
     text: 'Old records speak of a marid sleeping beneath Lake Michigan since before there was a city here to drown. The engineers want to reverse the river to keep it asleep. The Machine would rather it were bound, ideally by someone it can afford to lose. City Hall has been through its list of such people, and your name was near the top.',
-    done: 'The lake goes still. Across Chicago, every spirit in every circle turns its head toward your workshop.',
+    done: 'The lake goes still. Across Chicago, every spirit in every circle turns its head toward the Crib.',
   },
 ];
