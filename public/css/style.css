@@ -307,6 +307,9 @@ main {
 .sheet { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.8rem; margin: 0 0 0.6rem; font-size: 0.95rem; }
 .sheet dt { font-family: var(--display); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--dim); padding-top: 0.2em; }
 .sheet dd { margin: 0; }
+.mem { font-size: 0.8em; margin-left: 0.3em; white-space: nowrap; }
+.mem.good { color: var(--good); }
+.mem.bad { color: var(--blood); }
 .ded { color: var(--lore); font-size: 0.75em; margin-left: 0.15em; vertical-align: super; cursor: help; }
 details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; margin-bottom: 0.4rem; }
 

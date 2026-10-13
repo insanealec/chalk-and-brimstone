@@ -51,6 +51,7 @@ function newState() {
     newLore: 1,
     facts: {},  // demon id -> facts observed in the chamber (lore facts are derived from state.lore)
     met: [],    // spirits that have appeared in your circle, even ones you never read about
+    memory: {}, // per spirit: { times it has answered you, how its last stint with you ended } (see remember())
     servants: [],
     nextUid: 1,
     commission: 0,

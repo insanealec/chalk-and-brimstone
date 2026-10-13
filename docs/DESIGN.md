@@ -87,6 +87,19 @@ Once the right spirit appears:
   - Below 0: **breaks free**.
 - **Pentacle:** if your pentacle is at least the spirit's class, a broken binding costs ceil(class ÷ 2) health. Otherwise it costs class × 2 + 1. An uneasy binding with a weak pentacle has a 35% chance of hurting you for the spirit's class in health.
 
+### Spirit memory
+
+From a real playthrough: the spirits you summon for work again and again said the same greeting every time. Now each spirit remembers how its last time with you ended:
+
+| Parting | When | Next binding |
+|---|---|---|
+| kind | you spoke the Dismissal with nights still owed, or released it from a vessel or as a familiar | +1 |
+| grudge | you let an uneasy binding snap on you | −1 |
+| escaped | it broke out of your circle | — |
+| served | its term ran out | — |
+
+A returning spirit greets you with a line for that parting (each spirit has its own, in `DEMONS[].returns`, with generic fallbacks in `RETURN_LINES`), taking turns through its lines. The summoning result says when memory helped or hurt, and the notebook shows how many times it has answered you and how it remembers you. The Servants tab hints that an early dismissal is remembered. Letting a servant go early costs you its remaining nights of errands, so the +1 is a real trade.
+
 ### Servants and errands
 
 Bound spirits are **timed**: imps serve 3 nights, foliots and djinn 5, afrits and marids 6, plus 2 if firmly bound. A newly bound servant starts on *Gather coin*, so it earns from its first night unless you send it elsewhere. You can hold as many spirits as your rank tier. Errands run overnight and repeat each night until changed: gather coin, pilfer incense, gossip (lore of the spirit's class or lower), spy (lore one class higher), or a City Hall errand. Success chance depends on class versus difficulty, with a bonus for firm bindings. Uneasy servants sometimes twist a failed errand against you. When patience runs out, a firm servant leaves quietly; an uneasy one lashes out.
@@ -350,7 +363,7 @@ From playing the opening by hand and running a scripted player through 16 full g
 - **Cost of guessing names.** Each attempt costs an hour and an incense. Is that the right price, or should testing a name be cheaper but riskier?
 - **Rival magicians and the Machine.** Should rivals raid your workshop and try to steal your vessels? Wards could be a sixth vessel, or part of step 3.
 - **Rune positions.** The circle has three rune slots, but position doesn't matter yet. Placing runes at specific points is a candidate for deepening the lab puzzle later.
-- **Repeat visits.** What should happen after a spirit is bound once? Should rebinding get easier, and do spirits remember how you treated them?
+- ✅ **Repeat visits.** *Built:* spirits remember how their last stint with you ended (see *Spirit memory* under Binding rules). Open: should more of your history count, like the incense you burned or how often you've bound it?
 - **More events.** Only five events exist, and all but the crackdown happen once. Candidates: the Sanitary Canal (the plan to reverse the river) tied to the marid, the Fair's closing in October, rival magicians targeting your workshop, and a second round of labor trouble.
 - **Event pacing.** The strike and the election overlap in mid-April, which may be too much at once for a new player.
 - **Ithzar's absences.** Built as one day in seven. Is that a fun cost of its first term, or just annoying? The fallback is to make the term pure flavor.

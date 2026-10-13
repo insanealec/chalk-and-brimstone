@@ -27,15 +27,30 @@ function clauseLabel(clause) {
   return clause.startsWith('vessel:') ? `${CLAUSES.vessel.name}: ${VESSELS[clause.slice(7)].name}` : CLAUSES[clause].name;
 }
 
+// Spirits remember how their last time with you ended, and it colors the next summoning:
+//   kind     you dismissed it with nights still owed, or released it from a vessel or as a familiar (+1 to the next binding)
+//   grudge   you let its uneasy bonds snap (−1)
+//   escaped  it broke out of your circle
+//   served   its term ran out
+// While a spirit is in your service its parting is null. Greetings for each mood are in DEMONS[].returns.
+const MEMORY_MOD = { kind: 1, grudge: -1 };
+
+function remember(id, parting) {
+  const mem = state.memory[id] || (state.memory[id] = { times: 0, parting: null });
+  mem.parting = parting;
+}
+
 function releaseVessel(type, quiet = false) {
   const v = state.vessels[type];
   if (!v || !v.spirit) return;
+  remember(v.spirit, 'kind');
   if (!quiet) log(`You crack the seal. ${bold(demonById(v.spirit))} unfolds from your ${VESSELS[type].name.toLowerCase()}, stretches, and leaves with a remark about the accommodations.`);
   v.spirit = null;
 }
 
 function releaseFamiliar(quiet = false) {
   if (!state.familiar) return;
+  remember(state.familiar, 'kind');
   if (!quiet) log(`You speak the words of parting. ${bold(demonById(state.familiar))} gives you a long look, and is gone.`);
   state.familiar = null;
 }
@@ -64,7 +79,12 @@ function scry() {
   const selected = state.sel.name && demonById(state.sel.name);
   const d = selected && viewable(selected) ? selected : pick(knownDemons().filter(viewable));
   if (!d) {
-    log(`The scrying glass shows ${bold(glass)} examining its fingernails. There is nothing within its reach you do not already know.`);
+    const idle = [
+      `The scrying glass shows ${bold(glass)} examining its fingernails. There is nothing within its reach you do not already know.`,
+      `${bold(glass)} has fogged the scrying glass from the inside and drawn a face in it. It has nothing new to show you.`,
+      `The scrying glass shows only ${bold(glass)}, asleep. Everything it can see, you already know.`,
+    ];
+    log(idle[state.day % idle.length]);
     return;
   }
   const facts = unknownFacts(d).sort(() => random() - 0.5).slice(0, t);
@@ -170,13 +190,18 @@ function dismiss(uid) {
   const sv = state.servants.find(s => s.uid === uid);
   if (!sv) return;
   state.servants = state.servants.filter(s => s !== sv);
-  log(`You speak the Dismissal. ${bold(demonById(sv.demonId))} departs with a remark about your mother.`);
+  const early = sv.patience >= 2; // it still owed you at least one more night
+  remember(sv.demonId, early ? 'kind' : 'served');
+  log(early
+    ? `You speak the Dismissal early. ${bold(demonById(sv.demonId))} hesitates, as if suspecting a trick, then goes. It will remember this.`
+    : `You speak the Dismissal. ${bold(demonById(sv.demonId))} departs with a remark about your mother.`);
   render();
 }
 
 function expire(sv) {
   const d = demonById(sv.demonId);
   state.servants = state.servants.filter(s => s !== sv);
+  remember(d.id, sv.binding === 'firm' ? 'served' : sv.patience > 0 ? 'escaped' : 'grudge');
   if (sv.binding === 'firm') {
     log(`${bold(d)}’s term of service has worn thin. With a mocking bow, it unravels into smoke and is gone.`);
     return;

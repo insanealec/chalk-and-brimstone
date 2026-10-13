@@ -136,7 +136,7 @@ function manifestHTML() {
     <div class="m-head"><h3>${m.demon.name} <small>${TIER_NAMES[m.demon.tier]}</small></h3><span class="tag">${labels[m.outcome]}</span></div>
     <div class="slots spoken">${m.spoken.map((syl, i) => sylHTML(syl, m.feedback[i])).join('<span class="dot">·</span>')}</div>
     ${m.lines.map(l => `<p>${l}</p>`).join('')}
-    ${m.greet ? `<blockquote>${m.greet}</blockquote><p class="footnote">${m.footnote}</p>` : ''}
+    ${m.greet ? `<blockquote>${m.greet}</blockquote>${m.footnote ? `<p class="footnote">${m.footnote}</p>` : ''}` : ''}
     ${m.aside ? asideHTML(m.aside) : ''}
   </div>`;
 }

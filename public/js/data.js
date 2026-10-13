@@ -140,6 +140,21 @@ const DEMONS = [
     form: 'a warty green toad in a waistcoat two sizes too small',
     greet: `"Oh, it's <i>you</i>. Another one." It surveys your chalk lines with professional disdain.¹`,
     footnote: '¹ The circle was, Nibbet later told its friends, "wobbly enough to drive a cart through."',
+    returns: {
+      served: [
+        '"You again." Nibbet climbs into the circle the way a man climbs into a bath someone else has run. "Same chalk. Same wobble."',
+        'Nibbet arrives mid-chew. "I was eating," it says. "Don’t ask what."',
+      ],
+      kind: [
+        '"You let me off early last time." Nibbet squints at you. "I’ve been trying to work out what you’re after."',
+      ],
+      grudge: [
+        'Nibbet arrives already swelling. "You let the knots go slack and then acted surprised when I bit you. I’ll bite you again."',
+      ],
+      escaped: [
+        '"The wobbly one!" says Nibbet, delighted. "I told everyone about your circle. <i>Everyone.</i>"',
+      ],
+    },
     lore: [
       { src: 'Your late master’s notebook', facts: ['syl:0:NEB', 'syl:1:ITH', 'rune:thorn', 'runes:1'],
         text: 'Nibbet. Imp. [NEB]·[ITH]. Thorn at the edge and nothing else. Lazy, but it will carry a letter if you shout.' },
@@ -154,6 +169,21 @@ const DEMONS = [
     form: 'a sooty sparrow with eyes like two hot coals',
     greet: `"Chimneys!" it squawks. "Do you know how many smokestacks there are in Chicago? <i>I</i> do."¹`,
     footnote: '¹ 412,906. It counted. It had a great deal of free time between summonings.',
+    returns: {
+      served: [
+        '"Four hundred and twelve thousand, nine hundred and seven," says Squall. "They put up a new one on Halsted. I went and looked."',
+        'Squall lands on the rim of the circle, shakes soot over your floor, and counts the bricks in your chimney while it waits.',
+      ],
+      kind: [
+        '"You sent me off early last time," says Squall. "I did the whole North Side in one night. Nobody’s ever done the whole North Side."',
+      ],
+      grudge: [
+        'Squall’s eyes flare like coals under a bellows. "You let the binding fray. I don’t forget a magician who does that."',
+      ],
+      escaped: [
+        '"Back for another go?" Squall hops along the chalk, testing it with its beak. "I got out at this bit."',
+      ],
+    },
     lore: [
       { src: 'A sweep’s almanac', facts: ['syl:0:ZEPH'],
         text: 'Squall, an imp of the chimney-pots. Sweeps whistle the first of its name, [ZEPH], low, and it goes up the flue ahead of the brush.' },
@@ -168,6 +198,21 @@ const DEMONS = [
     form: 'a lumpish mole-thing wearing a monocle',
     greet: `"Kaliméra," it says, in a voice like gravel. "You'll be wanting something dug, I expect."¹`,
     footnote: '¹ Grubwick has dug for four kings, two popes and a man in Peoria who swore there was gold under his barn. Grubwick still talks about that barn.',
+    returns: {
+      served: [
+        '"Kaliméra again." Grubwick polishes its monocle on its belly. "Where are we digging?"',
+        'Grubwick comes up through your floorboards a foot outside the circle, apologizes, and goes back down to try again.',
+      ],
+      kind: [
+        '"You let me go early last time," says Grubwick. "I spent it under that barn in Peoria. Still nothing."',
+      ],
+      grudge: [
+        'Grubwick’s monocle glints. "Your bonds went soft and I went through them, and you bled for it. You remember. So do I." It does not offer to dig.',
+      ],
+      escaped: [
+        '"Ah. The magician with the loose chalk." Grubwick taps your circle with one claw, the way a buyer taps a melon.',
+      ],
+    },
     lore: [
       { src: 'Ledger of a Smyrna merchant', facts: ['syl:1:UL'],
         text: 'Item: one imp, Grubwick, for the cellars. Answers to a name ending [UL]. The rest of the name I keep in my head, where the clerks cannot copy it.' },
@@ -183,6 +228,21 @@ const DEMONS = [
     form: 'a pale woman made of drifting fog, smelling of a sea a long way from here',
     greet: `"How refreshing. The last one called me by the wrong name entirely, and in Swedish."¹`,
     footnote: '¹ He is still, in a sense, in Minnesota. Several parts of Minnesota.',
+    returns: {
+      served: [
+        '"You keep calling," says Tessaly. "People will talk." She drifts once around the circle, admiring herself in your window.',
+        'Fog comes in under the door before you have finished the name. Tessaly is already waiting in it, smelling of salt.',
+      ],
+      kind: [
+        '"You let me go before the term was out." Tessaly considers you. "The last man who did that was trying to marry me. Are you trying to marry me?"',
+      ],
+      grudge: [
+        '"You left the binding to rot," says Tessaly, cold now as the North Sea. "I am owed an apology. I will take it in sandalwood."',
+      ],
+      escaped: [
+        'Tessaly laughs, softly. "This circle again? I went out through the keyhole last time. You never fixed the keyhole."',
+      ],
+    },
     lore: [
       { src: 'Logbook of the brig <i>Persephone</i>', facts: ['syl:0:MAR'],
         text: 'Fog off Cape Matapan, thick as wool. The mate leaned over the rail and spoke to it, beginning [MAR], and it parted for us. Tessaly, he calls it. He would not tell me the rest.' },
@@ -197,6 +257,21 @@ const DEMONS = [
     form: 'a long-legged heron in a postman’s cap',
     greet: `"Message for you," says Querrin. "It reads: <i>you are going to regret this.</i>"¹`,
     footnote: '¹ Querrin writes these messages itself. It finds it saves time.',
+    returns: {
+      served: [
+        '"Message for you," says Querrin. "It reads: <i>again?</i>"',
+        'Querrin arrives with a satchel of letters, none of them addressed to you, and reads them while you speak.',
+      ],
+      kind: [
+        'Querrin hands you an envelope. Inside, in a cramped hand: <i>Thank you for the early release. Do not mention this.</i> It is signed with a footprint.',
+      ],
+      grudge: [
+        '"I have a message about the night your binding snapped," says Querrin. "It is from me, and it is not fit to read aloud."',
+      ],
+      escaped: [
+        '"Message for you," says Querrin. "It reads: <i>you left a gap.</i> I have sent a copy to Mrs. Ashby."',
+      ],
+    },
     lore: [
       { src: 'Post Office (Arcane) circular', facts: ['syl:1:OTH'],
         text: 'NOTICE TO SORTING ROOMS. The foliot Querrin, employed in express delivery, is not to be summoned by unauthorized staff. Its name has [OTH] in the middle. Staff who learn the rest are to forget it.' },
@@ -211,6 +286,21 @@ const DEMONS = [
     form: 'a squat brass kettle with a face, and an attitude',
     greet: `Steam whistles from Phebbet's spout. "Good pronunciation. <i>Terrible</i> posture."¹`,
     footnote: '¹ Phebbet’s views on posture date back to the Assyrians, who stood very straight, mostly out of fear.',
+    returns: {
+      served: [
+        'Phebbet whistles. "Better. You are standing straighter. Still slouching, but straighter."',
+        '"The same chalk, the same circle, the same stoop," says Phebbet. "I have boiled for worse."',
+      ],
+      kind: [
+        'Phebbet lets out a long, pleased plume of steam. "You let me cool off early last time. I will remember that the next time you want tea."',
+      ],
+      grudge: [
+        'Phebbet’s lid rattles. "You let the binding boil dry," it hisses. "I have scalded better magicians for less."',
+      ],
+      escaped: [
+        '"Oh, it is the sloucher," says Phebbet. "I got out past your left elbow last time. Mind it."',
+      ],
+    },
     lore: [
       { src: 'A Damascene smith’s prayer-roll', facts: ['syl:0:ASH'],
         text: 'Spirit of the forge, Phebbet, who keeps the bellows breathing: we begin your name with [ASH], the first thing the fire leaves. Be kind to our hands.' },
@@ -226,6 +316,21 @@ const DEMONS = [
     form: 'a handsome youth wreathed in lazy blue flame',
     greet: `"Azrimel, Breaker of Lesser Bonds, Scourge of—" It notices your runes, and sighs. "Fine. What do you want?"¹`,
     footnote: '¹ The full title runs to nineteen clauses. It has been workshopping a twentieth.',
+    returns: {
+      served: [
+        'Azrimel arrives in the middle of a yawn, and finishes the yawn before it looks at you.',
+        '"Azrimel, Breaker of Lesser Bonds—" It looks down at your circle. "Well. Lesser bonds are what you have."',
+      ],
+      kind: [
+        '"You let me go early last time," says Azrimel. "I have put you in the twentieth clause. <i>Azrimel, Breaker of Lesser Bonds, Acquaintance of a Magician on Clark Street.</i> It is a draft."',
+      ],
+      grudge: [
+        '"You let my bonds fray and then pretended not to notice," says Azrimel, and its flames go from blue to white. "I noticed."',
+      ],
+      escaped: [
+        '"Ah," says Azrimel, "the magician I have already escaped from. A twentieth clause suggests itself."',
+      ],
+    },
     lore: [
       { src: 'The Babylonian Index', facts: ['syl:0:ASH', 'syl:3:KHA'],
         text: 'Azrimel, djinni, of the fourth rank, contentious. The name: [ASH] at its head and [KHA] at its tail. Between them, two more, not recorded.' },
@@ -240,6 +345,21 @@ const DEMONS = [
     form: 'a jackal-headed figure in river-green linen',
     greet: `"You may address me as Your Radiance," says Kethuun. You do not.¹`,
     footnote: '¹ Kethuun has been addressed as Your Radiance once since the fall of Thebes, by a drunk in Alexandria. It still speaks of him fondly.',
+    returns: {
+      served: [
+        '"You may address me as Your Radiance," says Kethuun. You still do not. It seems to have expected that.',
+        'Kethuun steps into the circle as if onto a temple floor that you have failed to sweep.',
+      ],
+      kind: [
+        '"You released me before my term," says Kethuun. "In Thebes we called that piety." It does not quite smile, but its ears come forward.',
+      ],
+      grudge: [
+        'Kethuun regards you for a long moment. "You let my bonds rot," it says. "The priests of Thebes kept a list of magicians like you. I have kept it up to date."',
+      ],
+      escaped: [
+        '"Again?" says Kethuun. "Thebes had better circles. Thebes had better chalk."',
+      ],
+    },
     lore: [
       { src: 'A papyrus from Thebes', facts: ['syl:0:KHA', 'syl:3:BEL'],
         text: '…the temple’s servant Kethuun, whose name the scribes set down beginning [KHA] and ending [BEL]; the middle they kept in the god’s house, where it is safe…' },
@@ -255,6 +375,21 @@ const DEMONS = [
     form: 'a pillar of black smoke shot through with furnace-light, ten feet tall and stooping',
     greet: `The floorboards blister. "SPEAK, LITTLE MAGICIAN. QUICKLY."¹`,
     footnote: '¹ Afrits do not do lower case.',
+    returns: {
+      served: [
+        'The floorboards blister in the same places as last time. "AGAIN, LITTLE MAGICIAN. SPEAK."',
+        'The ceiling scorches. "THE SAME LITTLE ROOM," says Ulgaroth. "THE SAME LITTLE CIRCLE."',
+      ],
+      kind: [
+        '"YOU LET ME GO EARLY." A long pause, and a smell of hot iron. "NO ONE HAS DONE THAT SINCE NINEVEH."',
+      ],
+      grudge: [
+        '"YOUR BONDS ROTTED. I REMEMBER THE TASTE." The pentacle under your feet grows warm.',
+      ],
+      escaped: [
+        '"I GOT OUT," says Ulgaroth. "I WILL GET OUT AGAIN." It sounds pleased at the prospect.',
+      ],
+    },
     lore: [
       { src: 'A City Hall file, marked SECRET', facts: ['syl:0:UL'],
         text: 'SUBJECT: ULGAROTH (afrit). NAME BEGINS: [UL]. RECOMMENDATION: Do not. If you must, read file 1871/F first, and then do not.' },
@@ -286,6 +421,18 @@ const DEMONS = [
 ];
 
 // Said by whatever spirit has just broken free.
+// What a returning spirit says, by how you last parted (see remember() in js/engine/spirits.js), for spirits
+// without lines of their own in DEMONS[].returns. A line is a string or { text, note }.
+const RETURN_LINES = {
+  served: [
+    '{name} looks around your workshop. "Nothing has changed," it says, and does not sound surprised.',
+    '{name} arrives as if it had only stepped out for a minute.',
+  ],
+  kind: ['{name} remembers that you let it go early. It comes into the circle with something close to good grace.'],
+  grudge: ['{name} remembers the night its bonds snapped, and so do you. It watches your hands the whole time.'],
+  escaped: ['{name} looks at your circle, then at you, and smiles. It got out of the last one.'],
+};
+
 const BROKEN_QUIPS = [
   { greet: `"Thanks for the lift," says {name}, and leaves through the ceiling.¹`, footnote: '¹ It did not use the door. The ceiling has not been the same since.' },
   { greet: `{name} laughs, which is worse than anything it could have said.¹`, footnote: '¹ Spirits laugh at magicians the way cats look at birds.' },

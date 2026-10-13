@@ -222,7 +222,22 @@ function dossierHTML(d) {
     <dt>Runes</dt><dd>${runeBits.join(' · ') || '?'}</dd>
     <dt>Incense</dt><dd>${incBits.join(' · ')}</dd>
     <dt>Circle</dt><dd>one that holds ${TIER_NAMES[d.tier].toLowerCase()}s</dd>
+    ${memoryHTML(d)}
   </dl>`;
+}
+
+// How the spirit remembers you, once it has answered you at least once.
+function memoryHTML(d) {
+  const mem = state.memory[d.id];
+  if (!mem || !mem.times) return '';
+  const times = mem.times === 1 ? 'answered you once' : `answered you ${mem.times} times`;
+  const how = {
+    kind: 'you let it go early last time <span class="mem good">+1 to its next binding</span>',
+    grudge: 'holds a grudge: you let its bonds snap <span class="mem bad">−1 to its next binding</span>',
+    escaped: 'remembers getting away from you',
+    served: 'served out its term',
+  }[mem.parting] || (boundPhrase(d.id) ? `${boundPhrase(d.id)} now` : '');
+  return `<dt>Memory</dt><dd>${times}${how ? ` · ${how}` : ''}</dd>`;
 }
 
 function demonNotes(d, openLore, freshLore = []) {
@@ -303,6 +318,7 @@ function viewServants() {
         </label>
         ${desc ? `<p class="muted small">${desc}</p>` : ''}
         <button class="ghost" data-action="dismiss" data-value="${sv.uid}">Speak the Dismissal</button>
+        ${sv.patience >= 2 ? '<p class="muted small">Let it go before its term is up and it will remember you kindly next time.</p>' : ''}
       </article>`;
     }).join('')}
   </div>`;

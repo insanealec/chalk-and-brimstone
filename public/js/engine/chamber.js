@@ -155,6 +155,10 @@ function resolveSummon() {
   }
 
   m.demon = d;
+  // a spirit you have met before remembers how you parted (saves from before memory existed only know you met)
+  const mem = state.memory[d.id] || (state.memory[d.id] = { times: 0, parting: null });
+  const mood = mem.times || state.met.includes(d.id) ? mem.parting || 'served' : null;
+  mem.times++;
   if (!state.met.includes(d.id)) state.met.push(d.id);
   if (d !== target) {
     m.accident = true;
@@ -198,6 +202,7 @@ function resolveSummon() {
   }
 
   const circleBonus = clamp(circle.tier - d.tier, 0, 2);
+  const memMod = MEMORY_MOD[mood] || 0;
   const reach = circle.tier < d.tier && s.overreach && d === target ? overreachCheck(d) : null;
   if (reach && reach.ok && !wrong.length && !missing.length && d.likes === s.incense) {
     const held = random() * 100 < reach.odds;
@@ -215,7 +220,9 @@ function resolveSummon() {
     m.outcome = 'broken';
   } else {
     if (circleBonus) m.lines.push(`Your ${circle.name} is stronger than it needs to be. ${d.name} notices.`);
-    const score = incMod - wrong.length + circleBonus;
+    if (memMod > 0) m.lines.push(`${d.name} remembers that you let it go early, and comes into the circle more willingly.`);
+    if (memMod < 0) m.lines.push(`${d.name} remembers the night its bonds snapped, and fights the chalk.`);
+    const score = incMod - wrong.length + circleBonus + memMod;
     m.outcome = score >= 2 ? 'firm' : score >= 0 ? 'uneasy' : 'broken';
   }
   const vesselType = s.clause.startsWith('vessel:') ? s.clause.slice(7) : null;
@@ -237,6 +244,7 @@ function resolveSummon() {
     const q = pick(BROKEN_QUIPS);
     m.greet = fill(q.greet, { name: d.name });
     m.footnote = q.footnote;
+    remember(d.id, 'escaped');
     if (m.overreach) {
       state.standing.suspicion = Math.min(10, state.standing.suspicion + 2);
       m.lines.push('A loose spirit on Clark Street makes the papers. (the police take an interest)');
@@ -246,8 +254,8 @@ function resolveSummon() {
     return m;
   }
 
-  m.greet = d.greet;
-  m.footnote = d.footnote;
+  Object.assign(m, greeting(d, mood, mem.times));
+  remember(d.id, null); // in your service now
   if (s.clause === 'service') {
     settleBracing(m, d);
     if (m.overreach) m.lines.push(`It is held by a circle too small for it, and it knows. It will be testing that circle every night.`);
@@ -287,6 +295,16 @@ function resolveSummon() {
   }
   if (!state.over) checkBindCommission(d);
   return m;
+}
+
+// What a spirit says on arriving: its own greeting the first time, then a line for how you last parted,
+// taking turns through its lines so the same one doesn't come up twice running.
+function greeting(d, mood, times) {
+  if (!mood) return { greet: d.greet, footnote: d.footnote };
+  const pool = (d.returns && d.returns[mood]) || RETURN_LINES[mood];
+  const line = pool[times % pool.length];
+  const text = fill(typeof line === 'string' ? line : line.text, { name: d.name });
+  return { greet: text, footnote: typeof line === 'string' ? '' : line.note };
 }
 
 // Familiars who could brace the circle right now, and what each adds to the odds.
