@@ -1,6 +1,13 @@
 'use strict';
 // Input and start-up. Loaded last: it wires up clicks and keys, and starts or resumes a game.
 
+// On a phone the thing you just did can land far from your thumb: bring it into view.
+function reveal(selector) {
+  if (!narrow()) return;
+  const el = document.querySelector(selector);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-action],[data-pick],[data-tab],[data-buy],[data-district]');
   if (!el || el.disabled) return;
@@ -8,10 +15,12 @@ document.addEventListener('click', e => {
   if (el.dataset.district) {
     state.district = el.dataset.district;
     render();
+    reveal('.panel.district');
     return;
   }
 
   if (el.dataset.tab) {
+    if (el.dataset.tab !== currentTab) journalNews = null;
     currentTab = el.dataset.tab;
     if (currentTab === 'journal') state.newLore = 0;
     render();
@@ -44,12 +53,28 @@ document.addEventListener('click', e => {
   }
 
   switch (el.dataset.action) {
-    case 'summon': beginSummon(); break;
+    case 'summon':
+      beginSummon();
+      if (busy) reveal('.stage');
+      break;
     case 'notebook-fill': if (!busy) { applyNotebook(); render(); } break;
     case 'syl': if (!busy) { toggleSyllable(el.dataset.value); render(); } break;
     case 'slot': if (!busy) { state.sel.syllables[Number(el.dataset.value)] = null; render(); } break;
-    case 'end-day': endDay(); break;
-    case 'study': study(); break;
+    case 'end-day':
+      endDay();
+      // the night's news is the point of ending the day: on a phone, open the chronicle to it
+      if (narrow() && !state.over) openLog();
+      break;
+    case 'open-log': openLog(); break;
+    case 'close-log': closeLog(); break;
+    case 'study': {
+      const lore = [...state.lore];
+      const entries = newEntries(study);
+      journalNews = entries.length ? { entries: entries.reverse(), lore: state.lore.filter(id => !lore.includes(id)) } : null;
+      state.newLore = 0; // read on the spot
+      render();
+      break;
+    }
     case 'reinforce': reinforce(el.dataset.value); break;
     case 'release-vessel': releaseVessel(el.dataset.value); render(); break;
     case 'release-familiar': releaseFamiliar(); render(); break;
@@ -80,6 +105,10 @@ document.addEventListener('click', e => {
 
 // map markers are SVG groups, so give them button-like keyboard behavior
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && drawerOpen) {
+    closeLog();
+    return;
+  }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-district]')) {
     e.preventDefault();
     e.target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -106,6 +135,7 @@ function restart(showIntro) {
   currentTab = 'chamber';
   resetIncantation();
   log('You unlock the door of Mr. Thwaite’s workshop. It smells of chalk and something burnt.', 'info');
+  logSeen = state.log[0];
   render();
 }
 
@@ -114,5 +144,6 @@ if (!state) restart(true);
 else {
   const d = state.sel.name && demonById(state.sel.name);
   if (!d || state.sel.syllables.length !== d.trueName.length) resetIncantation();
+  logSeen = state.log[0];
   render();
 }

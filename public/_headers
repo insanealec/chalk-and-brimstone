@@ -1,0 +1,4 @@
+# Cloudflare: browsers may keep every file, but must check with the server before reusing it.
+# Unchanged files come back as a tiny "not modified", and an update is never mixed with stale files.
+/*
+  Cache-Control: no-cache

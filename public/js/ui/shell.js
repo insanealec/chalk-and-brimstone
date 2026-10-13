@@ -84,6 +84,40 @@ function ithzarCard() {
     </article>`;
 }
 
+// Phone-sized layout: one column, the chronicle at the bottom and in a drawer, End day in a bottom bar.
+const narrow = () => matchMedia('(max-width: 960px)').matches;
+
+// The chronicle drawer: open or not, the newest entry the player has seen, and how many were new when it opened.
+let drawerOpen = false;
+let logSeen = null;
+let drawerFresh = 0;
+const unreadLog = () => {
+  const i = state.log.indexOf(logSeen);
+  return i < 0 ? state.log.length : i;
+};
+
+function openLog() {
+  drawerOpen = true;
+  drawerFresh = unreadLog();
+  logSeen = state.log[0];
+  render();
+}
+function closeLog() {
+  drawerOpen = false;
+  render();
+}
+
+// What the last hour of study turned up, shown under the Study button: { entries, lore }.
+let journalNews = null;
+
+// Runs an action and returns the chronicle entries it added, newest first.
+function newEntries(fn) {
+  const top = state.log[0];
+  fn();
+  const i = state.log.indexOf(top);
+  return state.log.slice(0, i < 0 ? state.log.length : i);
+}
+
 function render() {
   renderStats();
   renderTabs();
@@ -97,10 +131,17 @@ function renderStats() {
   const hearts = Array.from({ length: MAX_HEALTH }, (_, i) => `<span class="heart ${i < state.health ? 'full' : ''}"></span>`).join('');
   $('#stats').innerHTML = `
     <div class="stat"><span class="k">Date</span><span class="v">${dateLabel(state.day)} · ${HOUR_NAMES[Math.ceil(state.actions / maxActions() * 3)]}</span></div>
-    <div class="stat"><span class="k">Hours left</span><span class="v">${state.actions}</span></div>
+    <div class="stat hours"><span class="k">Hours left</span><span class="v">${state.actions}</span></div>
     <div class="stat"><span class="k">Dollars</span><span class="v">$${state.dollars}</span></div>
     <div class="stat"><span class="k">Health</span><span class="v hearts" title="${state.health}/${MAX_HEALTH}">${hearts}</span></div>
     <div class="stat"><span class="k">Rank</span><span class="v">${RANKS[rankIndex()].name} <small>(${state.rep} rep)</small></span></div>
+    <button class="primary end-day" data-action="end-day" ${state.over || busy ? 'disabled' : ''}>End day</button>`;
+  const bar = $('#bottombar'); // not on the playtest page
+  if (!bar) return;
+  const unread = drawerOpen ? 0 : unreadLog();
+  bar.innerHTML = `
+    <button class="ghost log-btn" data-action="open-log">Chronicle${unread ? `<span class="badge">${unread}</span>` : ''}</button>
+    <span class="bb-hours">${state.actions} hour${state.actions === 1 ? '' : 's'} left</span>
     <button class="primary" data-action="end-day" ${state.over || busy ? 'disabled' : ''}>End day</button>`;
 }
 
@@ -123,9 +164,21 @@ function renderView() {
   $('#view').innerHTML = views[currentTab]();
 }
 
+function entryHTML(e, fresh = false) {
+  return `<p class="entry ${e.kind}${fresh ? ' fresh' : ''}"><span class="day">${dateLabel(e.day, 'stamp')}</span>${e.html}</p>`;
+}
+
 function renderLog() {
-  $('#log').innerHTML = `<h2>Chronicle</h2>` + state.log.map(e =>
-    `<p class="entry ${e.kind}"><span class="day">${dateLabel(e.day, 'stamp')}</span>${e.html}</p>`).join('');
+  $('#log').innerHTML = `<h2>Chronicle</h2>` + state.log.map(e => entryHTML(e)).join('');
+  const drawer = $('#drawer');
+  if (!drawer) return;
+  drawer.classList.toggle('open', drawerOpen);
+  drawer.setAttribute('aria-hidden', String(!drawerOpen));
+  document.body.classList.toggle('drawer-open', drawerOpen);
+  if (drawerOpen) {
+    $('#drawer-log').innerHTML = (drawerFresh ? '' : '<p class="muted small">Nothing new since you last looked.</p>')
+      + state.log.map((e, i) => (i === drawerFresh && i ? '<p class="seen-divider">Earlier</p>' : '') + entryHTML(e, i < drawerFresh)).join('');
+  }
 }
 
 function chip(kind, value, label, on, disabled = false) {
@@ -172,11 +225,11 @@ function dossierHTML(d) {
   </dl>`;
 }
 
-function demonNotes(d, openLore) {
-  const frags = d.lore.filter((_, i) => state.lore.includes(`${d.id}-${i}`));
+function demonNotes(d, openLore, freshLore = []) {
+  const frags = d.lore.map((f, i) => [f, `${d.id}-${i}`]).filter(([, id]) => state.lore.includes(id));
   return `${dossierHTML(d)}${claimsHTML(d)}
     ${frags.length ? `<details class="lore" ${openLore ? 'open' : ''}><summary>Lore (${frags.length} of ${d.lore.length})</summary>
-      ${frags.map(f => `<p class="frag"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
+      ${frags.map(([f, id]) => `<p class="frag${freshLore.includes(id) ? ' fresh' : ''}"><span class="src">${f.src}</span>“${fmtLore(f.text)}”</p>`).join('')}
     </details>` : '<p class="muted small">You have read nothing about it. Everything here came from the chamber.</p>'}`;
 }
 
@@ -184,6 +237,9 @@ function viewJournal() {
   const known = knownDemons().sort((a, b) => a.tier - b.tier);
   const unknown = DEMONS.length - known.length;
   const readCount = state.lore.length;
+  const news = journalNews;
+  const freshIds = news ? news.lore : [];
+  const isFresh = d => freshIds.some(id => id.startsWith(`${d.id}-`));
   return `
   <div class="journal">
     <div class="panel row">
@@ -192,12 +248,15 @@ function viewJournal() {
         <p>Lore fragments read: ${readCount} of ${FRAGMENTS.length}. ${unknown ? `${unknown} spirit${unknown > 1 ? 's' : ''} remain unnamed to you.` : 'You know every name worth knowing.'}</p>
       </div>
       <button class="primary" data-action="study" ${state.actions < 1 || state.over ? 'disabled' : ''}>Study in the library <small>(1 hour)</small></button>
+      ${news ? `<div class="result study-result">${news.entries.map(e => `<p class="entry ${e.kind}">${e.html}</p>`).join('')}
+        ${freshIds.length ? `<p class="small muted">Added to the notebook: ${known.filter(d => isFresh(d)).map(d => `<a href="#j-${d.id}">${d.name}</a>`).join(', ')}.</p>` : ''}</div>` : ''}
     </div>
+    ${known.length > 3 ? `<nav class="jump">${known.map(d => `<a href="#j-${d.id}" class="${isFresh(d) ? 'fresh' : ''}">${d.name}</a>`).join('')}</nav>` : ''}
     <div class="cards">
       ${known.map(d => `
-        <article class="panel card tier-${d.tier}">
+        <article class="panel card tier-${d.tier}${isFresh(d) ? ' fresh' : ''}" id="j-${d.id}">
           <header><h3>${d.name}</h3><span class="tag">${TIER_NAMES[d.tier]}</span></header>
-          ${demonNotes(d, true)}
+          ${demonNotes(d, !narrow() || isFresh(d), freshIds)}
           <button class="ghost" data-action="prepare" data-value="${d.id}">Prepare a summoning</button>
         </article>`).join('')}
     </div>

@@ -45,3 +45,4 @@ Open `public/index.html` in a browser. There's no build step. You can also serve
 - `css/style.css`: styling.
 - `tools/playtest.html`, `tools/playtest.js`: the playtest page, scripted player and content checks.
 - `wrangler.jsonc`: Cloudflare Workers config.
+- `public/_headers`: tells browsers to revalidate files on the live site, so updates are never mixed with stale files.

@@ -509,14 +509,108 @@ details.lore summary { cursor: pointer; color: var(--dim); font-size: 0.9rem; ma
   .market { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 720px) {
-  .topbar { position: static; }
-  /* seven tabs don't fit on a phone: wrap them onto two rows of full buttons instead of scrolling sideways */
-  .tabs { flex-wrap: wrap; gap: 0.3rem; overflow-x: visible; padding: 0.6rem 16px; }
-  .tabs button { flex: 1 1 auto; border-radius: 6px; border-bottom: 1px solid var(--line); padding: 0.45em 0.6em; font-size: 0.75rem; letter-spacing: 0.02em; }
-  .tabs button.active { border-color: var(--gold); }
-}
 
 .result span.footnote, #log span.footnote { display: block; margin-top: 0.4rem; }
 .slot.wrong { border-color: var(--blood); color: #e8a090; text-decoration: line-through; }
 .controls .fill { align-self: flex-start; margin: -0.3rem 0 0.6rem; }
+
+/* ---------- the chronicle drawer and bottom bar (one-column layouts) */
+
+.bottombar, .drawer { display: none; }
+.entry.fresh, .frag.fresh { background: #2a2216; border-radius: 0 6px 6px 0; }
+.card.fresh { box-shadow: 0 0 0 1px #8a6a2c; }
+.card { scroll-margin-top: 90px; }
+.study-result { flex-basis: 100%; }
+.study-result .entry { margin: 0 0 0.4rem; border-left: 2px solid var(--lore); padding-left: 0.6rem; }
+.study-result .entry.lore { font-style: italic; }
+.study-result a, .jump a { color: var(--gold-hi); }
+.seen-divider { display: flex; align-items: center; gap: 0.6rem; margin: 0.9rem 0; font-family: var(--display); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.seen-divider::before, .seen-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
+.jump { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 1rem; }
+.jump a { font-family: var(--display); font-size: 0.75rem; letter-spacing: 0.04em; text-decoration: none; border: 1px solid var(--line); border-radius: 1em; padding: 0.3em 0.8em; background: var(--panel); }
+.jump a.fresh { border-color: var(--gold); }
+
+@media (max-width: 960px) {
+  main { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  .bottombar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 10;
+    padding: 0.55rem 12px calc(0.55rem + env(safe-area-inset-bottom));
+    background: #17130ff2;
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(4px);
+  }
+  .bottombar .bb-hours { flex: 1; text-align: right; color: var(--dim); font-size: 0.9rem; }
+  .bottombar button { padding: 0.55em 1em; }
+  .bottombar .badge { margin-left: 0.5em; }
+  .topbar .end-day { display: none; }
+
+  .drawer { display: block; position: fixed; inset: 0; z-index: 15; pointer-events: none; }
+  .drawer-backdrop { position: absolute; inset: 0; background: #0a0806b3; opacity: 0; transition: opacity 0.2s; }
+  .drawer-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border-top: 1px solid #5a4a2a;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -10px 40px #000a;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
+  }
+  .drawer-sheet header { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 16px 0.4rem; border-bottom: 1px solid var(--line); }
+  .drawer-sheet header h2 { margin: 0; }
+  .drawer-body { overflow-y: auto; padding: 0.8rem 16px calc(1rem + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
+  .drawer-body .entry { font-size: 0.95rem; border-left: 2px solid var(--line); padding-left: 0.6rem; margin-bottom: 0.55rem; }
+  .drawer-body .entry .day { font-family: var(--display); font-size: 0.65rem; color: var(--dim); margin-right: 0.4rem; }
+  .drawer-body .entry.good { border-color: var(--good); }
+  .drawer-body .entry.bad { border-color: var(--blood); }
+  .drawer-body .entry.lore { border-color: var(--lore); font-style: italic; }
+  .drawer-body .entry.news { border-color: #b9a888; }
+  .drawer-body .entry.aside { border-color: #c98a4a; }
+  .drawer-body .entry.aside b { color: #e8b27a; }
+  .drawer-body .entry.info { border-color: transparent; color: var(--dim); font-family: var(--display); font-size: 0.75rem; letter-spacing: 0.05em; }
+  .drawer-body .note { color: var(--dim); font-style: italic; font-size: 0.9em; }
+  .drawer-body span.footnote { display: block; margin-top: 0.4rem; }
+  .drawer.open { pointer-events: auto; }
+  .drawer.open .drawer-backdrop { opacity: 1; }
+  .drawer.open .drawer-sheet { transform: none; }
+  body.drawer-open { overflow: hidden; }
+}
+
+/* ---------- phones */
+
+@media (max-width: 720px) {
+  .topbar { position: static; padding: 0.55rem 12px; gap: 0.45rem; }
+  .brand { width: 100%; justify-content: space-between; }
+  .title { font-size: 1.05rem; }
+  .stats { width: 100%; justify-content: space-between; gap: 0.3rem 0.9rem; }
+  .stats .hours { display: none; } /* shown in the bottom bar */
+  .stat .k { font-size: 0.6rem; }
+  .stat .v { font-size: 0.92rem; }
+  /* seven tabs: a compact grid of four columns rather than a strip that scrolls sideways */
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; overflow-x: visible; padding: 0.5rem 12px; }
+  .tabs button { border-radius: 6px; border-bottom: 1px solid var(--line); padding: 0.55em 0.2em; font-size: 0.68rem; letter-spacing: 0.02em; }
+  .tabs button.active { border-color: var(--gold); }
+  .tabs .badge { margin-left: 0.25em; min-width: 1.1em; font-size: 0.65rem; }
+  main { padding: 0.8rem 12px calc(5rem + env(safe-area-inset-bottom)); gap: 0.8rem; }
+  .panel { padding: 0.85rem 0.9rem; }
+  .cards { gap: 0.8rem; margin-top: 0.8rem; }
+  h2 { font-size: 1.05rem; }
+}
+
+/* fingers, not mice: bigger targets for the small controls */
+@media (pointer: coarse) {
+  .chip { padding: 0.5em 0.85em; }
+  .syl-key { padding: 0.7em 0; font-size: 0.85rem; }
+  .slot { padding: 0.6em 0.5em; }
+  button.tiny { padding: 0.4em 0.8em; }
+  .choice { padding: 0.75em 0.9em; }
+  details summary { padding: 0.35em 0; }
+}
