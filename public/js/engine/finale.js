@@ -71,6 +71,8 @@ function finaleBeats(m) {
   if (fam) company.push(fill(FINALE.familiar[Math.min(fam.tier, 4)], { name: bold(fam) }));
   const ithzar = ithzarAtTheCrib();
   if (ithzar) company.push(FINALE.ithzar[ithzar]);
+  const cornelia = state.flags['cornelia-truce'] !== undefined ? 'truce' : state.flags['cornelia-enemy'] !== undefined ? 'enemy' : null;
+  if (cornelia) company.push(FINALE.cornelia[cornelia]);
   if (!trip) beats.push(company.map(p).join(''));
 
   // the circle and runes

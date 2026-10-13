@@ -26,6 +26,11 @@ const FINALE = {
     left: 'The stern seat is empty. Ithzar asked to be let go before this night, and when you would not answer, it went anyway.',
     bound: 'A launch lies a quarter mile off with its lamps doused: City Hall’s observers. Cornelia Ashby is aboard. So, in a stovepipe hat, is her djinni, and it is the only one of them watching the water instead of you.',
   },
+  // after Ithzar is free: how things stand with Cornelia Ashby (Part D of js/ithzar.js)
+  cornelia: {
+    truce: 'A launch lies a quarter mile off: City Hall’s observers. Cornelia Ashby is aboard. As you pass she raises one gloved hand, and keeps it raised until you are out of sight.',
+    enemy: 'A launch lies a quarter mile off with its lamps doused: City Hall’s observers. Cornelia Ashby is aboard. She has come out two miles on a cold night to watch you drown.',
+  },
 
   // the circle and runes, chalked on the pump room floor
   circle: {

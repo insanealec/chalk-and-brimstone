@@ -246,6 +246,13 @@ function runIthzarFavor() {
 }
 
 // The victory screen's last word on Ithzar, if you ever met it.
+// The endings' word on Cornelia Ashby, if her reckoning with you ran its course.
+function corneliaEpilogue() {
+  if (state.flags['cornelia-truce'] !== undefined) return CORNELIA_EPILOGUES.truce;
+  if (state.flags['cornelia-enemy'] !== undefined) return CORNELIA_EPILOGUES.enemy;
+  return '';
+}
+
 function ithzarEpilogue() {
   const f = state.flags;
   if (f['met-ithzar'] === undefined) return '';

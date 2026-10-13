@@ -359,6 +359,17 @@ function applyEffects(fx, cause) {
     state.flags[fx.releaseIthzar === 'kept' ? 'kept-promise' : 'ithzar-left'] = state.day;
     notes.push('Ithzar is gone');
   }
+  // Cornelia's raid: the strongest spirit you keep in a vessel is let out
+  if (fx.crackVessel) {
+    const type = Object.keys(state.vessels).filter(k => state.vessels[k].spirit)
+      .sort((a, b) => demonById(state.vessels[b].spirit).tier - demonById(state.vessels[a].spirit).tier)[0];
+    if (type) {
+      const d = demonById(state.vessels[type].spirit);
+      remember(d.id, 'escaped');
+      state.vessels[type].spirit = null;
+      notes.push(`${d.name} is gone from your ${VESSELS[type].name.toLowerCase()}`);
+    }
+  }
   if (fx.joinIthzar) {
     state.ithzar.joined = true;
     if (state.flags['ithzar-joined'] === undefined) state.flags['ithzar-joined'] = state.day;

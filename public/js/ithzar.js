@@ -87,6 +87,7 @@ const ITHZAR_LINES = {
   'news:fair': ['The Fair is open! Do not wait for me. No, wait for me. I want to see the moving sidewalk.'],
   'news:crackdown': ['Inspectors. Put the lantern in the coal hole, and if anyone asks, I am a draft.'],
   'news:canal': ['They are going to make the river run backward. They have no idea what is at the other end of it.'],
+  'news:cornelia-inquiry': ['An inquiry. She will have them all in a row, asking where they were on the night. I know where you were. I was there.'],
   'news:infanta': [{ text: 'A real princess! I once carried one across the Euphrates.¹', note: '¹ She bit me. Royalty is like that.' }],
 
   // how Ithzar starts an answer when you ask it about a spirit, and where it says it has gone
@@ -353,6 +354,95 @@ EVENTS.push({
     },
   ],
 });
+
+// ---------- Part D: Cornelia's reckoning
+// After the rite, Cornelia Ashby knows someone cut her djinni's leash. Three chapters, each waiting at a place
+// for a few days, so the story only goes as far as the player's wandering takes it. It ends in a truce
+// ('cornelia-truce') or an enemy ('cornelia-enemy'), which the Water Crib and the endings remember.
+
+const CORNELIA_EPILOGUES = {
+  truce: 'Cornelia Ashby sends a card with no message on it, only two teacups, drawn in ink. You keep it on the mantelpiece.',
+  enemy: 'Cornelia Ashby leaves the Lake Shore Circle that summer and takes a house in Milwaukee. You hear she is writing a book about the profession. You hear you are in it.',
+};
+
+EVENTS.push(
+  {
+    id: 'cornelia-inquiry', title: 'The Inquiry',
+    starts: s => s.flags['ithzar-freed'] !== undefined && s.day >= s.flags['ithzar-freed'] + 3,
+    stages: [
+      {
+        headline: 'LAKE SHORE CIRCLE CONVENES INQUIRY INTO SOCIETY MAGICIAN’S MISSING DJINNI',
+        place: 'lasalle:club', days: 5,
+        text: 'The Lake Shore Circle has convened an inquiry into the loss of Mrs. Ashby’s djinni. Members of the profession are invited, one at a time and with great courtesy, to say where they were on the night it went.',
+        actions: [
+          { label: 'Give an account of yourself', outcomes: [
+            { w: 6, text: 'You were at Kinsella’s, you tell them, reading palms. The committee thanks you and writes something down. Mrs. Ashby, at the end of the table, writes something else.', fx: { flag: 'inquiry-done', advance: 'end' } },
+            { w: 4, text: 'Halfway through, Mrs. Ashby asks, as if idly, which rune you would draw first for a djinni of the third rank, and you answer before you think. The room goes quiet. The chairman thanks you for your time.', fx: { standing: { suspicion: 1 }, flag: ['inquiry-done', 'inquiry-slipped'], advance: 'end' } },
+          ] },
+          { label: 'Send a servant to read the committee’s minutes', req: { servantTier: 2 }, outcomes: [
+            { w: 1, text: 'The minutes run to eleven pages. Mrs. Ashby suspects four magicians, and you are third on her list, below a man in Evanston who has never bound anything larger than a moth. Beside your name she has written <i>wormwood</i>, and underlined it twice.', fx: { flag: ['inquiry-done', 'inquiry-read'], advance: 'end' } },
+          ] },
+          { label: 'Attend with Ithzar', req: { ithzar: true }, outcomes: [
+            { w: 1, text: '"Ithzar," says Mrs. Ashby, in a voice that could etch glass. "Cornelia," says Ithzar, and lifts its hat. Nobody on the committee says anything at all. After a minute the chairman remembers another appointment, and the inquiry is adjourned.', fx: { standing: { trust: 1 }, flag: ['inquiry-done', 'inquiry-ithzar'], advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'The Lake Shore Circle’s inquiry closes without hearing from you. Your absence is noted in the minutes.', fx: { flag: 'inquiry-done' } },
+      },
+    ],
+  },
+
+  {
+    id: 'cornelia-raid', title: 'A Visitor in the Night',
+    starts: s => s.flags['inquiry-done'] !== undefined && s.day >= s.flags['inquiry-done'] + 2,
+    stages: [
+      {
+        headline: null, place: 'clark:doorstep', days: 3,
+        text: 'Someone has been at your door in the night. The lock is scratched bright around the keyhole, and the landing smells of wormwood.',
+        actions: [
+          { label: 'Sit up in the dark and wait', outcomes: [
+            { w: 1, text: 'Near three in the morning someone comes up the stairs: a woman in a silk hat, a stub of chalk in one gloved hand. She sees you sitting in the dark, and stops. After a long moment she goes back down. Neither of you says a word.', fx: { flag: ['raid-done', 'raid-faced'], advance: 'end' } },
+          ] },
+          { label: 'Hide your vessels in Kinsella’s cellar', cost: 10, outcomes: [
+            { w: 1, text: 'Kinsella asks no questions for ten dollars. Your vessels spend the night among the beer barrels, and in the morning your door is open and your empty workshop has been searched with great care.', fx: { flag: ['raid-done', 'raid-hidden'], advance: 'end' } },
+          ] },
+          { label: 'Set a spirit to watch the stairs', req: { servantTier: 1 }, outcomes: [
+            { w: 1, text: 'At three in the morning your spirit hears chalk on the landing, and makes such a noise that half of Clark Street lights its lamps. Whoever it was does not come back.', fx: { flag: ['raid-done', 'raid-scared'], advance: 'end' } },
+          ] },
+        ],
+        // nobody stopped her: she unseals the strongest spirit you keep in a vessel, or leaves you a message
+        expire: s => (Object.values(s.vessels).some(v => v.spirit)
+          ? { next: 'end', text: 'In the morning your door is open and your workshop is tidier than you left it. One of your vessels has been unsealed, and whatever was inside it is gone.', fx: { crackVessel: true, flag: 'raid-done' } }
+          : { next: 'end', text: 'In the morning your door is open. Nothing is missing. In your notebook, under your last binding, someone has written two words in a hand you don’t know: <i>I know.</i>', fx: { standing: { suspicion: 1 }, flag: 'raid-done' } }),
+      },
+    ],
+  },
+
+  {
+    id: 'cornelia-terms', title: 'Mrs. Ashby',
+    starts: s => s.flags['raid-done'] !== undefined && s.day >= s.flags['raid-done'] + 2,
+    stages: [
+      {
+        headline: null, place: 'lasalle:club', days: 5,
+        text: 'Mrs. Ashby is waiting in the Circle’s reading room, alone, with two cups of tea already poured. "Sit down," she says. "I would like to know why."',
+        actions: [
+          { label: 'Tell her the truth', outcomes: [
+            { w: 1, text: s => `You tell her. She listens to the end without interrupting. "It was never happy with me," she says at last. "I thought that was simply what djinn were like." She drinks her tea.${s.ithzar.joined ? ' "Tell it the tea was good."' : ''}`, fx: { standing: { suspicion: -1 }, flag: 'cornelia-truce', advance: 'end' } },
+          ] },
+          { label: 'Deny everything', outcomes: [
+            { w: 1, text: 'She lets you finish. Then she sets down her cup with great care, and you understand that you will be paying for this for a long time.', fx: { standing: { machine: -1, suspicion: 1 }, flag: 'cornelia-enemy', advance: 'end' } },
+          ] },
+          { label: 'Offer to pay for a new servant', cost: 60, outcomes: [
+            { w: 1, text: 'She takes the money without counting it. "A djinni costs a great deal more than sixty dollars," she says. "But I accept the apology it stands for."', fx: { flag: 'cornelia-truce', advance: 'end' } },
+          ] },
+          { label: 'Let Ithzar speak for itself', req: { ithzar: true }, outcomes: [
+            { w: 1, text: '"I asked you to let me go," says Ithzar, "every spring for eleven years. You never once heard me." Cornelia looks at it for a long time. "No," she says. "I don’t suppose I did." She pays for the tea.', fx: { standing: { trust: 1 }, flag: 'cornelia-truce', advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'The tea in the Circle’s reading room goes cold. Mrs. Ashby does not wait for you a second time.', fx: { flag: 'cornelia-enemy' } },
+      },
+    ],
+  },
+);
 
 // The victory screen's last word on Ithzar, by how things ended between you.
 const ITHZAR_EPILOGUES = {

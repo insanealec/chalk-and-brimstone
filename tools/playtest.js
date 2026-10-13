@@ -16,7 +16,7 @@
 // It is a measuring stick, not a perfect player: when a change makes it win faster or die less,
 // that is evidence, not proof.
 
-const FRIENDLY_SKIP = /Report|Refuse|Send it away|packers’ money|stuff the ballot|Ask it to stay|buy its own|Ask the engineers/;
+const FRIENDLY_SKIP = /Report|Refuse|Send it away|packers’ money|stuff the ballot|Ask it to stay|buy its own|Ask the engineers|Deny everything/;
 
 function playGame(seed, maxDays = 200) {
   seedRandom(seed);

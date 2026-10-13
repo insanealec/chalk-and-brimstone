@@ -281,6 +281,12 @@ Either way, you face the marid without it: no extra abilities, and no heckling t
 - **Part A ✅:** Ithzar's data, the second familiar slot (abilities at the stronger familiar, Ithzar's voice for warnings once joined), remarks on summonings, districts and headlines, banter, morning notes, chapters 1 and 2, the crackdown tip, and Ithzar's card in the Workshop showing trust in words. Cornelia is now named in the LaSalle Street rival encounter, and meeting her there can start chapter 1 early.
 - **Part B ✅:** Cornelia's binding as a notebook puzzle, the clause *of Release*, the *spy on Cornelia* errand, the doorstep conversation and wincing, chapters 3 and 4 with the second offer, Ithzar's days away, "Ask Ithzar" with lies, and the weekly favor.
 - **Part C ✅:** the call, the parting gift, and the epilogue.
+- **Part D ✅: Cornelia's reckoning.** After the rite, Cornelia knows someone cut her djinni's leash. Asked for after a real playthrough: more story once Ithzar is yours, kept opt-in. Three chapters, each waiting a few days at a place you'll pass while exploring:
+  1. *The Inquiry* (the Lake Shore Circle, in the Clarion): give an account of yourself (it may slip), send a servant to read the minutes, or bring Ithzar. Ignore it and your absence is minuted.
+  2. *A Visitor in the Night* (your doorstep, smelling of wormwood, her incense): sit up and face her, hide your vessels at Kinsella's ($10), or set a spirit on the stairs. Do nothing and she unseals the strongest spirit you keep in a vessel (it remembers escaping).
+  3. *Mrs. Ashby* (tea in the Circle's reading room): tell the truth, pay for a new servant ($60), or let Ithzar speak, for a truce; deny everything, or don't come, and she's your enemy (Machine −1, suspicion +1 for denying).
+
+  The truce or enmity shows at the Water Crib (she is on City Hall's launch, for you or against you) and gets a line in the endings.
 
 #### Deferred: dark paths
 
@@ -378,7 +384,7 @@ From playing the opening by hand and running a scripted player through 16 full g
 - **Event pacing.** The strike and the election overlap in mid-April, which may be too much at once for a new player.
 - **Ithzar's absences.** Built as one day in seven. Is that a fun cost of its first term, or just annoying? The fallback is to make the term pure flavor.
 - **Chapter 3 gating.** The rite needs a circle that holds djinn (the Silver-Inlaid Circle, Alderman rank) and the Moon and Flame runes. Trust 5 may come before Alderman, in which case chapter 3 waits on rank. Watch whether that feels like a wall.
-- **Cornelia after the release.** Does she become a recurring rival who comes after your workshop once she knows you freed her djinni?
+- ✅ **Cornelia after the release.** *Built:* Part D of Ithzar's arc. Open: should an enemy Cornelia keep making trouble after the tea, beyond the Crib and the epilogue?
 
 ## Content conventions
 

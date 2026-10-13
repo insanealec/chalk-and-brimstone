@@ -473,7 +473,7 @@ function renderOverlay() {
     const ending = FINALE.endings[state.over];
     html = `<h1>${ending.title}</h1>
       ${ending.text.map(x => `<p>${fill(x, { date: dateLabel(state.day, 'long') })}</p>`).join('')}
-      ${ithzarEpilogue() ? `<p><i>${ithzarEpilogue()}</i></p>` : ''}
+      ${[ithzarEpilogue(), corneliaEpilogue()].filter(Boolean).map(x => `<p><i>${x}</i></p>`).join('')}
       <button class="primary big" data-action="restart">Begin anew</button>
       <button class="ghost" data-action="close-overlay">Admire your handiwork</button>`;
   }
