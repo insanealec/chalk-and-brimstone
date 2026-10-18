@@ -179,6 +179,133 @@ const EVENTS = [
       },
     ],
   },
+  {
+    id: 'seance', title: 'The Medium',
+    starts: s => s.day >= 5,
+    stages: [
+      {
+        headline: 'SPIRITUALIST TAKES ROOMS ON CLARK STREET; THE DEAD SAID TO BE "UNUSUALLY FORTHCOMING"',
+        place: 'clark:kinsellas', days: 6,
+        text: 'A spiritualist, Madame Ottoline Reese, has taken Kinsella’s back room for séances, Tuesdays and Fridays, a dollar a head. The dead, by every account, have a great deal to say, and most of it is about money.',
+        actions: [
+          { label: 'Sit in on a séance', cost: 1, outcomes: [
+            { w: 7, text: 'The table knocks, the lamp dims, and the dead speak through Madame Reese. Halfway through, a small hand with too many knuckles reaches up from under the tablecloth and raps twice.', fx: { advance: 1 } },
+            { w: 3, text: 'The dead speak at length about a sister in Joliet. You learn nothing, except that the sister is not to be trusted.', fx: {} },
+          ] },
+          { label: 'Ask Kinsella about his lodger', outcomes: [
+            { w: 1, text: 'She pays a month ahead, Kinsella says, in silver, and the silver is always cold. He would take it kindly if you looked into it, as a neighbor.', fx: { advance: 1 } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'Madame Reese has taken her séances to Milwaukee.' },
+      },
+      {
+        headline: null, place: 'clark:kinsellas', days: 5,
+        text: 'You know what is knocking under Madame Reese’s table: an imp, bound badly and paid worse.',
+        actions: [
+          { label: 'Expose her in front of the room', outcomes: [
+            { w: 1, text: 'You lift the tablecloth. The imp under it blinks in the lamplight, and a dozen dockworkers who paid a dollar each to hear from their mothers turn slowly toward Madame Reese. Kinsella stands you drinks for a week.', fx: { rep: 1, standing: { union: 2 }, advance: 'end' } },
+          ] },
+          { label: 'Offer to improve the act, for a share', outcomes: [
+            { w: 1, text: 'With your coaching the dead become a great deal more convincing. Madame Reese pays you twenty dollars, and the patrolman on the corner starts attending on Fridays.', fx: { dollars: 20, standing: { suspicion: 1 }, advance: 'end' } },
+          ] },
+          { label: 'Speak the Dismissal over the imp', outcomes: [
+            { w: 1, text: 'The imp hears the words and goes, and on its way out, for spite, it tells you everything it knows about its mistress’s other bindings. Madame Reese’s next séance is a quiet one.', fx: { lore: [1, 2], loreCount: 2, advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'Madame Reese has taken her séances, and her imp, to Milwaukee.' },
+      },
+    ],
+  },
+
+  {
+    id: 'examination', title: 'The Spring Examination',
+    starts: s => s.day >= 16 && s.rep >= RANKS[1].rep,
+    stages: [
+      {
+        headline: 'LAKE SHORE CIRCLE’S SPRING EXAMINATION: CITY’S MAGICIANS TO BE TESTED BEFORE A PANEL',
+        place: 'lasalle:club', days: 6,
+        text: 'The Lake Shore Circle’s spring examination is open to any magician in good standing with City Hall. Pass, and your name goes on the brass board in the front hall, where the Machine reads it.',
+        actions: [
+          { label: 'Sit the written paper', outcomes: [
+            { w: 6, text: 'Three hours on the correspondences of the lesser runes, in a room so quiet you can hear the examiner’s watch. You pass, a little better than you expected.', fx: { rep: 2, advance: 'end' } },
+            { w: 4, text: 'Question four asks for the true name of a foliot you have never heard of. You write a polite essay on the dangers of guessing at names, and the examiner gives you half marks for prudence.', fx: { rep: 1, advance: 'end' } },
+          ] },
+          { label: 'Bind a spirit before the panel', req: { servantTier: 2 }, outcomes: [
+            { w: 1, text: 'You call your spirit into a chalk circle on the Circle’s parquet and put it through its paces. The panel applauds, which it has not done since 1886, and the Machine reads your name on the brass board that afternoon.', fx: { rep: 3, standing: { machine: 1 }, advance: 'end' } },
+          ] },
+          { label: 'Buy a copy of the questions', cost: 15, outcomes: [
+            { w: 1, text: 'A porter sells you the questions for fifteen dollars, and you pass with distinction. Mrs. Ashby, who set question four, reads your answer twice and looks at you down the length of the hall.', fx: { rep: 2, standing: { suspicion: 1 }, advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'The spring examination has closed, and your name is not on the brass board.' },
+      },
+    ],
+  },
+
+  {
+    // the Panic of 1893 broke on May 5, the day after National Cordage failed
+    id: 'panic', title: 'The Panic',
+    starts: s => s.day >= 33,
+    stages: [
+      {
+        headline: 'PANIC ON LASALLE STREET! NATIONAL CORDAGE FAILS, STOCKS IN FREEFALL',
+        place: 'lasalle:board', days: 3,
+        text: 'National Cordage has failed, and the Board of Trade has lost its mind. Brokers are selling anything to anyone at any price, and men who were rich at breakfast are pawning their watches by lunch.',
+        actions: [
+          { label: 'Read tomorrow’s prices in your scrying glass', req: { glass: 2 }, once: true, outcomes: [
+            { w: 1, text: 'The spirit in the glass shows you tomorrow’s board, chalked up in a clerk’s hand. You buy what will rise and sell what will not, and by the closing bell the Board’s secretary is asking who you are.', fx: { dollars: [40, 70], standing: { suspicion: 1 } } },
+          ] },
+          { label: 'Buy at the bottom', cost: 30, once: true, outcomes: [
+            { w: 6, text: 'You buy railroad stock at a third of what it was worth on Monday, and sell it on Friday for half. The broker who sold it to you shakes your hand and goes home to tell his wife.', fx: { dollars: 50 } },
+            { w: 4, text: 'It turns out not to be the bottom. There was a great deal further to go.', fx: { dollars: 12 } },
+          ] },
+          { label: 'See a ruined broker home', once: true, outcomes: [
+            { w: 1, text: 'He is a ward man of the Machine, it turns out. In the morning he does not remember your name, but his wife does.', fx: { standing: { machine: 1 } } },
+          ] },
+        ],
+        expire: { next: 1 },
+      },
+      {
+        headline: 'RUN ON THE BANKS: DEPOSITORS QUEUE ALL NIGHT ON HALSTED STREET',
+        place: 'maxwell:stalls', days: 4,
+        text: 'The panic has reached the banks. Half of Maxwell Street keeps its savings in the Dime Savings Bank on Halsted Street, and the Dime Savings Bank has closed its doors “for inventory.”',
+        actions: [
+          { label: 'Lend a servant to hold the stallholders’ place in line', req: { servantTier: 1 }, outcomes: [
+            { w: 1, text: 'Your servant stands in the queue all night in the shape of a patient old woman. In the morning the bank opens for an hour, and the stallholders get their money out before it shuts again.', fx: { rep: 1, standing: { union: 2 }, advance: 'end' } },
+          ] },
+          { label: 'Tell the herring woman to get her savings out now', outcomes: [
+            { w: 1, text: 'She goes, and gets it, and tells the whole street who told her. You are paid in herring for a month.', fx: { standing: { union: 1 }, advance: 'end' } },
+          ] },
+          { label: 'Buy a ruined stallholder’s stock cheap', cost: 10, outcomes: [
+            { w: 1, text: 'He sells you a crate of incense for ten dollars because he needs ten dollars. You both know what it is worth.', fx: { incenseRandom: [4, 2], standing: { union: -1 }, advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'The Dime Savings Bank does not reopen.' },
+      },
+    ],
+  },
+
+  {
+    id: 'heatwave', title: 'The Heat Wave',
+    starts: s => s.day >= 30 && (!s.events.strike || s.events.strike.done),
+    stages: [
+      {
+        headline: 'EARLY HEAT SPOILS A MILLION POUNDS OF BEEF; PACKERS BLAME "LABOR TROUBLE IN THE COLD ROOMS"',
+        place: 'stockyards:row', days: 5,
+        text: 'An early heat has settled on the Yards, and the cold rooms are failing one by one. The ice imps that keep them cold have downed tools, the foremen say, and will not go back until they are paid in snow.',
+        actions: [
+          { label: 'Negotiate with the ice imps', outcomes: [
+            { w: 6, text: 'You sit down with the imps in the last cold room on the Row, which is the most comfortable meeting you have had all week. They settle for a sack of rock salt each and Sundays off. The packers pay you for the peace.', fx: { dollars: 25, standing: { union: 1 }, advance: 'end' } },
+            { w: 4, text: 'The ice imps are in no mood for a magician. You come out with frost in your eyebrows and two fingers you cannot feel until evening.', fx: { health: -1 } },
+          ] },
+          { label: 'Have your servant drive them back to work', req: { servantTier: 2 }, outcomes: [
+            { w: 1, text: 'Your servant goes from cold room to cold room, and the imps go back to work in silence. The packers pay well. The imps will remember who sent it.', fx: { dollars: 35, standing: { machine: 1, union: -1 }, advance: 'end' } },
+          ] },
+        ],
+        expire: { next: 'end', text: 'The heat breaks on its own. The Yards smell, briefly, even worse than usual.' },
+      },
+    ],
+  }
 ];
 
 // Later events, so May isn't empty. Both are loosely historical: the Sanitary and Ship Canal was dug in

@@ -9,11 +9,13 @@
 //   req       { rank, servantTier, known, machine, union } needed to pick it
 //             (servantTier: a servant or your familiar; known: a spirit you have heard of;
 //              machine / union: at least this standing with the Machine / the workers)
-//             { lantern, ring, flag, ithzar } hide it entirely unless that vessel holds a spirit of at
-//             least this class, that flag has been set, or Ithzar is around
+//             { lantern, ring, glass, flag, ithzar } hide it entirely unless that vessel (glass: the scrying
+//             glass) holds a spirit of at least this class, that flag has been set, or Ithzar is around
 //   unless    a flag that hides the action once it has been set
 //   outcomes  [{ w (weight), text, fx }], one is drawn by weight
-// Street encounter: { id, title, text, choices, once?, unless?, flag? }   flag: set when the encounter happens
+// Street encounter: { id, title, text, choices, once?, unless?, when?, flag? }
+//   flag: set when the encounter happens; when(state): only met while this is true (an event running, say).
+//   A walk avoids the district's last few encounters.
 //
 // Outcome effects (fx):
 //   dollars        n or [min, max] (negative takes money, never below zero)
@@ -66,7 +68,54 @@ const DISTRICTS = [
         ],
       },
     ],
-    street: [],
+    street: [
+      {
+        id: 'organ', title: 'The Organ Grinder',
+        text: 'An organ grinder works the corner outside Kinsella’s. His monkey wears a red fez and collects pennies in a tin cup, and when it looks at you its eyes catch the light the way no monkey’s should.',
+        choices: [
+          { label: 'Drop a penny in the cup', cost: 1, outcomes: [
+            { w: 6, text: 'The monkey bows, and as it straightens it whispers in a voice like a rusty hinge: the name of a magician who owes it money, and what he keeps in his cellar.', fx: { lore: [1, 2] } },
+            { w: 4, text: 'The monkey bites the penny, finds it genuine, and loses interest in you.', fx: {} },
+          ] },
+          { label: 'Tell the grinder what his monkey is', outcomes: [
+            { w: 1, text: 'The grinder goes pale and gives you a dollar to keep it to yourself. Behind his back, the monkey makes a gesture you have only seen sailors make.', fx: { dollars: 1 } },
+          ] },
+          { label: 'Walk on', outcomes: [{ w: 1, text: 'Behind you, the organ starts “After the Ball” for the fourth time this hour.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'landlady', title: 'Mrs. Dunphy',
+        text: 'Your landlady, Mrs. Dunphy, catches you on the stairs. There is a scorch mark on her ceiling in the shape of a pentacle, and she would like to know what you propose to do about it.',
+        choices: [
+          { label: 'Pay for the plasterer', cost: 4, outcomes: [
+            { w: 1, text: 'She takes the money, and stops mentioning you to the patrolman on the corner.', fx: { standing: { suspicion: -1 } } },
+          ] },
+          { label: 'Have your servant fix the ceiling', req: { servantTier: 1 }, outcomes: [
+            { w: 7, text: 'By evening the ceiling is whiter than it has been since the Fire. Mrs. Dunphy is delighted, and a little afraid of you.', fx: { standing: { suspicion: -1 } } },
+            { w: 3, text: 'Your servant fixes the ceiling, and leaves a small rude face in the plaster where only you will notice it.', fx: {} },
+          ] },
+          { label: 'Promise to be more careful', outcomes: [
+            { w: 6, text: 'She does not believe you, but she likes being promised things.', fx: {} },
+            { w: 4, text: 'She does not believe you, and says so to the patrolman on the corner.', fx: { standing: { suspicion: 1 } } },
+          ] },
+        ],
+      },
+      {
+        id: 'wallet', once: true, title: 'A Wallet in the Gutter',
+        text: 'A fat calfskin wallet lies in the gutter outside the Sherman House. Inside: forty dollars, a railway pass, and a card engraved with the name of an alderman.',
+        choices: [
+          { label: 'Return it to the alderman', outcomes: [
+            { w: 1, text: 'The alderman’s secretary counts the money in front of you, finds it all there, and looks at you as if you were a new kind of insect. The alderman remembers your name.', fx: { rep: 1, standing: { machine: 2 } } },
+          ] },
+          { label: 'Keep the money and post the wallet back', outcomes: [
+            { w: 1, text: 'You keep the forty dollars and drop the wallet in a mailbox. In the First Ward this counts as civic virtue.', fx: { dollars: 40 } },
+          ] },
+          { label: 'Give the money to the Mission on Van Buren Street', outcomes: [
+            { w: 1, text: 'The sister at the Mission thanks you, and tells everyone in the soup line.', fx: { standing: { union: 2 } } },
+          ] },
+        ],
+      },
+    ],
   },
 
   {
@@ -102,6 +151,44 @@ const DISTRICTS = [
       },
     ],
     street: [
+      {
+        id: 'elixir', title: 'Dr. Fennimore’s Elixir',
+        text: 'A man on a soapbox is selling Dr. Fennimore’s Galvanic Elixir, a dollar the bottle, against gout, grief and the tremors. One bottle in his crate is glowing faintly, and he has not noticed.',
+        choices: [
+          { label: 'Buy the glowing bottle', cost: 1, outcomes: [
+            { w: 6, text: 'It tastes of copper and thunderstorms. Your bruises are gone by evening.', fx: { health: 2 } },
+            { w: 4, text: 'It is lamp oil and food coloring. The glow was the light off the river.', fx: {} },
+          ] },
+          { label: 'Ask him where he gets it', outcomes: [
+            { w: 1, text: 'From a chemist on Halsted Street who pays his rent in bottles, he says. The chemist keeps a foliot in his still, it turns out, and talks about it to anyone who buys a drink.', fx: { lore: [2, 2] } },
+          ] },
+          { label: 'Walk on', outcomes: [{ w: 1, text: 'Behind you, a woman buys three bottles for her husband’s gout.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'chess', title: 'The Chess Player',
+        text: 'An old man in a skullcap plays chess against all comers on an upturned crate, a nickel a game. He has not lost today. Whenever his opponent looks away, one of the opponent’s pawns edges back a square.',
+        choices: [
+          { label: 'Play him for five dollars', cost: 5, outcomes: [
+            { w: 4, text: 'You watch your pawns instead of the board, and win. He pays up with a sigh, and calls the imp under the crate a name in Yiddish that it seems to deserve.', fx: { dollars: 12 } },
+            { w: 6, text: 'You watch your pawns so closely that you lose your queen to an ordinary bishop. He is also, it turns out, good at chess.', fx: {} },
+          ] },
+          { label: 'Speak to the imp under the crate', outcomes: [
+            { w: 1, text: 'The imp lodges with the old man and pays its rent in won games. For your silence it tells you about another imp, a street over, that does the same thing with dice.', fx: { lore: [1, 1] } },
+          ] },
+          { label: 'Watch a game', outcomes: [{ w: 1, text: 'A broker from LaSalle Street loses four games in a row, then a fifth, and leaves blaming the light.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'ragman', once: true, title: 'The Rag-and-Bone Man',
+        text: 'A rag-and-bone man’s cart is piled with the leavings of a house on Prairie Avenue: hat boxes, a birdcage, and a stack of leather notebooks tied with string. The top one has a circle chalked on the cover.',
+        choices: [
+          { label: 'Buy the notebooks', cost: 12, outcomes: [
+            { w: 1, text: 'Most of them are household accounts. The last one is a dead magician’s working notes, and it teaches you a rune.', fx: { rune: 'serpent' } },
+          ] },
+          { label: 'Let the cart go by', outcomes: [{ w: 1, text: 'The cart rattles off toward the river, the birdcage swinging.', fx: {} }] },
+        ],
+      },
       {
         id: 'herring', once: true, title: 'The Herring Woman',
         text: 'An old woman selling pickled herring absently traces a rune in the brine with one finger. It glows, faintly, then fades.',
@@ -186,6 +273,49 @@ const DISTRICTS = [
     ],
     street: [
       {
+        id: 'grady', title: 'Officer Grady',
+        text: 'Officer Grady of the Harrison Street station falls into step beside you. He hears you have been doing a little business, he says, and he would hate for anyone to make trouble over it.',
+        choices: [
+          { label: 'Pay him to keep it that way', cost: 5, outcomes: [
+            { w: 1, text: 'Grady pockets the money without looking at it and touches his helmet. Somewhere at the station a report goes into a drawer instead of onto a desk.', fx: { standing: { suspicion: -1 } } },
+          ] },
+          { label: 'Show him the Machine’s signet', req: { ring: 1 }, outcomes: [
+            { w: 1, text: 'Grady sees the ring, remembers an appointment, and walks away faster than a policeman should.', fx: { standing: { suspicion: -1 } } },
+          ] },
+          { label: 'Tell him you have no idea what he means', outcomes: [
+            { w: 5, text: 'Grady laughs, says he likes a magician with a sense of humor, and lets it go.', fx: {} },
+            { w: 5, text: 'Grady stops laughing, and writes your name in his little book.', fx: { standing: { suspicion: 1 } } },
+          ] },
+        ],
+      },
+      {
+        id: 'gambler', once: true, title: 'A Gambler’s Debt',
+        text: 'A gambler in a checked suit, three days into a losing streak, offers to sell you the true name of an imp he won at cards in Cincinnati. He wants eight dollars and a drink.',
+        choices: [
+          { label: 'Buy him the drink and the name', cost: 8, outcomes: [
+            { w: 7, text: 'He writes what he remembers on a beer mat. It is not the whole name, but it is not nothing.', fx: { lore: [1, 1] } },
+            { w: 3, text: 'He writes it on a beer mat. Your notebook already knows it. You drink the drink yourself.', fx: {} },
+          ] },
+          { label: 'Wish him luck', outcomes: [{ w: 1, text: 'He thanks you, and goes back to the faro table to test it.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'parade', title: 'A Torchlight Parade', when: s => s.events.election && !s.events.election.done,
+        text: 'A torchlight parade for Honest Mike Rourke comes down Clark Street: a brass band, two hundred men in borrowed coats, and a banner of Rourke so large it takes six to carry it. Several of the marchers cast no shadow.',
+        choices: [
+          { label: 'Fall in and march', outcomes: [
+            { w: 1, text: 'You march to the end of the route and are handed a free sandwich and a ballot already filled in.', fx: { standing: { machine: 1 } } },
+          ] },
+          { label: 'Heckle the banner', outcomes: [
+            { w: 6, text: 'The crowd on the sidewalk laughs with you, and somebody from Ellen Vance’s campaign buys you a beer.', fx: { standing: { union: 1, machine: -1 } } },
+            { w: 4, text: 'One of the marchers without a shadow steps out of line and walks you into a lamppost.', fx: { health: -1, standing: { union: 1, machine: -1 } } },
+          ] },
+          { label: 'Count the marchers without shadows', outcomes: [
+            { w: 1, text: 'Eleven. Three of them answer to the names on headstones in the North Side cemetery, and one of them, cornered, tells you what it really is.', fx: { lore: [1, 2] } },
+          ] },
+        ],
+      },
+      {
         id: 'museum', once: true, title: 'A Genuine Bottled Djinni',
         text: 'A dime museum on State Street advertises A GENUINE BOTTLED DJINNI! Inside, on a velvet cushion, sits a green glass bottle. Something in it is swearing, fluently, in several dead languages.',
         choices: [
@@ -265,6 +395,45 @@ const DISTRICTS = [
     ],
     street: [
       {
+        id: 'clerk', title: 'A Clerk at Lunch',
+        text: 'A City Hall clerk with ink to the elbows is eating his lunch on the steps of the Rookery. He copies out the commissions, and he looks as if nobody has bought him lunch in years.',
+        choices: [
+          { label: 'Buy him a better lunch', cost: 3, outcomes: [
+            { w: 6, text: 'Over oysters at Rector’s he tells you which files sit in the cabinet behind his desk, and what one of them says.', fx: { lore: r => [Math.max(1, r - 1), r] } },
+            { w: 4, text: 'He eats the lunch, thanks you warmly, and tells you nothing, because he is honest. You had not expected that.', fx: {} },
+          ] },
+          { label: 'Leave him to his sandwich', outcomes: [{ w: 1, text: 'He nods to you, the way one clerk nods to another.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'ticker', title: 'A Strip of Ticker Tape',
+        text: 'A strip of ticker tape blows down LaSalle Street and wraps itself around your ankle. The prices on it are tomorrow’s.',
+        choices: [
+          { label: 'Buy what it says will rise', cost: 10, outcomes: [
+            { w: 6, text: 'It rises. You sell at noon, and the man who buys from you looks at you the way people look at magicians.', fx: { dollars: 22 } },
+            { w: 4, text: 'It rises the day after tomorrow. Either the tape was a day early or you were a day late.', fx: { dollars: 4 } },
+          ] },
+          { label: 'Take it to the secretary of the Board of Trade', outcomes: [
+            { w: 1, text: 'The secretary burns it in his ashtray, thanks you for your public spirit, and remembers your face.', fx: { standing: { machine: 1 } } },
+          ] },
+          { label: 'Let it blow away', outcomes: [{ w: 1, text: 'It flutters off toward the river. A broker chases it for a block and a half.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'petitioner', title: 'A Petitioner', when: s => s.rep >= RANKS[2].rep,
+        text: 'A widow in good black follows you down from City Hall. She has heard you are a magician the Machine listens to, and her late husband’s ghost is keeping the lodgers up.',
+        choices: [
+          { label: 'Send your servant to lay the ghost', req: { servantTier: 2 }, outcomes: [
+            { w: 1, text: 'It is not a ghost. It is an imp her husband bound in 1879 and forgot to dismiss, and it is delighted to be let go. The widow pays you, and tells her friends.', fx: { dollars: [15, 25], rep: 1 } },
+          ] },
+          { label: 'See to it yourself', outcomes: [
+            { w: 6, text: 'You chalk a small circle in her attic and speak the Dismissal. The knocking stops. She pays you in banknotes that smell of camphor.', fx: { dollars: 12 } },
+            { w: 4, text: 'The imp in the attic is not ready to go, and says so with a coal scuttle.', fx: { health: -2, dollars: 6 } },
+          ] },
+          { label: 'Send her to Mrs. Ashby', outcomes: [{ w: 1, text: 'She thanks you. Mrs. Ashby, you hear later, charged her forty dollars.', fx: {} }] },
+        ],
+      },
+      {
         id: 'rival', title: 'A Rival Magician', flag: 'met-cornelia',
         text: 'A magician in a silk hat recognizes you outside the Rookery: Mrs. Cornelia Ashby, who sits on the Lake Shore Circle’s committee and keeps a djinni the way other women keep a lapdog. "Thwaite’s apprentice," she says, as if naming a stain.',
         choices: [
@@ -326,6 +495,33 @@ const DISTRICTS = [
     ],
     street: [
       {
+        id: 'steer', title: 'A Runaway Steer',
+        text: 'A steer has broken out of the pens and is coming down Halsted Street at a gallop, scattering wagons. Its eyes are lit like lamps, and a small grinning shape is riding between its horns.',
+        choices: [
+          { label: 'Stand your ground and speak the Dismissal', outcomes: [
+            { w: 6, text: 'The rider hears the Dismissal and lets go, and the steer stops dead a yard from your boots, astonished at itself. The drovers stand you a drink.', fx: { rep: 1, standing: { union: 1 } } },
+            { w: 4, text: 'The rider hears the Dismissal and ignores it. You spend the afternoon on your back in the mud, being stepped around.', fx: { health: -2 } },
+          ] },
+          { label: 'Set your servant on the rider', req: { servantTier: 2 }, outcomes: [
+            { w: 1, text: 'Your servant plucks the imp off the steer like a burr off a coat. The packinghouse that owns the steer pays you a finder’s fee.', fx: { dollars: [10, 20] } },
+          ] },
+          { label: 'Climb the nearest fence', outcomes: [{ w: 1, text: 'You sit on the fence with three drovers and a newsboy and watch it go by.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'meeting', title: 'A Meeting in a Back Room',
+        text: 'Behind a saloon on Ashland Avenue, forty packinghouse workers are crowded into a back room, arguing in four languages about wages. They go quiet when you come in.',
+        choices: [
+          { label: 'Speak for the workers', outcomes: [
+            { w: 1, text: 'You do not say much, but you say it in the right language. They let you stay to the end.', fx: { standing: { union: 2, machine: -1 } } },
+          ] },
+          { label: 'Report the meeting to the Machine', outcomes: [
+            { w: 1, text: 'The Machine is grateful in the way it is always grateful: briefly, and with a note in a file.', fx: { standing: { machine: 2, union: -2 } } },
+          ] },
+          { label: 'Leave quietly', outcomes: [{ w: 1, text: 'You go. The argument starts again before the door has closed.', fx: {} }] },
+        ],
+      },
+      {
         id: 'mole', once: true, title: 'Diggings under Packingtown',
         text: 'Under a boardwalk you spot a lumpish thing with a monocle, tunneling with great dignity through the muck.',
         choices: [
@@ -351,7 +547,7 @@ const DISTRICTS = [
   },
 
   {
-    id: 'midway', name: 'The Midway Plaisance', rank: 2, opensDay: 29, danger: 1, x: 432, y: 455,
+    id: 'midway', name: 'The Midway Plaisance', rank: 2, opensDay: 29, danger: 1, x: 432, y: 455, streetLabel: 'Walk the Midway',
     desc: 'The World’s Columbian Exposition: electric light, the great Wheel, and a "Street in Cairo" where, rumor says, not all the Egyptians are human.',
     places: [
       {
@@ -406,7 +602,48 @@ const DISTRICTS = [
         ],
       },
     ],
-    street: [],
+    street: [
+      {
+        id: 'lions', title: 'Hagenbeck’s Lions',
+        text: 'At Hagenbeck’s Animal Arena a lion has ridden a tricycle twice a day since the Fair opened. Today it has stopped in the middle of the ring and is staring at the audience, as if looking for someone in particular.',
+        choices: [
+          { label: 'Look the lion in the eye', outcomes: [
+            { w: 6, text: 'There is a spirit in the lion, looking for a magician who owes it a favor. It is disappointed that you are not him, and tells you so at length.', fx: { lore: [2, 3] } },
+            { w: 4, text: 'Whatever is in the lion takes offense. The keepers get you out of the front row with a torn coat and a long scratch.', fx: { health: -2 } },
+          ] },
+          { label: 'Send your servant into the cage', req: { servantTier: 3 }, outcomes: [
+            { w: 1, text: 'A foliot shoots out of the lion’s ear like a cork from a bottle and makes for the lake. The lion finishes its ride to applause, and the arena’s manager pays you in gold.', fx: { dollars: 40, rep: 1 } },
+          ] },
+          { label: 'Watch the show', cost: 1, outcomes: [{ w: 1, text: 'The lion finishes the act without enthusiasm. The children love it anyway.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'balloon', title: 'The Captive Balloon',
+        text: 'The captive balloon at the west end of the Midway goes up a thousand feet on its cable, two dollars a ride. From the top, they say, you can see four states.',
+        choices: [
+          { label: 'Ride it up', cost: 2, outcomes: [
+            { w: 5, text: 'From the top the whole city is laid out like a map, and if you know how to look you can see where spirits are at work: a flicker here, a curl of wrong-colored smoke there. You note down two of them.', fx: { lore: [1, 3] } },
+            { w: 3, text: 'The wind picks up. The balloon bucks on its cable, and you spend the ride on the floor of the basket with a schoolteacher from Ohio.', fx: { health: -1 } },
+            { w: 2, text: 'A sooty sparrow lands on the rim of the basket, counts the chimneys of the South Side aloud, and is gone before you can ask its name.', fx: {} },
+          ] },
+          { label: 'Watch it from the ground', outcomes: [{ w: 1, text: 'It goes up, comes down, and goes up again, like the price of wheat.', fx: {} }] },
+        ],
+      },
+      {
+        id: 'photographer', title: 'The Photographer',
+        text: 'A photographer offers to take your likeness against a painted Court of Honor, a dollar. When he shows you the wet plate, there is someone standing behind you who was not there.',
+        choices: [
+          { label: 'Buy the print', cost: 1, outcomes: [
+            { w: 1, text: s => (s.ithzar.joined ? 'It is Ithzar, of course, in its stovepipe hat, holding two fingers up behind your head.'
+              : ownFamiliar() ? `It is ${ownFamiliar().name}, of course, pulling a face at the camera.`
+              : 'It is no one you know, and by the time the print is dry it has gone from the paper.'), fx: {} },
+          ] },
+          { label: 'Ask him to take another', outcomes: [
+            { w: 1, text: 'The second plate shows only you, looking startled. He charges you for both.', fx: { dollars: -1 } },
+          ] },
+        ],
+      },
+    ],
   },
 
   {
@@ -440,6 +677,33 @@ const DISTRICTS = [
       },
     ],
     street: [
+      {
+        id: 'net', title: 'The Fisherman’s Net',
+        text: 'A fisherman has tied up at the Crib’s ladder to wait out the weather. He will not fish near the Crib any more, he says. His nets come up with things in them that were never alive.',
+        choices: [
+          { label: 'Buy what was in his last net', cost: 6, outcomes: [
+            { w: 4, text: 'A lump of grey wax as big as your fist, greasy and sweet. Ambergris, from a lake that has never had a whale in it.', fx: { incense: { ambergris: 1 } } },
+            { w: 6, text: 'A brass doorknob, a child’s shoe, and a bottle with a letter in it in a language you cannot read. You keep the letter.', fx: {} },
+          ] },
+          { label: 'Ask him what he has seen', outcomes: [
+            { w: 1, text: 'A light under the water at night, he says, moving against the current, as big as a streetcar. He has not told his wife.', fx: {} },
+          ] },
+        ],
+      },
+      {
+        id: 'storm', title: 'Weather on the Lake',
+        text: 'A squall comes across the lake out of a clear sky, black and fast, and hits the gallery like a thrown bucket. The engineers run for the pump house.',
+        choices: [
+          { label: 'Run for the pump house', outcomes: [{ w: 1, text: 'You wait it out with the engineers, who play cards and do not talk about the weather.', fx: {} }] },
+          { label: 'Call to Squall by name', req: { known: 'squall' }, outcomes: [
+            { w: 1, text: 'The wind drops at once. A sooty sparrow lands on the rail, puffed up with pride, says it was only practicing, and leaves you a stick of incense it stole from the engineers.', fx: { incenseRandom: [1, 3] } },
+          ] },
+          { label: 'Stand in it and listen', outcomes: [
+            { w: 5, text: 'Under the wind, in the gaps between the waves, the lake says a syllable under its breath.', fx: { loreDemon: 'shemashara' } },
+            { w: 5, text: 'You hear nothing but wind, and catch a chill that lasts the week.', fx: { health: -2 } },
+          ] },
+        ],
+      },
       {
         id: 'fog', title: 'Fog on the Water',
         text: 'A fog rolls across the lake toward the crib. As it passes, it speaks to you in Greek, in a woman’s voice, bored and amused.',

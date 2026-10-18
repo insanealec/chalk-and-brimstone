@@ -88,6 +88,10 @@ const ITHZAR_LINES = {
   'news:crackdown': ['Inspectors. Put the lantern in the coal hole, and if anyone asks, I am a draft.'],
   'news:canal': ['They are going to make the river run backward. They have no idea what is at the other end of it.'],
   'news:cornelia-inquiry': ['An inquiry. She will have them all in a row, asking where they were on the night. I know where you were. I was there.'],
+  'news:seance': ['A medium on Clark Street. Nine in ten are frauds, and the tenth has an imp under the table. Both kinds charge a dollar.'],
+  'news:examination': [{ text: 'An examination. I sat one in Babylon, for a bet.¹', note: '¹ I was the examiner. It was still a very hard paper.' }],
+  'news:panic': ['A panic. I have seen eleven. Sell the paper and buy bread; bread always comes back.'],
+  'news:heatwave': ['Ice imps on strike. Every spirit in the Yards is watching to see how it ends, and so is every packer.'],
   'news:infanta': [{ text: 'A real princess! I once carried one across the Euphrates.¹', note: '¹ She bit me. Royalty is like that.' }],
 
   // how Ithzar starts an answer when you ask it about a spirit, and where it says it has gone

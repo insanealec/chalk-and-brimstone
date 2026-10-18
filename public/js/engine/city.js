@@ -128,10 +128,11 @@ function choiceBlocker(ch) {
   return null;
 }
 
-// Lantern, signet and story-flag choices are invisible until you qualify for them.
+// Lantern, signet, scrying-glass and story-flag choices are invisible until you qualify for them.
 function choiceHidden(ch) {
   const r = ch.req || {};
   return Boolean((r.lantern && vesselTier('lantern') < r.lantern) || (r.ring && vesselTier('ring') < r.ring)
+    || (r.glass && vesselTier('scrying') < r.glass)
     || (r.flag && state.flags[r.flag] === undefined) || (r.ithzar && !ithzarPresent())
     || (ch.unless && state.flags[ch.unless] !== undefined));
 }
@@ -201,7 +202,7 @@ function doAction(key) {
 
 function streetEncounters(dist) {
   return dist.street.filter(e => !(e.once && state.used[`s:${dist.id}:${e.id}`] !== undefined)
-    && !(e.unless && state.flags[e.unless] !== undefined));
+    && !(e.unless && state.flags[e.unless] !== undefined) && (!e.when || e.when(state)));
 }
 
 function currentEncounter() {
@@ -215,11 +216,14 @@ function walkStreets(id) {
   const dist = districtById(id);
   const pool = dist ? streetEncounters(dist) : [];
   if (!pool.length || districtBlocker(dist) || state.encounter || state.actions < 1 || state.over) return;
-  const fresh = pool.filter(e => e.id !== state.lastStreet[id]);
+  // avoid the last few encounters here, so a few walks in a row show different streets
+  const recent = [].concat(state.lastStreet[id] || []); // saves from before this kept a single id
+  const fresh = pool.filter(e => !recent.includes(e.id));
   const enc = pick(fresh.length ? fresh : pool);
   state.actions--;
   state.encounter = { district: id, id: enc.id };
-  state.lastStreet[id] = enc.id;
+  // remember up to 3, but always leave at least two to choose between, so the order never becomes a fixed cycle
+  state.lastStreet[id] = [enc.id, ...recent.filter(x => x !== enc.id)].slice(0, clamp(pool.length - 2, 1, 3));
   if (enc.flag && state.flags[enc.flag] === undefined) state.flags[enc.flag] = state.day;
   state.lastResult = null;
   log(`You spend an hour wandering ${dist.name}.`);

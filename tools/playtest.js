@@ -241,7 +241,12 @@ function playGame(seed, maxDays = 200) {
     if (state.ithzar.joined && isKnown(marid) && !askBlocker(marid)) askIthzar(marid.id);
 
     for (let guard = 0; state.actions > 0 && !state.over && guard < 12; guard++) {
-      if (state.encounter) { chooseOption(0); continue; }
+      if (state.encounter) {
+        // the first choice it can actually take
+        const enc = currentEncounter().enc;
+        chooseOption(Math.max(0, enc.choices.findIndex(ch => !choiceHidden(ch) && !choiceBlocker(ch))));
+        continue;
+      }
       if (state.health <= 4 && act(/Sleep off/)) continue;
       if (act(/./, true)) continue;
       if (tryRite()) continue;

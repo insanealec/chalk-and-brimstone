@@ -68,7 +68,7 @@ function newState() {
     district: 'maxwell',    // district selected on the city map
     encounter: null,        // { district, id } street encounter awaiting a choice
     lastResult: null,       // what happened on the last action in the city
-    lastStreet: {},         // district id -> last street encounter, to avoid immediate repeats
+    lastStreet: {},         // district id -> its last few street encounters, newest first, to avoid repeats
     used: {},               // action key -> day last used (for once and cooldown)
     events: {},             // event id -> { stage, since, done }
     flags: {},              // story flag -> day it was set
