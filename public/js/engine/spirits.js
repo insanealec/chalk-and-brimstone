@@ -103,6 +103,7 @@ function errandChance(sv, diff, tier = demonById(sv.demonId).tier) {
 
 function errandDiff(errand, tier) {
   if (errand === 'commission') return currentCommission().diff;
+  if (errand.startsWith('job:')) return jobForErrand(errand).diff;
   return ERRANDS[errand].diff(tier);
 }
 
@@ -116,16 +117,19 @@ function runErrand(sv, d = demonById(sv.demonId)) {
     const c = currentCommission();
     if (!c || c.type !== 'errand') { sv.errand = null; return; }
   }
+  if (sv.errand.startsWith('job:') && !jobForErrand(sv.errand)) { sv.errand = 'coin'; } // the job lapsed or was done
+  const job = jobForErrand(sv.errand);
   const e = ERRANDS[sv.errand];
   if (e && e.available && !e.available(state)) { sv.errand = null; return; }
   const succeeded = random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier);
 
   if (!succeeded) {
     if (sv.binding === 'uneasy' && random() < 0.5) return twist(d);
-    log(fill(pick(ERRAND_TEXT[sv.errand].fail), vars), 'bad');
+    log(fill(pick(ERRAND_TEXT[job ? 'commission' : sv.errand].fail), vars), 'bad');
     return;
   }
 
+  if (job) return completeJob(job);
   switch (sv.errand) {
     case 'coin': {
       const amt = coinAmount(d.tier);
@@ -184,6 +188,34 @@ function twist(d) {
   } else {
     log(fill(t.text, vars), 'bad');
   }
+}
+
+// A firmly bound servant in its last two nights can be kept on for another term, for sticks of the incense it
+// likes: no summoning, no hour spent. Each renewal of the same servant costs one stick more than the last.
+const renewCost = sv => (sv.renewals || 0) + 1;
+
+// Why this servant can't be renewed, or null.
+function renewBlocker(sv) {
+  const d = demonById(sv.demonId);
+  if (sv.binding !== 'firm' || sv.strained) return 'Only a firm binding can be renewed.';
+  const likes = dossier(d).likes;
+  if (!likes) return `Your notebook doesn’t know what incense ${d.name} likes.`;
+  const n = renewCost(sv);
+  if ((state.incense[likes] || 0) < n) return `Renewing it takes ${n} ${n > 1 ? 'sticks' : 'stick'} of ${INCENSE[likes].name.toLowerCase()}, and you have ${state.incense[likes] || 0}.`;
+  return null;
+}
+
+function renewServant(uid) {
+  const sv = state.servants.find(s => s.uid === uid);
+  if (!sv || sv.patience > 2 || renewBlocker(sv) || state.over) return;
+  const d = demonById(sv.demonId);
+  const likes = dossier(d).likes;
+  const n = renewCost(sv);
+  state.incense[likes] -= n;
+  sv.patience += PATIENCE[d.tier] + 2;
+  sv.renewals = (sv.renewals || 0) + 1;
+  log(`You burn ${n > 1 ? `${n} sticks` : 'a stick'} of ${INCENSE[likes].name.toLowerCase()} and renew ${bold(d)}’s term. It agrees, and makes a note of the terms${n > 1 ? ', which are getting steeper' : ''}.`, 'good');
+  render();
 }
 
 function dismiss(uid) {

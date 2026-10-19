@@ -14,7 +14,7 @@ const isFinaleSummons = () => state.sel.name === FINALE_SPIRIT;
 // The marid can only be called up once City Hall has asked for it.
 function finaleBlocker() {
   const c = currentCommission();
-  if (!c || !c.win) return 'City Hall has not asked for the deep one yet, and you would not want to wake it for nothing.';
+  if (!c || !c.win || !commissionReady()) return 'City Hall has not asked for the deep one yet, and you would not want to wake it for nothing.';
   return null;
 }
 

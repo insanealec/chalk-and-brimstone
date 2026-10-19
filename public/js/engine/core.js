@@ -56,6 +56,10 @@ function newState() {
     servants: [],
     nextUid: 1,
     commission: 0,
+    commissionDay: 0,       // the day the last commission was done (a commission with `wait` waits from then)
+    jobs: [],               // City Hall's ward work on offer (js/engine/jobs.js)
+    jobsDone: 0,
+    recentJobs: [],         // ids of jobs offered lately, so the board doesn't repeat itself
     log: [],
     over: null, // 'dead' | 'won'
     deathCause: '',

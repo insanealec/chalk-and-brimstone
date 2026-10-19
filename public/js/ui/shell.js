@@ -150,6 +150,7 @@ function renderTabs() {
     journal: state.newLore ? `<span class="badge">${state.newLore}</span>` : '',
     servants: state.servants.some(sv => sv.binding !== 'firm' && sv.patience <= 1) ? '<span class="badge alert" title="A servant’s bonds will snap tonight">!</span>'
       : state.servants.length ? `<span class="badge quiet">${state.servants.length}</span>` : '',
+    cityhall: state.jobs.some(j => !j.done && j.kind !== 'errand' && !handInBlocker(j)) ? '<span class="badge alert" title="Ward work you can hand in">!</span>' : '',
     city: state.encounter || activeEvents().some(a => a.stage.place.startsWith('clark:')) ? '<span class="badge alert">!</span>' : '',
   };
   document.querySelectorAll('#tabs [data-tab]').forEach(b => {
@@ -286,6 +287,10 @@ function errandOptions(sv, tier, selected) {
   if (c && c.type === 'errand') {
     opts.push(`<option value="commission" ${selected === 'commission' ? 'selected' : ''}>City Hall: ${c.title} (${Math.round(errandChance(sv, c.diff, tier) * 100)}%)</option>`);
   }
+  state.jobs.filter(j => j.kind === 'errand' && !j.done).forEach(j => {
+    const v = `job:${j.uid}`;
+    opts.push(`<option value="${v}" ${selected === v ? 'selected' : ''}>Ward work: ${j.title}, $${j.pay} (${Math.round(errandChance(sv, j.diff, tier) * 100)}%)</option>`);
+  });
   return opts.join('');
 }
 
@@ -302,7 +307,8 @@ function viewServants() {
     ${state.servants.map(sv => {
       const d = demonById(sv.demonId);
       const opts = [errandOptions(sv, d.tier, sv.errand)];
-      const desc = sv.errand && sv.errand !== 'commission' ? ERRANDS[sv.errand].desc : sv.errand === 'commission' ? c.text : '';
+      const job = jobForErrand(sv.errand);
+      const desc = job ? job.text : sv.errand === 'commission' ? c.text : sv.errand && ERRANDS[sv.errand] ? ERRANDS[sv.errand].desc : '';
       return `<article class="panel card servant ${sv.binding}">
         <header><h3>${d.name}</h3><span class="tag">${TIER_NAMES[d.tier]} · ${sv.binding === 'firm' ? 'firmly bound' : 'uneasily bound'}</span></header>
         <p class="muted">Appears as ${d.form}.</p>
@@ -317,6 +323,9 @@ function viewServants() {
           </select>
         </label>
         ${desc ? `<p class="muted small">${desc}</p>` : ''}
+        ${sv.patience <= 2 && sv.binding === 'firm' && !sv.strained ? (renewBlocker(sv)
+          ? `<p class="muted small">${renewBlocker(sv)}</p>`
+          : `<button class="primary" data-action="renew" data-value="${sv.uid}">Renew its term <small>(${renewCost(sv)} ${INCENSE[dossier(d).likes].name.toLowerCase()})</small></button>`) : ''}
         <button class="ghost" data-action="dismiss" data-value="${sv.uid}">Speak the Dismissal</button>
         ${sv.patience >= 2 ? '<p class="muted small">Let it go before its term is up and it will remember you kindly next time.</p>' : ''}
       </article>`;
@@ -424,6 +433,28 @@ function viewMarket() {
   </div>`;
 }
 
+// City Hall's board of small paid jobs (js/engine/jobs.js).
+function wardWorkHTML() {
+  if (state.commission < 1) return '';
+  const jobs = state.jobs.filter(j => !j.done);
+  const card = j => {
+    const how = j.kind === 'errand'
+      ? `<p class="muted small">Send a servant on it from the Servants tab. Difficulty ${j.diff}.</p>`
+      : handInBlocker(j)
+        ? `<button class="ghost" disabled>${j.kind === 'supply' ? 'Hand over the incense' : 'Hand in your account'}</button><p class="muted small">${handInBlocker(j)}</p>`
+        : `<button class="primary" data-action="job" data-value="${j.uid}">${j.kind === 'supply' ? `Hand over ${j.n} ${INCENSE[j.incense].name.toLowerCase()}` : 'Hand in your account'}</button>`;
+    return `<article class="panel card job">
+      <header><h3>${j.title}</h3><span class="tag">$${j.pay}${j.rep ? ` · +${j.rep} rep` : ''}</span></header>
+      <p>${j.text}</p>${how}
+      <p class="muted small">Open until ${dateLabel(j.until, 'prose')}.</p>
+    </article>`;
+  };
+  return `<section class="panel"><h2>Ward work</h2>
+    <p class="muted">Small jobs, paid on completion. City Hall posts new ones as old ones are done or given to someone else.${state.jobsDone ? ` You have done ${state.jobsDone}.` : ''}</p>
+    ${jobs.length ? `<div class="cards">${jobs.map(card).join('')}</div>` : '<p class="muted">Nothing on the board today.</p>'}
+  </section>`;
+}
+
 function viewCityHall() {
   const c = currentCommission();
   const r = rankIndex();
@@ -436,9 +467,12 @@ function viewCityHall() {
   <div class="cityhall">
     <section class="panel">
       <h2>City Hall</h2>
-      ${c ? `<h3>${c.title}</h3><p>${c.text}</p><p>${req}</p><p class="muted">Reward: ${c.rep} reputation, $${commissionPay(c)}${c.gift ? `, a ${VESSELS[c.gift].name.toLowerCase()}` : ''}${c.teaches ? `, and the Clause ${CLAUSES[c.teaches].name}` : ''}.</p>`
+      ${c && !commissionReady()
+          ? `<h3>The lake</h3><p>City Hall is drawing up its plans for whatever sleeps under the lake, and will send for you when it is ready: by ${dateLabel(commissionDue(), 'prose')}, the clerks say. Until then, there is ward work.</p>`
+        : c ? `<h3>${c.title}</h3><p>${c.text}</p><p>${req}</p><p class="muted">Reward: ${c.rep} reputation, $${commissionPay(c)}${c.gift ? `, a ${VESSELS[c.gift].name.toLowerCase()}` : ''}${c.teaches ? `, and the Clause ${CLAUSES[c.teaches].name}` : ''}.</p>`
           : '<p>City Hall has nothing further to ask of you. It is, frankly, a little afraid of you.</p>'}
     </section>
+    ${wardWorkHTML()}
     <section class="panel"><h2>Your standing</h2>
       <p>To the Machine, you are <b>${standingWord('machine')}</b>. To the workers in the Yards, you are <b>${standingWord('union')}</b>. The police are <b>${standingWord('suspicion')}</b>.</p>
     </section>

@@ -87,6 +87,8 @@ document.addEventListener('click', e => {
     case 'act': doAction(el.dataset.value); break;
     case 'choose': chooseOption(Number(el.dataset.value)); break;
     case 'dismiss': dismiss(Number(el.dataset.value)); break;
+    case 'renew': renewServant(Number(el.dataset.value)); break;
+    case 'job': handInJob(Number(el.dataset.value)); break;
     case 'ask': askIthzar(el.dataset.value); break;
     case 'prepare':
       state.sel.name = el.dataset.value;

@@ -21,7 +21,7 @@ const FRIENDLY_SKIP = /Report|Refuse|Send it away|packers’ money|stuff the bal
 function playGame(seed, maxDays = 200) {
   seedRandom(seed);
   restart(false);
-  const S = { seed, log: [], silence: 0, broken: 0, firm: 0, uneasy: 0, minHealth: MAX_HEALTH, fortunes: 0, commissions: {} };
+  const S = { seed, log: [], silence: 0, broken: 0, firm: 0, uneasy: 0, minHealth: MAX_HEALTH, fortunes: 0, commissions: {}, renewed: 0, jobs: 0 };
   const note = msg => S.log.push(`${dateLabel(state.day, 'stamp')}: ${msg}`);
 
   const owned = i => (state.incense[i] || 0) > 0;
@@ -173,6 +173,13 @@ function playGame(seed, maxDays = 200) {
     });
     if (state.ithzar.joined && !favorBlocker()) state.ithzar.favor = 'coin';
     state.servants.filter(sv => sv.binding !== 'firm' && sv.patience <= 1).forEach(sv => dismiss(sv.uid));
+    // keep good servants on rather than summoning again
+    state.servants.filter(sv => sv.patience <= 2 && !renewBlocker(sv)).forEach(sv => { renewServant(sv.uid); S.renewed++; });
+    // ward work: hand in what it can, and put a spare servant (never the only earner) on the best-paying errand job
+    state.jobs.filter(j => !j.done && j.kind !== 'errand' && !handInBlocker(j)).forEach(j => { handInJob(j.uid); S.jobs++; });
+    const errandJob = state.jobs.filter(j => !j.done && j.kind === 'errand').sort((a, b) => b.pay - a.pay)[0];
+    const spare = state.servants.find((sv, i) => i > 0 && sv.errand !== 'commission' && sv.errand !== 'cornelia');
+    if (errandJob && spare && errandChance(spare, errandJob.diff) >= 0.5) spare.errand = `job:${errandJob.uid}`;
   }
 
   // ---- what to do with each hour

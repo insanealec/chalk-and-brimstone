@@ -564,8 +564,42 @@ const COMMISSIONS = [
     done: 'The Mayor shakes your hand, then discreetly checks it for scorch marks.',
   },
   {
-    title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true, file: 'shemashara-1',
+    // City Hall asks `wait` days after the last commission, and not before day `notBefore` (May 10), so there
+    // is time for Ithzar, the Fair and the city before the finale
+    title: 'The Deep One', type: 'bind', tier: 5, rep: 10, pay: 500, win: true, file: 'shemashara-1', wait: 7, notBefore: 38,
     text: 'Old records speak of a marid sleeping beneath Lake Michigan since before there was a city here to drown. The engineers want to reverse the river to keep it asleep. The Machine would rather it were bound, ideally by someone it can afford to lose. City Hall has been through its list of such people, and your name was near the top.',
     done: 'The lake goes still. Across Chicago, every spirit in every circle turns its head toward the Crib.',
   },
+];
+
+// City Hall's ward work: small paid jobs alongside the commissions, two on offer at a time (js/engine/jobs.js).
+//   errand  a servant does it overnight, at this difficulty (as for errands)
+//   supply  hand over {n} sticks of {incense}, chosen from what the market sells at your rank
+//   report  hand in a complete notebook sheet (true name, runes, liked incense) on {name}, a spirit you know of
+// Optional: standing changes on completion.
+const WARD_JOBS = [
+  { id: 'runaway', kind: 'errand', diff: 1, title: 'The Alderman’s Runaway',
+    text: 'An alderman’s household imp has run off with his cufflinks, and is thought to be living in the ventilation of the Board of Trade. Have a servant fetch it back.' },
+  { id: 'census', kind: 'errand', diff: 1, title: 'Counting the Voters',
+    text: 'The Election Commission would like to know how many of the First Ward’s voters are, strictly speaking, alive. Have a servant count.' },
+  { id: 'pumping', kind: 'errand', diff: 2, title: 'The Pumping Station',
+    text: 'Something in the Chicago Avenue pumping station is eating the coal faster than the stokers can shovel it. Have a servant find out what.' },
+  { id: 'reporter', kind: 'errand', diff: 2, title: 'A Reporter Who Asks Questions', standing: { machine: 1, union: -1 },
+    text: 'A reporter from the <i>Daily News</i> has been asking about ballot boxes. City Hall would like to know who he has been asking.' },
+  { id: 'nightwatch', kind: 'errand', diff: 2, title: 'Night Watch at the Fairgrounds',
+    text: 'Workmen at Jackson Park swear their tools move about in the night. Have a servant keep watch until morning.' },
+  { id: 'tunnel', kind: 'errand', diff: 3, title: 'The Tunnel Under the River',
+    text: 'The LaSalle Street tunnel floods every night at two in the morning, though the river is nowhere near the leak. Send something that can hold its breath.' },
+  { id: 'delegation', kind: 'errand', diff: 3, title: 'A Visiting Djinni',
+    text: 'A foreign delegation to the Fair has brought its own djinni, and the Mayor would like to know what it tells them. Have a servant keep it company.' },
+  { id: 'fumigation', kind: 'supply', title: 'Fumigation',
+    text: 'The Health Department is fumigating the Levee and wants {n} sticks of {incense} for the job, no questions asked.' },
+  { id: 'mayoress', kind: 'supply', title: 'The Mayor’s Wife',
+    text: 'The Mayor’s wife is holding a séance on Saturday, and City Hall needs {n} sticks of {incense} for it. Do not ask.' },
+  { id: 'cells', kind: 'supply', title: 'Police Stores', standing: { suspicion: -1 },
+    text: 'The Harrison Street station has run out of {incense} for its holding cells, which matters when some of the prisoners are not human. It wants {n} sticks.' },
+  { id: 'thinfile', kind: 'report', title: 'A Thin File',
+    text: 'The Department of Public Works keeps a file on every spirit that might trouble it, and the one on {name} is thin. Bring a complete account: its true name, its runes and the incense it likes.' },
+  { id: 'eatenfile', kind: 'report', title: 'An Eaten File',
+    text: 'A clerk’s file on {name} has been eaten, possibly by {name}. City Hall wants a complete account to replace it: true name, runes and the incense it likes.' },
 ];

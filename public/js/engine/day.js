@@ -26,9 +26,15 @@ function endDay() {
     for (const sv of state.servants.filter(x => x.patience <= 1)) {
       const d = demonById(sv.demonId);
       log(sv.binding === 'firm'
-        ? `${bold(d)}’s service ends tonight.`
+        ? `${bold(d)}’s service ends tonight. You can renew it on the Servants tab.`
         : `${bold(d)}’s bonds will snap tonight unless you dismiss it.`, sv.binding === 'firm' ? '' : 'bad');
     }
+    const c = currentCommission();
+    if (c && (c.wait || c.notBefore) && state.day === commissionDue()) {
+      log(`City Hall sends for you. <b>${c.title}</b>: see the City Hall tab.`, 'news');
+      sendFile();
+    }
+    if (offerJobs()) log('City Hall has posted new ward work.', 'info');
     processEvents();
     ithzarDawn();  // before suspicion fades, so its warning sees today's danger
     coolSuspicion();
@@ -41,10 +47,19 @@ function endDay() {
 
 const currentCommission = () => COMMISSIONS[state.commission] || null;
 
+// The day City Hall asks for the current commission: `wait` days after the last was done, and not before
+// `notBefore`. Most commissions come at once.
+function commissionDue() {
+  const c = currentCommission();
+  return c ? Math.max(state.commissionDay + (c.wait || 0), c.notBefore || 0) : 0;
+}
+
+const commissionReady = () => Boolean(currentCommission()) && state.day >= commissionDue();
+
 // City Hall sends a file on a suitable spirit when a binding commission comes up (see COMMISSIONS).
 function sendFile() {
   const c = currentCommission();
-  if (!c || !c.file || state.lore.includes(c.file)) return;
+  if (!c || !c.file || !commissionReady() || state.lore.includes(c.file)) return;
   const f = FRAGMENTS.find(x => x.id === c.file);
   state.lore.push(f.id);
   state.newLore++;
@@ -56,7 +71,7 @@ const commissionPay = c => Math.round(c.pay * (1 + 0.25 * vesselTier('ring')));
 
 function checkBindCommission(d) {
   const c = currentCommission();
-  if (c && c.type === 'bind' && d.tier >= c.tier) completeCommission();
+  if (c && c.type === 'bind' && commissionReady() && d.tier >= c.tier) completeCommission();
 }
 
 function completeCommission() {
@@ -64,8 +79,14 @@ function completeCommission() {
   const pay = commissionPay(c);
   state.dollars += pay;
   state.commission++;
+  state.commissionDay = state.day;
   state.servants.forEach(s => { if (s.errand === 'commission') s.errand = null; });
   sendFile();
+  const next = currentCommission();
+  if (next && !commissionReady()) {
+    log(`City Hall will be in touch about the lake. It expects to send word by ${dateLabel(commissionDue(), 'prose')}; until then, there is ward work.`, 'info');
+  }
+  offerJobs();
   log(`<b>Commission complete: ${c.title}.</b> ${c.done} (+${c.rep} reputation, +$${pay})`, 'good');
   gainRep(c.rep);
   if (c.gift && !state.vessels[c.gift]) {

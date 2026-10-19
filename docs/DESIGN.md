@@ -114,9 +114,18 @@ A returning spirit greets you with a line for that parting (each spirit has its 
 
 Bound spirits are **timed**: imps serve 3 nights, foliots and djinn 5, afrits and marids 6, plus 2 if firmly bound. A newly bound servant starts on *Gather coin*, so it earns from its first night unless you send it elsewhere. You can hold as many spirits as your rank tier. Errands run overnight and repeat each night until changed: gather coin, pilfer incense, gossip (lore of the spirit's class or lower), spy (lore one class higher), or a City Hall errand. Success chance depends on class versus difficulty, with a bonus for firm bindings. Uneasy servants sometimes twist a failed errand against you. When patience runs out, a firm servant leaves quietly; an uneasy one lashes out.
 
+**Renewing a servant.** In its last two nights, a firmly bound servant can be kept on for another full term from the Servants tab, for sticks of the incense it likes: one the first time, two the next, and so on. No summoning, no hour. The dawn warning that its service ends tonight points to it. (Playtest feedback: in the endgame, keeping earners working meant re-summoning the same spirits over and over.)
+
 ### City Hall and ranks
 
-There's a chain of eight commissions, alternating "bind a spirit of class X" with "send a servant on errand X". When a binding commission comes up, City Hall sends a *file*: one lore fragment on a suitable spirit of that class (Querrin for the foliot, Azrimel for the djinni, Ulgaroth's runes for the afrit, and the marid's warning). Reputation raises your rank: Apprentice → Ward Magician → Alderman → Commissioner → Boss. Rank gates market goods, districts and how many spirits you can hold. The last commission is binding the marid.
+There's a chain of eight commissions, alternating "bind a spirit of class X" with "send a servant on errand X". When a binding commission comes up, City Hall sends a *file*: one lore fragment on a suitable spirit of that class (Querrin for the foliot, Azrimel for the djinni, Ulgaroth's runes for the afrit, and the marid's warning). Reputation raises your rank: Apprentice → Ward Magician → Alderman → Commissioner → Boss. Rank gates market goods, districts and how many spirits you can hold. The last commission is binding the marid. City Hall asks for it a week after the afrit, and not before May 10, so the finale doesn't arrive the day after Ithzar is freed (playtest feedback); the City Hall tab says when to expect word.
+
+**Ward work** (`WARD_JOBS`, `js/engine/jobs.js`). Once your first commission is done, City Hall keeps two small paid jobs on offer, each open for five days and replaced at dawn when done or lapsed, without repeating the last few. Three kinds:
+- *errands* a servant runs overnight (a runaway alderman's imp, the pumping station eating its coal, a tunnel that floods at 2 a.m.), offered up to your rank tier in difficulty;
+- *supply* orders for incense the market sells at your rank, paying about 1.8 times the price;
+- *reports*: hand in a complete notebook sheet (true name, runes, liked incense) on a named spirit you know of, which gives deduction a use for spirits you've already moved past.
+
+Pay rises 25% per rank, so ward work stays worth a servant's night. The City Hall tab shows a "!" when a job can be handed in. In 20 scripted games the player did 7–19 jobs, Ithzar joined in every game (days 32–38), and every game won between day 39 and 48 (median 42).
 
 ### City (built in step 3)
 
