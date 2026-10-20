@@ -414,7 +414,9 @@ EVENTS.push(
           ] },
         ],
         // nobody stopped her: she unseals the strongest spirit you keep in a vessel, or leaves you a message
-        expire: s => (Object.values(s.vessels).some(v => v.spirit)
+        expire: s => (s.keptHouse === s.day
+          ? { next: 'end', text: 'In the night someone tried your door. Phebbet, on the stove, let out a whistle that woke half of Clark Street, and whoever it was ran. The landing smells of wormwood.', fx: { flag: 'raid-done' } }
+          : Object.values(s.vessels).some(v => v.spirit)
           ? { next: 'end', text: 'In the morning your door is open and your workshop is tidier than you left it. One of your vessels has been unsealed, and whatever was inside it is gone.', fx: { crackVessel: true, flag: 'raid-done' } }
           : { next: 'end', text: 'In the morning your door is open. Nothing is missing. In your notebook, under your last binding, someone has written two words in a hand you don’t know: <i>I know.</i>', fx: { standing: { suspicion: 1 }, flag: 'raid-done' } }),
       },

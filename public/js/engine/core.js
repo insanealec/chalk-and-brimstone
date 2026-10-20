@@ -52,6 +52,8 @@ function newState() {
     facts: {},  // demon id -> facts observed in the chamber (lore facts are derived from state.lore)
     met: [],    // spirits that have appeared in your circle, even ones you never read about
     cribTrips: 0, // times you have rowed out to the Water Crib to call up the marid (js/engine/finale.js)
+    tempers: {},  // spirit id -> the day the notebook learned what it is good and bad at
+    keptHouse: 0, // the dawn after a night Phebbet kept house: the workshop was guarded
     memory: {}, // per spirit: { times it has answered you, how its last stint with you ended } (see remember())
     servants: [],
     nextUid: 1,

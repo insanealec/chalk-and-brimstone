@@ -114,6 +114,22 @@ A returning spirit greets you with a line for that parting (each spirit has its 
 
 Bound spirits are **timed**: imps serve 3 nights, foliots and djinn 5, afrits and marids 6, plus 2 if firmly bound. A newly bound servant starts on *Gather coin*, so it earns from its first night unless you send it elsewhere. You can hold as many spirits as your rank tier. Errands run overnight and repeat each night until changed: gather coin, pilfer incense, gossip (lore of the spirit's class or lower), spy (lore one class higher), or a City Hall errand. Success chance depends on class versus difficulty, with a bonus for firm bindings. Uneasy servants sometimes twist a failed errand against you. When patience runs out, a firm servant leaves quietly; an uneasy one lashes out.
 
+**Tempers** (`DEMONS[].temper`). Every spirit but the marid is good at one errand and bad at another, so who you keep in service, who goes in a vessel and who stays your familiar is a choice about *who*, not just how strong. (Playtest feedback: in the endgame, choosing where to put spirits was slot-juggling, and every dawn report sounded the same.)
+
+| Spirit | Good at | Bad at |
+|---|---|---|
+| Nibbet | pilfering (kitchen gardens) | spying |
+| Squall | gossip (every chimney in Chicago) | coin |
+| Grubwick | coin (dug from under the city) | gossip |
+| Tessaly | spying (fog gets in anywhere) | coin |
+| Querrin | City Hall's errands, commission and ward work; reads the Mayor's mail on the way (a lore fragment) | pilfering |
+| Phebbet | its own errand, *Keep house*: +1 health at dawn, and the workshop is guarded that night (Cornelia's raid and the inspectors find nothing) | spying |
+| Azrimel | pilfering, boldly, but brags (sometimes +1 suspicion) | gossip |
+| Kethuun | spying, and its notes fill in a notebook fact | coin |
+| Ulgaroth | its own errands: *Collect the Machine's debts* (1.6× coin, Machine +1, workers −1) or, once the workers trust you, *Stand with the workers* (0.6× coin from the union, workers +1: the strike kitchen's coppers, the cooperative laundry's boilers, the Yards gate) | gossip |
+
+A specialty adds 20% to the odds and brings back more (1.5× coin, two more incense, a second fragment); a dislike takes 15% off. Each spirit reports its specialty and its failures at its dislike in its own words. The notebook learns a spirit's temper the first time it runs an errand for you; after that its card, its notebook sheet and the errand menu (★ and ✗) show it. Two of your spirits serving together sometimes trade lines at dawn (`SERVANT_BANTER`).
+
 **Renewing a servant.** In its last two nights, a firmly bound servant can be kept on for another full term from the Servants tab, for sticks of the incense it likes: one the first time, two the next, and so on. No summoning, no hour. The dawn warning that its service ends tonight points to it. (Playtest feedback: in the endgame, keeping earners working meant re-summoning the same spirits over and over.)
 
 ### City Hall and ranks

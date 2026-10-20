@@ -39,6 +39,7 @@ function endDay() {
     ithzarDawn();  // before suspicion fades, so its warning sees today's danger
     coolSuspicion();
     scry();
+    servantBanter();
     if (state.familiar && random() < 0.4) log(fill(pick(FAMILIAR_QUIPS), { name: bold(demonById(state.familiar)) }));
   }
   manifestation = null;

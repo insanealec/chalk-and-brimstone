@@ -97,8 +97,27 @@ const familiarResting = key => state.day < (state.familiarOut[key] || 0);
 
 const ownFamiliar = () => (state.familiar && !familiarResting('own') ? demonById(state.familiar) : null);
 
-function errandChance(sv, diff, tier = demonById(sv.demonId).tier) {
-  return clamp(0.55 + 0.2 * (tier - diff) + (sv.binding === 'firm' ? 0.15 : 0), 0.1, 0.95);
+// What a spirit is good and bad at (DEMONS[].temper): +1 for its specialty, -1 for the errand it dislikes, else 0.
+// City Hall's commission and ward errands count together as 'cityhall'.
+const errandKind = errand => (errand === 'commission' || (errand || '').startsWith('job:') ? 'cityhall' : errand);
+function temperOf(d, errand) {
+  const t = d && d.temper;
+  if (!t || !errand) return 0;
+  const kind = errandKind(errand);
+  return [].concat(t.good).includes(kind) ? 1 : t.bad === kind ? -1 : 0;
+}
+
+// The notebook learns a spirit's temper the first time it runs an errand for you.
+const temperKnown = d => state.tempers[d.id] !== undefined;
+
+function temperText(d) {
+  const t = d.temper;
+  return `good at ${[].concat(t.good).map(k => TEMPER_WORDS[k]).join(' or ')} and bad at ${TEMPER_WORDS[t.bad]}`;
+}
+
+function errandChance(sv, diff, tier = demonById(sv.demonId).tier, errand = null) {
+  const temper = sv.demonId ? temperOf(demonById(sv.demonId), errand) : 0;
+  return clamp(0.55 + 0.2 * (tier - diff) + (sv.binding === 'firm' ? 0.15 : 0) + [ -0.15, 0, 0.2 ][temper + 1], 0.1, 0.95);
 }
 
 function errandDiff(errand, tier) {
@@ -107,44 +126,68 @@ function errandDiff(errand, tier) {
   return ERRANDS[errand].diff(tier);
 }
 
+// Errands this spirit can be sent on tonight: the shared ones, and its own.
+const errandsFor = d => Object.entries(ERRANDS).filter(([, e]) => (!e.for || e.for === d.id) && (!e.available || e.available(state)));
+
 function coinAmount(tier) {
   return [0, rand(5, 9), rand(12, 18), rand(24, 34), rand(45, 60), rand(80, 100)][tier];
 }
 
 function runErrand(sv, d = demonById(sv.demonId)) {
+  if (errandOutcome(sv, d) !== false) learnTemper(d);
+}
+
+// Runs one night's errand and reports it. Returns false if the errand could not be run at all.
+function errandOutcome(sv, d) {
   const vars = { name: bold(d) };
   if (sv.errand === 'commission') {
     const c = currentCommission();
-    if (!c || c.type !== 'errand') { sv.errand = null; return; }
+    if (!c || c.type !== 'errand') { sv.errand = null; return false; }
   }
   if (sv.errand.startsWith('job:') && !jobForErrand(sv.errand)) { sv.errand = 'coin'; } // the job lapsed or was done
   const job = jobForErrand(sv.errand);
   const e = ERRANDS[sv.errand];
-  if (e && e.available && !e.available(state)) { sv.errand = null; return; }
-  const succeeded = random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier);
+  if (e && ((e.available && !e.available(state)) || (e.for && e.for !== d.id))) { sv.errand = null; return false; }
+  const temper = temperOf(d, sv.errand);
+  const own = (key, base) => (d.temper && d.temper[key] && d.temper[key].length ? d.temper[key] : base);
+  const succeeded = random() < errandChance(sv, errandDiff(sv.errand, d.tier), d.tier, sv.errand);
 
   if (!succeeded) {
     if (sv.binding === 'uneasy' && random() < 0.5) return twist(d);
-    log(fill(pick(ERRAND_TEXT[job ? 'commission' : sv.errand].fail), vars), 'bad');
+    const base = ERRAND_TEXT[job ? 'commission' : sv.errand].fail;
+    log(fill(pick(temper < 0 ? own('badText', base) : base), vars), 'bad');
     return;
   }
 
-  if (job) return completeJob(job);
+  const good = temper > 0;
+  // the better haul a spirit brings home from its specialty
+  if (job || sv.errand === 'commission') {
+    if (good && d.temper.goodText) {
+      log(fill(pick(d.temper.goodText), vars));
+      learnFragment(1, d.tier); // Querrin reads the mail on the way
+    }
+    return job ? completeJob(job) : completeCommission();
+  }
   switch (sv.errand) {
     case 'coin': {
-      const amt = coinAmount(d.tier);
+      const amt = Math.round(coinAmount(d.tier) * (good ? 1.5 : 1));
       state.dollars += amt;
-      log(fill(pick(ERRAND_TEXT.coin.ok), { ...vars, amt }), 'good');
+      log(fill(pick(good ? own('goodText', ERRAND_TEXT.coin.ok) : ERRAND_TEXT.coin.ok), { ...vars, amt }), 'good');
       break;
     }
     case 'pilfer': {
-      const items = grantRandomIncense(d.tier + rand(0, 1), d.tier);
-      log(fill(pick(ERRAND_TEXT.pilfer.ok), { ...vars, items }), 'good');
+      const items = grantRandomIncense(d.tier + rand(0, 1) + (good ? 2 : 0), d.tier);
+      log(fill(pick(good ? own('goodText', ERRAND_TEXT.pilfer.ok) : ERRAND_TEXT.pilfer.ok), { ...vars, items }), 'good');
+      if (good && d.temper.extra === 'brag' && random() < 0.4) {
+        state.standing.suspicion = Math.min(10, state.standing.suspicion + 1);
+        log(`${bold(d)} has also told half the Levee about it. (the police take an interest)`, 'bad');
+      }
       break;
     }
     case 'gossip': {
-      log(fill(pick(ERRAND_TEXT.gossip.ok), vars));
-      if (!learnFragment(1, d.tier)) {
+      log(fill(pick(good ? own('goodText', ERRAND_TEXT.gossip.ok) : ERRAND_TEXT.gossip.ok), vars));
+      const heard = [learnFragment(1, d.tier), good && learnFragment(1, d.tier)].filter(Boolean);
+      if (!heard.length) {
         state.log.shift();
         log(fill(pick(ERRAND_TEXT.gossip.none), vars));
       }
@@ -152,10 +195,10 @@ function runErrand(sv, d = demonById(sv.demonId)) {
     }
     case 'spy': {
       const target = Math.min(5, d.tier + 1);
-      log(fill(pick(ERRAND_TEXT.spy.ok), vars));
-      if (!learnFragment(target, target) && !learnFragment(1, target)) {
-        log('The notes contain nothing you did not already know.');
-      }
+      log(fill(pick(good ? own('goodText', ERRAND_TEXT.spy.ok) : ERRAND_TEXT.spy.ok), vars));
+      const read = [learnFragment(target, target) || learnFragment(1, target), good && learnFragment(1, target)].filter(Boolean);
+      if (good && d.temper.extra === 'notes') noteFromSpy(d);
+      else if (!read.length) log('The notes contain nothing you did not already know.');
       break;
     }
     case 'cornelia': {
@@ -163,10 +206,49 @@ function runErrand(sv, d = demonById(sv.demonId)) {
       log(`${fill(pick(ERRAND_TEXT.cornelia.ok), vars)} ${clue ? `From what it saw, ${clue}.` : 'It learned nothing you did not already know.'}`, 'lore');
       break;
     }
-    case 'commission':
-      completeCommission();
+    case 'house':
+      state.health = Math.min(MAX_HEALTH, state.health + 1);
+      state.keptHouse = state.day + 1; // guarded until dawn: see the raid and the crackdown
+      log(fill(pick(ERRAND_TEXT.house.ok), vars), 'good');
       break;
+    case 'debts':
+    case 'workers': {
+      const forMachine = sv.errand === 'debts';
+      const amt = Math.round(coinAmount(d.tier) * (forMachine ? 1.6 : 0.6));
+      state.dollars += amt;
+      const s = state.standing;
+      if (forMachine) { s.machine = Math.min(10, s.machine + 1); s.union = Math.max(-10, s.union - 1); }
+      else s.union = Math.min(10, s.union + 1);
+      log(`${fill(pick(ERRAND_TEXT[sv.errand].ok), { ...vars, amt })} (${forMachine ? 'the Machine approves; the workers do not' : 'the workers won’t forget it'})`, 'good');
+      break;
+    }
   }
+}
+
+// Kethuun's spying fills in a fact your notebook didn't have, about a spirit you know of.
+function noteFromSpy(d) {
+  const known = knownDemons().filter(x => unknownFacts(x).length);
+  if (!known.length) return;
+  const x = pick(known);
+  const fact = pick(unknownFacts(x));
+  recordFact(x.id, fact);
+  log(`In ${bold(d)}’s margins: ${bold(x)}, ${factText(fact)}.`, 'lore');
+}
+
+// The first errand a spirit runs for you shows what it is good and bad at.
+function learnTemper(d) {
+  if (!d.temper || temperKnown(d)) return;
+  state.tempers[d.id] = state.day;
+  log(`Your notebook notes that ${bold(d)} is ${temperText(d)}.`, 'info');
+}
+
+// At dawn, two of your spirits may have words.
+function servantBanter() {
+  const here = [...state.servants.map(sv => sv.demonId), ownFamiliar() && ownFamiliar().id].filter(Boolean);
+  const pairs = SERVANT_BANTER.filter(b => b.pair.every(id => here.includes(id)));
+  if (!pairs.length || random() > 0.3) return;
+  const b = pickFresh('servant-banter', pairs);
+  log(b.lines.map(([id, text]) => `<b>${demonById(id).name}:</b> ${text}`).join(' '), 'aside');
 }
 
 function twist(d) {

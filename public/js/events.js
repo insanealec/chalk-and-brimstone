@@ -175,7 +175,10 @@ const EVENTS = [
             { w: 1, text: 'A word in the right ear, and the inspectors discover urgent business elsewhere. The Machine will want something for this, someday.', fx: { standing: { suspicion: -5, machine: -2 }, advance: 'end' } },
           ] },
         ],
-        expire: { next: 'end', text: 'The inspectors come anyway. They take what they like and call it evidence.', fx: { robbed: [15, 40], standing: { suspicion: -6 } } },
+        // a workshop Phebbet kept house in overnight is guarded (keptHouse, js/engine/spirits.js)
+        expire: s => (s.keptHouse === s.day
+          ? { next: 'end', text: 'The inspectors come at dawn and find a brass kettle on the stove that whistles at them so piercingly that they leave without searching anything.', fx: { standing: { suspicion: -6 } } }
+          : { next: 'end', text: 'The inspectors come anyway. They take what they like and call it evidence.', fx: { robbed: [15, 40], standing: { suspicion: -6 } } }),
       },
     ],
   },

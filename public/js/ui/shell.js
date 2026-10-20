@@ -223,6 +223,7 @@ function dossierHTML(d) {
     <dt>Runes</dt><dd>${runeBits.join(' · ') || '?'}</dd>
     <dt>Incense</dt><dd>${incBits.join(' · ')}</dd>
     <dt>Circle</dt><dd>one that holds ${TIER_NAMES[d.tier].toLowerCase()}s</dd>
+    ${d.temper && temperKnown(d) ? `<dt>Temper</dt><dd>${temperText(d)}</dd>` : ''}
     ${memoryHTML(d)}
   </dl>`;
 }
@@ -282,14 +283,19 @@ function viewJournal() {
 // The errands a spirit of this class could run tonight, with its odds, as <option>s.
 function errandOptions(sv, tier, selected) {
   const c = currentCommission();
-  const opts = Object.entries(ERRANDS).filter(([, e]) => !e.available || e.available(state)).map(([k, e]) =>
-    `<option value="${k}" ${selected === k ? 'selected' : ''}>${e.name} (${Math.round(errandChance(sv, e.diff(tier), tier) * 100)}%)</option>`);
+  const d = sv.demonId ? demonById(sv.demonId) : null; // Ithzar's favors have no temper and no errands of their own
+  // once the notebook knows its temper, mark the errand it's good at with a star and the one it's bad at with a cross
+  const mark = errand => (d && temperKnown(d) ? ['✗ ', '', '★ '][temperOf(d, errand) + 1] : '');
+  const pct = (diff, errand) => Math.round(errandChance(sv, diff, tier, errand) * 100);
+  const list = d ? errandsFor(d) : Object.entries(ERRANDS).filter(([, e]) => !e.for && (!e.available || e.available(state)));
+  const opts = list.map(([k, e]) =>
+    `<option value="${k}" ${selected === k ? 'selected' : ''}>${mark(k)}${e.name} (${pct(e.diff(tier), k)}%)</option>`);
   if (c && c.type === 'errand') {
-    opts.push(`<option value="commission" ${selected === 'commission' ? 'selected' : ''}>City Hall: ${c.title} (${Math.round(errandChance(sv, c.diff, tier) * 100)}%)</option>`);
+    opts.push(`<option value="commission" ${selected === 'commission' ? 'selected' : ''}>${mark('commission')}City Hall: ${c.title} (${pct(c.diff, 'commission')}%)</option>`);
   }
   state.jobs.filter(j => j.kind === 'errand' && !j.done).forEach(j => {
     const v = `job:${j.uid}`;
-    opts.push(`<option value="${v}" ${selected === v ? 'selected' : ''}>Ward work: ${j.title}, $${j.pay} (${Math.round(errandChance(sv, j.diff, tier) * 100)}%)</option>`);
+    opts.push(`<option value="${v}" ${selected === v ? 'selected' : ''}>${mark(v)}Ward work: ${j.title}, $${j.pay} (${pct(j.diff, v)}%)</option>`);
   });
   return opts.join('');
 }
@@ -312,6 +318,7 @@ function viewServants() {
       return `<article class="panel card servant ${sv.binding}">
         <header><h3>${d.name}</h3><span class="tag">${TIER_NAMES[d.tier]} · ${sv.binding === 'firm' ? 'firmly bound' : 'uneasily bound'}</span></header>
         <p class="muted">Appears as ${d.form}.</p>
+        ${d.temper ? `<p class="small">${temperKnown(d) ? `${d.name} is ${temperText(d)}.` : '<span class="muted">You will learn what it is good at the first time it runs an errand.</span>'}</p>` : ''}
         <p class="${sv.patience <= 1 ? 'warn' : ''}">${sv.patience <= 1
           ? (sv.binding === 'firm' ? 'Its service ends tonight.' : 'Its bonds will snap tonight unless you dismiss it!')
           : `Will serve ${sv.patience} more nights.`}</p>

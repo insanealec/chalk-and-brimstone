@@ -164,12 +164,22 @@ function playGame(seed, maxDays = 200) {
     }
   }
 
+  // The money errand with the best expected haul for this spirit, as a player reading the odds would pick it
+  // (it plays friendly: standing with the workers over collecting the Machine's debts when it can).
+  function bestEarning(sv) {
+    const d = demonById(sv.demonId);
+    const options = errandsFor(d).map(([k]) => k).filter(k => ['coin', 'workers', 'debts'].includes(k));
+    if (options.includes('workers')) return 'workers';
+    const worth = k => errandChance(sv, ERRANDS[k].diff(d.tier), d.tier, k) * (k === 'debts' ? 1.6 : temperOf(d, k) > 0 ? 1.5 : 1);
+    return options.sort((a, b) => worth(b) - worth(a))[0];
+  }
+
   function giveOrders() {
     const c = currentCommission();
     state.servants.forEach((sv, i) => {
       if (c && c.type === 'errand') sv.errand = 'commission';
       else if (leashActive() && i === 0) sv.errand = 'cornelia';
-      else sv.errand = state.dollars < 700 ? 'coin' : (i % 2 ? 'gossip' : 'spy');
+      else sv.errand = state.dollars < 700 ? bestEarning(sv) : (i % 2 ? 'gossip' : 'spy');
     });
     if (state.ithzar.joined && !favorBlocker()) state.ithzar.favor = 'coin';
     state.servants.filter(sv => sv.binding !== 'firm' && sv.patience <= 1).forEach(sv => dismiss(sv.uid));

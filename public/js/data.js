@@ -140,6 +140,16 @@ const DEMONS = [
     form: 'a warty green toad in a waistcoat two sizes too small',
     greet: `"Oh, it's <i>you</i>. Another one." It surveys your chalk lines with professional disdain.¹`,
     footnote: '¹ The circle was, Nibbet later told its friends, "wobbly enough to drive a cart through."',
+    temper: {
+      good: 'pilfer', bad: 'spy',
+      goodText: [
+        '{name} comes back from somebody’s kitchen garden smelling of thyme, its waistcoat stuffed: {items}.',
+        '{name} has robbed a herb-seller’s barrow on Maxwell Street and is unrepentant about it: {items}.',
+      ],
+      badText: [
+        '{name} was meant to be spying. It found the magician’s pantry instead, and spent the night there.',
+      ],
+    },
     returns: {
       served: [
         '"You again." Nibbet climbs into the circle the way a man climbs into a bath someone else has run. "Same chalk. Same wobble."',
@@ -169,6 +179,15 @@ const DEMONS = [
     form: 'a sooty sparrow with eyes like two hot coals',
     greet: `"Chimneys!" it squawks. "Do you know how many smokestacks there are in Chicago? <i>I</i> do."¹`,
     footnote: '¹ 412,906. It counted. It had a great deal of free time between summonings.',
+    temper: {
+      good: 'gossip', bad: 'coin',
+      goodText: [
+        '{name} spent the night going from chimney to chimney, listening. It has a great deal to tell you, nearly all of it about other people’s spirits.',
+      ],
+      badText: [
+        '{name} was meant to bring back money, lost count of it halfway home, and brings back a number instead.',
+      ],
+    },
     returns: {
       served: [
         '"Four hundred and twelve thousand, nine hundred and seven," says Squall. "They put up a new one on Halsted. I went and looked."',
@@ -198,6 +217,16 @@ const DEMONS = [
     form: 'a lumpish mole-thing wearing a monocle',
     greet: `"Kaliméra," it says, in a voice like gravel. "You'll be wanting something dug, I expect."¹`,
     footnote: '¹ Grubwick has dug for four kings, two popes and a man in Peoria who swore there was gold under his barn. Grubwick still talks about that barn.',
+    temper: {
+      good: 'coin', bad: 'gossip',
+      goodText: [
+        '{name} comes up through your floor with {amt} dollars in old coins, some of them Spanish. "Under the Board of Trade," it says. "They drop a lot."',
+        '{name} has been digging under Wells Street, where the city was jacked up three feet before the war. It brings {amt} dollars that fell through the cracks.',
+      ],
+      badText: [
+        '{name} spent the night underground, where nobody gossips, and has nothing to report but the price of worms.',
+      ],
+    },
     returns: {
       served: [
         '"Kaliméra again." Grubwick polishes its monocle on its belly. "Where are we digging?"',
@@ -228,6 +257,15 @@ const DEMONS = [
     form: 'a pale woman made of drifting fog, smelling of a sea a long way from here',
     greet: `"How refreshing. The last one called me by the wrong name entirely, and in Swedish."¹`,
     footnote: '¹ He is still, in a sense, in Minnesota. Several parts of Minnesota.',
+    temper: {
+      good: 'spy', bad: 'coin',
+      goodText: [
+        '{name} came under a senior magician’s door as fog and read over his shoulder all night. She brings you a copied page, and his opinion of his wife.',
+      ],
+      badText: [
+        '{name} returns without a cent. "I am not a pickpocket," she says. "I am a sea fog." She will not discuss it further.',
+      ],
+    },
     returns: {
       served: [
         '"You keep calling," says Tessaly. "People will talk." She drifts once around the circle, admiring herself in your window.',
@@ -257,6 +295,15 @@ const DEMONS = [
     form: 'a long-legged heron in a postman’s cap',
     greet: `"Message for you," says Querrin. "It reads: <i>you are going to regret this.</i>"¹`,
     footnote: '¹ Querrin writes these messages itself. It finds it saves time.',
+    temper: {
+      good: 'cityhall', bad: 'pilfer',
+      goodText: [
+        '{name} delivered City Hall’s business, and read the rest of the Mayor’s mail on the way.',
+      ],
+      badText: [
+        '{name} will not pilfer. "The United States Post Office," it says, with great dignity, "does not steal." It has, however, read your letters.',
+      ],
+    },
     returns: {
       served: [
         '"Message for you," says Querrin. "It reads: <i>again?</i>"',
@@ -286,6 +333,12 @@ const DEMONS = [
     form: 'a squat brass kettle with a face, and an attitude',
     greet: `Steam whistles from Phebbet's spout. "Good pronunciation. <i>Terrible</i> posture."¹`,
     footnote: '¹ Phebbet’s views on posture date back to the Assyrians, who stood very straight, mostly out of fear.',
+    temper: {
+      good: 'house', bad: 'spy',
+      badText: [
+        '{name} was meant to keep quiet in a senior magician’s study, and began to whistle at midnight. It came home at a run.',
+      ],
+    },
     returns: {
       served: [
         'Phebbet whistles. "Better. You are standing straighter. Still slouching, but straighter."',
@@ -316,6 +369,15 @@ const DEMONS = [
     form: 'a handsome youth wreathed in lazy blue flame',
     greet: `"Azrimel, Breaker of Lesser Bonds, Scourge of—" It notices your runes, and sighs. "Fine. What do you want?"¹`,
     footnote: '¹ The full title runs to nineteen clauses. It has been workshopping a twentieth.',
+    temper: {
+      good: 'pilfer', bad: 'gossip', extra: 'brag',
+      goodText: [
+        '{name} walked through a rival’s wards at midnight, took what it liked, and left a card: {items}, with the compliments of Azrimel, Breaker of Lesser Bonds.',
+      ],
+      badText: [
+        '{name} was sent for gossip and talked about itself all night instead. You learn a great deal about Azrimel.',
+      ],
+    },
     returns: {
       served: [
         'Azrimel arrives in the middle of a yawn, and finishes the yawn before it looks at you.',
@@ -345,6 +407,15 @@ const DEMONS = [
     form: 'a jackal-headed figure in river-green linen',
     greet: `"You may address me as Your Radiance," says Kethuun. You do not.¹`,
     footnote: '¹ Kethuun has been addressed as Your Radiance once since the fall of Thebes, by a drunk in Alexandria. It still speaks of him fondly.',
+    temper: {
+      good: 'spy', bad: 'coin', extra: 'notes',
+      goodText: [
+        '{name} copied a senior magician’s notes in a hand neater than the original, and has marked the mistakes in the margin.',
+      ],
+      badText: [
+        '{name} returns empty-handed. "Temple servants do not handle money," it says. "That is what priests are for."',
+      ],
+    },
     returns: {
       served: [
         '"You may address me as Your Radiance," says Kethuun. You still do not. It seems to have expected that.',
@@ -375,6 +446,12 @@ const DEMONS = [
     form: 'a pillar of black smoke shot through with furnace-light, ten feet tall and stooping',
     greet: `The floorboards blister. "SPEAK, LITTLE MAGICIAN. QUICKLY."¹`,
     footnote: '¹ Afrits do not do lower case.',
+    temper: {
+      good: ['debts', 'workers'], bad: 'gossip',
+      badText: [
+        '{name} was asked to listen at doors. "WHISPERS ARE BENEATH ME," it says. The door is now a hole.',
+      ],
+    },
     returns: {
       served: [
         'The floorboards blister in the same places as last time. "AGAIN, LITTLE MAGICIAN. SPEAK."',
@@ -450,6 +527,19 @@ const ERRANDS = {
   pilfer: { name: 'Pilfer incense',         diff: () => 2,     desc: 'Raid a rival’s stores for incense.' },
   gossip: { name: 'Gossip about its kind',  diff: () => 1,     desc: 'Lore about spirits of its own class or lower.' },
   spy:    { name: 'Spy on a senior magician', diff: t => t + 1, desc: 'Stolen notes on a more powerful spirit.' },
+  // a spirit's own errands: only it can be sent on them (for), and some only some of the time (available)
+  house: {
+    name: 'Keep house', for: 'phebbet', diff: () => 0,
+    desc: 'Stay home: tea, a warm room, and a whistle for intruders. +1 health at dawn, and the workshop is guarded for the night.',
+  },
+  debts: {
+    name: 'Collect the Machine’s debts', for: 'ulgaroth', diff: () => 2,
+    desc: 'Call on people who owe the Machine money. They pay. The Yards will hear about it.',
+  },
+  workers: {
+    name: 'Stand with the workers', for: 'ulgaroth', diff: () => 2, available: s => s.standing.union >= 2,
+    desc: 'Put its fire to work for the union: boilers, soup kettles, and the gate at the Yards. The union pays what it can.',
+  },
   // offered only during chapter 3 of Ithzar's arc (js/ithzar.js)
   cornelia: {
     name: 'Spy on Cornelia Ashby', diff: () => 2,
@@ -457,6 +547,27 @@ const ERRANDS = {
     available: s => s.flags['leash-agreed'] !== undefined && s.flags['ithzar-freed'] === undefined,
   },
 };
+
+// What each spirit is good and bad at (DEMONS[].temper), as the notebook puts it. City Hall's commission and
+// ward errands together count as 'cityhall'.
+const TEMPER_WORDS = {
+  coin: 'gathering coin', pilfer: 'pilfering incense', gossip: 'gossip', spy: 'spying', cityhall: 'City Hall’s errands',
+  house: 'keeping house', debts: 'collecting the Machine’s debts', workers: 'standing with the workers',
+};
+
+// Exchanges between two of your spirits at dawn, when both are serving you (or one is your familiar).
+const SERVANT_BANTER = [
+  { pair: ['nibbet', 'squall'], lines: [['squall', 'Four hundred and twelve thousand, nine hundred and eight.'], ['nibbet', 'Nobody asked.'], ['squall', 'Nine.']] },
+  { pair: ['grubwick', 'nibbet'], lines: [['nibbet', 'You’ve tracked mud right through the circle.'], ['grubwick', 'Kaliméra to you too.']] },
+  { pair: ['tessaly', 'querrin'], lines: [['querrin', 'Message for the fog.'], ['tessaly', 'Burn it.'], ['querrin', 'It is from your admirer in Minnesota.'], ['tessaly', 'Burn it twice.']] },
+  { pair: ['azrimel', 'kethuun'], lines: [['azrimel', 'Azrimel, Breaker of Lesser Bonds, greets the temple sweeper.'], ['kethuun', 'Your title has grown again.'], ['azrimel', 'Twenty clauses.'], ['kethuun', 'And still you do not know what the eleventh means.']] },
+  { pair: ['phebbet', 'grubwick'], lines: [['phebbet', 'Feet off the stove.'], ['grubwick', 'They are warm there.'], ['phebbet', 'That is the point of a stove. The point of feet is to be somewhere else.']] },
+  { pair: ['ulgaroth', 'squall'], lines: [['squall', '(from inside the chimney) Is it gone?'], ['ulgaroth', 'I AM NOT GONE.'], ['squall', '(further up the chimney) Noted.']] },
+  { pair: ['ulgaroth', 'phebbet'], lines: [['phebbet', 'You could at least use a trivet.'], ['ulgaroth', 'I AM A PILLAR OF FIRE.'], ['phebbet', 'Then use two.']] },
+  { pair: ['tessaly', 'kethuun'], lines: [['tessaly', 'You smell of river mud.'], ['kethuun', 'The Nile, madam.'], ['tessaly', 'Mud is mud.']] },
+  { pair: ['querrin', 'azrimel'], lines: [['azrimel', 'Any letters for me?'], ['querrin', 'Three. All from people you owe money.']] },
+  { pair: ['tessaly', 'nibbet'], lines: [['nibbet', 'It’s damp in here since she came.'], ['tessaly', 'You are a toad.'], ['nibbet', 'I know what I like.']] },
+];
 
 const ERRAND_TEXT = {
   coin: {
@@ -498,6 +609,28 @@ const ERRAND_TEXT = {
       '{name} got lost in the senior magician’s library, which it insists was "rearranging itself."',
     ],
   },
+  house: {
+    ok: [
+      '{name} keeps house: the kettle on, the stove banked, your boots warming by the fire. You wake rested.',
+      '{name} spends the night on the stove, and whistles once, at three in the morning, at a footstep on the landing that goes away again.',
+    ],
+    fail: ['{name} boiled itself dry in the night and spent the morning complaining about it.'],
+  },
+  debts: {
+    ok: [
+      '{name} called on six men who owe the Machine money. Five paid at once. The sixth paid after it had looked at his house for a while. {amt} dollars, and a smell of scorched brick.',
+      'A saloonkeeper on Halsted Street found {name} sitting in his stove, waiting. He paid. {amt} dollars, and the Yards are talking about it.',
+    ],
+    fail: ['{name} comes back with nothing. Every debtor on its list left town the moment they heard it was coming.'],
+  },
+  workers: {
+    ok: [
+      'All night {name} kept the coppers boiling in the strike kitchen on Ashland Avenue, and four hundred families ate hot soup. The union sends {amt} dollars and a loaf of bread.',
+      'Pinkertons came to the Yards gate at midnight. {name} was standing in it, burning quietly. The Pinkertons went home. The union sends {amt} dollars, and a note: <i>Same again tomorrow?</i>',
+      '{name} kept the boilers going all night in the cooperative laundry on Halsted Street, so the women there needn’t pay the coal man this week. They send {amt} dollars, all in nickels.',
+    ],
+    fail: ['{name} spent the night at the union hall, but nobody could agree what it was for, and it left in a temper.'],
+  },
   commission: {
     fail: [
       '{name} returns having failed City Hall’s errand. It blames "bureaucracy."',
@@ -511,7 +644,7 @@ const ERRAND_TEXT = {
     ],
     fail: [
       '{name} reports that Cornelia Ashby’s workshop is "warded to the rafters, and rude about it."',
-      '{name} was spotted by Cornelia’s cat, which is not entirely a cat.',
+      '{name} was spotted by Cornelia’s cat, which turned out to be an imp in a cat’s coat.',
     ],
   },
 };
